@@ -13,7 +13,8 @@ Technical and organisational details that go beyond the public [README](../READM
 | Folder | Purpose | Status |
 |---|---|---|
 | `background/` | Literature, report, concepts | 28 references, report with ten risk model candidates, 20 PDFs |
-| `engine/` | Synthetic data generator | empty |
+| `schema/` | Central data schema | version 0.1.0: baseline and outcome table, Python loader and validator |
+| `engine/` | Synthetic data generator | simple models for candidates 1 and 2, ten regimens, tests |
 | `risk-model/` | Toxicity risk model | empty |
 | `app/` | Inspection app | empty |
 | `project/` | Project management, internal documentation | prompt log, start prompt, this file |
@@ -66,6 +67,13 @@ Automated download is limited because the publisher websites and the Europe PMC 
 
 The copyrighted PDFs must not be in the repository when it becomes public. Before publication, `background/papers/` has to be reduced to openly licensed files, and the PDFs have to be removed from the git history as well.
 
+## Schema and engine
+
+- The schema in `schema/` is the single source for field names, types and allowed values. Code in other folders reads it from there and does not repeat field lists. Rules for extending it are in `schema/README.md`.
+- The engine is plain Python 3 without further packages. `engine/README.md` describes the models and marks every parameter as literature value or assumption. The parameters themselves are in `engine/config/`.
+- Generated data go to `engine/output/`, which is not under version control. Data are reproduced from the seed.
+- Tests run with `python3 -m unittest discover engine/tests`.
+
 ## Cloud environment
 
 Sessions for this repository run in the cloud environment `toxage-sim`. Its network allows the package registries and these hosts:
@@ -79,5 +87,7 @@ The literature services work from scripts. The publisher hosts answer scripted r
 
 - Add the PDFs of the eight added guidelines to `background/papers/` and read the six that are not yet covered by a full text.
 - Extend the literature to the topics in section 9 of the report, first of all published prediction models and the evidence for home measurements.
-- Choose the first risk models to build. The report proposes candidate 1 (any severe toxicity in the first three months) and candidate 2 (lung toxicity), see section 8 of the report.
+- Replace the assumed parameters of the engine by literature values where possible: effects of age, performance status and geriatric impairments on severe toxicity, and the age distributions per regimen.
+- Add measurements during therapy to schema and engine, so that detection models become possible.
+- Build the first risk models on the generated data.
 - Decide on a licence for the repository before it becomes public.

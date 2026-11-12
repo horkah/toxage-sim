@@ -1,0 +1,65 @@
+{
+  "description": "Regimens of the engine with reference rates from the literature. severe_toxicity_rate is the share of patients with at least one adverse event of grade 3 or higher. ild_rate is the share with drug-related interstitial lung disease or pneumonitis; null means that the sources give no rate and the engine generates none.",
+  "regimens": {
+    "nalirifox": {
+      "tumour_type": "pancreas",
+      "severe_toxicity_rate": 0.87,
+      "ild_rate": null,
+      "source": "Wainberg et al. (2023), NAPOLI 3, grade 3 or higher treatment-emergent adverse events"
+    },
+    "gemcitabine_nab_paclitaxel": {
+      "tumour_type": "pancreas",
+      "severe_toxicity_rate": 0.86,
+      "ild_rate": null,
+      "source": "Wainberg et al. (2023), NAPOLI 3, grade 3 or higher treatment-emergent adverse events"
+    },
+    "adt_docetaxel": {
+      "tumour_type": "prostate",
+      "severe_toxicity_rate": 0.635,
+      "ild_rate": null,
+      "source": "Smith et al. (2022), ARASENS, placebo arm, grade 3 or 4 adverse events"
+    },
+    "adt_docetaxel_abiraterone": {
+      "tumour_type": "prostate",
+      "severe_toxicity_rate": 0.63,
+      "ild_rate": null,
+      "source": "Fizazi et al. (2022), PEACE-1, grade 3 or worse adverse events"
+    },
+    "adt_docetaxel_darolutamide": {
+      "tumour_type": "prostate",
+      "severe_toxicity_rate": 0.661,
+      "ild_rate": null,
+      "source": "Smith et al. (2022), ARASENS, grade 3 or 4 adverse events"
+    },
+    "lu_psma_617": {
+      "tumour_type": "prostate",
+      "severe_toxicity_rate": 0.527,
+      "ild_rate": null,
+      "source": "Sartor et al. (2021), VISION, grade 3 or higher adverse events"
+    },
+    "olaparib": {
+      "tumour_type": "prostate",
+      "severe_toxicity_rate": 0.51,
+      "ild_rate": null,
+      "source": "de Bono et al. (2020), PROfound, grade 3 or higher adverse events"
+    },
+    "trastuzumab_deruxtecan": {
+      "tumour_type": "breast",
+      "severe_toxicity_rate": 0.526,
+      "ild_rate": 0.121,
+      "source": "Modi et al. (2022), DESTINY-Breast04, grade 3 or higher adverse events and adjudicated drug-related interstitial lung disease or pneumonitis"
+    },
+    "chemotherapy_single_agent": {
+      "tumour_type": "breast",
+      "severe_toxicity_rate": 0.674,
+      "ild_rate": 0.006,
+      "source": "Modi et al. (2022), DESTINY-Breast04, physician's choice arm"
+    },
+    "pembrolizumab_chemotherapy": {
+      "tumour_type": "breast",
+      "severe_toxicity_rate": 0.681,
+      "ild_rate": null,
+      "source": "Cortes et al. (2022), KEYNOTE-355, treatment-related adverse events of grade 3 to 5"
+    }
+  }
+}

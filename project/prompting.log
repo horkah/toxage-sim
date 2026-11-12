@@ -33,3 +33,8 @@ ok, this is stage one. go.
 2026-11-12 18:26 (+01:00) | model: claude-fable-5-2 | attachments: none
 --------------------------------------------------------------------------------
 I have replaced the Wainberg pdf with the published version, and uploaded several from your list. Please update your background material section and extend the report for our purpose. We want also to integrate the relevant us-american and/or european guidelines for the purpose. the main purpose is to derive potential candidates for risk models that help to early identify patients at risk for severe adverse therapy side effects in those three main patient groups under various conditions.
+
+================================================================================
+2026-11-12 18:47 (+01:00) | model: claude-fable-5-2 | attachments: none
+--------------------------------------------------------------------------------
+start with candidate 1 and 2 in the engine, start with simple models first. use a simple schema for the required input data, which can be extended later. keep the data schema somewhere central because we will need it in the app and synthetization projects.
