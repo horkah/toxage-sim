@@ -19,7 +19,7 @@ import models  # noqa: E402
 def evaluate(baseline, outcomes, cfg=None):
     """Return {model name: {"model": summary, "regimen_only": summary,
     "groups": calibration rows, "by_regimen": {regimen: summary}}}."""
-    model = models.RiskModel(cfg)
+    model = models.Scorer(cfg)
     scores = [model.score(p) for p in baseline]
     result = {}
 

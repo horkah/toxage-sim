@@ -17,7 +17,7 @@ from data import toxage_schema  # noqa: E402
 
 
 def score_all(baseline, cfg=None):
-    model = models.RiskModel(cfg)
+    model = models.Scorer(cfg)
     scores = [model.score(p) for p in baseline]
     toxage_schema.validate("risk_score", scores)
     return scores

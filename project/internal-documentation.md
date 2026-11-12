@@ -13,10 +13,10 @@ Technical and organisational details that go beyond the public [README](../READM
 | Folder | Purpose | Status |
 |---|---|---|
 | `background/` | Literature, report, concepts | 28 references, report with ten risk model candidates, 20 PDFs |
-| `schema/` | Central data schema | baseline, observation, event and outcome table (version 0.2.0), risk_score table (version 0.1.0), Python loader, validator, CSV reader and writer |
+| `schema/` | Central data schema | baseline, observation, event and outcome table (version 0.2.1), risk_score table (version 0.1.1), titles for all fields, Python loader, validator, CSV reader and writer |
 | `engine/` | Synthetic data generator | weekly microsimulation for candidates 1 and 2, five subgroups, ten regimens, calibration, tests |
-| `risk-model/` | Toxicity risk model | baseline models for candidates 1 and 2, fitting, evaluation, tests, list of extensions |
-| `app/` | Inspection app | empty |
+| `risk-model/` | Toxicity risk model | common interface, baseline models for candidates 1 and 2, fitting, evaluation, tests, list of extensions |
+| `app/` | Inspection app | Django app with disclaimer, cohort and patient view, filters and charts built from schema and risk models, tests |
 | `project/` | Project management, internal documentation | prompt log, start prompt, this file |
 
 ## Literature
@@ -78,12 +78,21 @@ The copyrighted PDFs must not be in the repository when it becomes public. Befor
 
 ## Risk model
 
-- The risk model has its own configuration in `risk-model/config/models.json` and does not read the engine parameters. Both draw on the same literature.
+- The risk model has its own configuration in `risk-model/config/models.json`. It does not import the engine and does not read its parameters. Both draw on the same literature.
+- `risk-model/toxage_risk.py` is the interface for the app: one class per model with risk, reference risk and factors. The calculations are in `models.py`. A new model is added in both places and then appears in the app without changes there.
 - The engine generates outcomes with a richer process than the risk models assume. The evaluation in `risk-model/README.md` therefore shows how well simple baseline models do on these data. For lung toxicity, engine and risk model use the same published hazard ratios.
 - The risk model is plain Python 3 without further packages, like the engine. Refitting uses its own binomial regression in `glm.py`.
 - Scores go to `risk-model/output/`, which is not under version control.
 - Tests run with `python3 -m unittest discover risk-model/tests`. They generate data with the engine, so a change of the engine can make them fail.
 - Possible extensions are collected in `risk-model/EXTENSIONS.md`. Items are removed there when done.
+
+## App
+
+- The app needs Django and nothing else (`app/requirements.txt`). Pages are Django templates, charts are drawn by a web component in plain JavaScript.
+- `python3 manage.py load_cohort` generates patients with the engine and stores the baseline and outcome records in `app/db.sqlite3`, which is not under version control. Weekly observations and events are not stored yet.
+- Filters and the charts per patient characteristic are built from the schema, the status bar and risk filters from the registered risk models.
+- Tests run in `app/` with `python3 manage.py test explorer` and `node --test "explorer/tests/*.test.mjs"`.
+- The folders `templates/` and `templatetags/` match the pattern `temp*` in `.gitignore`. Two lines there exempt them. Without these lines git leaves the templates out without a warning.
 
 ## Cloud environment
 
@@ -103,4 +112,6 @@ The literature services work from scripts. The publisher hosts answer scripted r
 - Search the literature for unit costs, quality-of-life weights, hospital stays by event grade and participation rates, which the intervention model needs.
 - Pick the next extensions of the engine from the list "Ideas for later" in `engine/README.md`.
 - Extend the risk models, see `risk-model/EXTENSIONS.md`. The detection model for lung toxicity (2.1) can now be built on the weekly observations.
-- Decide on a licence for the repository before it becomes public.
+- Bring the course over time into the app: store and show weekly observations and adverse events.
+- Add the cohort and intervention analytics mode to the app once the intervention model is in the engine.
+- Decide on a licence for the repository before it becomes public. The disclaimer of the app holds preliminary terms of use.

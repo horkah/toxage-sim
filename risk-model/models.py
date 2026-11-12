@@ -163,8 +163,10 @@ def ild_risk(patient, cfg, baseline_risk=None):
 
 # Scores for the app -----------------------------------------------------------
 
-class RiskModel:
-    """Both models with one configuration. Scores follow schema/risk_score."""
+class Scorer:
+    """Both models with one configuration. Writes the scores of a patient as
+    one record of schema/risk_score. The interface for single models, as the
+    app uses it, is in toxage_risk.py."""
 
     def __init__(self, cfg=None):
         self.cfg = cfg or load_config()

@@ -23,7 +23,7 @@ The project works with synthetic data. A data engine generates patients, therapi
 | [background/](background/) | Scientific background: literature list and a report on therapy toxicity |
 | [schema/](schema/) | Central data schema, shared by engine, risk model and app |
 | [engine/](engine/) | Generator for synthetic patient data |
-| [risk-model/](risk-model/) | Toxicity risk model |
+| [risk-model/](risk-model/) | Toxicity risk models with a common interface |
 | [app/](app/) | App to inspect data and risk scores |
 | [project/](project/) | Project management and internal documentation |
 
@@ -42,12 +42,15 @@ The central data schema and the data engine exist:
 
 A first version of the risk models exists:
 
-- [risk-model/](risk-model/) has baseline models for candidates 1 and 2: a logistic model for any severe toxicity within 90 days and a proportional hazards model for lung toxicity under trastuzumab deruxtecan and single-agent chemotherapy. Coefficients come from the literature or are marked as assumptions. Each patient gets a risk, the published rate of the regimen for comparison, a risk category, and the factors behind the risk.
+- [risk-model/](risk-model/) gives all risk models one interface and has baseline models for candidates 1 and 2: a logistic model for any severe toxicity within 90 days and a proportional hazards model for lung toxicity under trastuzumab deruxtecan and single-agent chemotherapy. Coefficients come from the literature or are marked as assumptions. Each patient gets a risk, the published rate of the regimen for comparison, a risk category, and the factors behind the risk.
 - On the synthetic data, the model for severe toxicity ranks patients only slightly better than the published rate of the regimen alone, and the model for lung toxicity clearly better. All data are synthetic, so this says nothing about real patients. [risk-model/EXTENSIONS.md](risk-model/EXTENSIONS.md) lists the next steps, among them the detection model for lung toxicity.
 
 A concept for interventions exists: [background/intervention-model.md](background/intervention-model.md) describes how early detection and prediction, participation, the actions of the care team and their effects on health and costs can be simulated, and how the same cohort can be run through several scenarios for comparison. It is not implemented yet.
 
-The app has no code yet.
+A first app exists:
+
+- [app/](app/) is a web app that shows the cohort and a single patient in relation to it: risk distribution, calibration, time to event by risk group, and observed and predicted rates by patient characteristic. Filters cover every field of the baseline and outcome records and every risk model.
+- The app does not show the course over time yet, and it has no view for comparing interventions.
 
 ## Note
 
