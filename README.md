@@ -40,6 +40,8 @@ The central data schema and the data engine exist:
 - [schema/](schema/) defines four tables: baseline data, weekly observations, adverse events and an outcome summary per patient.
 - [engine/](engine/) is a microsimulation. It follows each synthetic patient week by week for one year: adverse events, dose changes, end of therapy and death, together with blood values, oxygen saturation and reported symptoms. The three tumour types have equal numbers of patients, with subgroups and ten regimens inside. Event rates follow the published trials.
 
+A concept for interventions exists: [background/intervention-model.md](background/intervention-model.md) describes how early detection and prediction, participation, the actions of the care team and their effects on health and costs can be simulated, and how the same cohort can be run through several scenarios for comparison. It is not implemented yet.
+
 The risk model and the app have no code yet.
 
 ## Note

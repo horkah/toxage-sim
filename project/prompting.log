@@ -43,3 +43,14 @@ start with candidate 1 and 2 in the engine, start with simple models first. use 
 2026-11-12 19:22 (+01:00) | model: claude-fable-5-2 | attachments: none
 --------------------------------------------------------------------------------
 ok, now extend the model to become more realistic. think about synthetication patterns that are suitable for a microsimulation study, where individual patients progress over time. think about and define the model variables required, and also think about suitable covariate mechanisms that add realism. stay with medium complexity, and keep ideas for extensions for later. always keep the three main cohorts with the three cancer types in equal numbers in the model. but inside, you must of course differentiate such that different patient subgroups can have different behavior. extend the data schema as needed.
+
+================================================================================
+2026-11-12 19:50 (+01:00) | model: claude-fable-5-2 | attachments: none
+--------------------------------------------------------------------------------
+ok, now conceptually, we also need to model interventions. Our main intervention is early detection or prediction of the risk of adverse therapy side effects in terms of cancer therapy toxicity. what follows from such intervention must be modeled as well based on additional model parameters. the risk model with its parametrization will be added later to the app, once the basic app has been stabilized. 
+
+The effects can include early treatment at lower cost and improved outcome as compared to late detection of the toxicitiy that creates more harm and costs. Think about this for a moment and come up with realistic, reasonable, and useful intervention-effect model components. 
+
+we can then integrate the intervention model into our microsimulation - and create multiple "parallel universes" of how the cohort could have evolved with different interventions in place. these could then be explored in the app later in a cohort and intervention analytics mode.
+
+of course, also include that interventions come with participation rates, dropout (patients that do not show up anymore after diagnosis) etc.

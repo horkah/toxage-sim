@@ -90,6 +90,8 @@ The literature services work from scripts. The publisher hosts answer scripted r
 - Add the PDFs of the eight added guidelines to `background/papers/` and read the six that are not yet covered by a full text.
 - Extend the literature to the topics in section 9 of the report, first of all published prediction models and the evidence for home measurements.
 - Replace the assumed parameters of the engine by literature values where possible, see the table "Basis of the parameters" in `engine/README.md`.
+- Integrate the intervention model into engine and schema, in the order given in section 6 of `background/intervention-model.md`. The real risk model is added after the basic app is stable; until then a stand-in with adjustable performance is used.
+- Search the literature for unit costs, quality-of-life weights, hospital stays by event grade and participation rates, which the intervention model needs.
 - Pick the next extensions of the engine from the list "Ideas for later" in `engine/README.md`.
 - Build the first risk models on the generated data.
 - Decide on a licence for the repository before it becomes public.
