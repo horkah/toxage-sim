@@ -1,0 +1,132 @@
+"""Refit the coefficients of both models on data.
+
+Usage: python3 risk-model/fit.py --data engine/output --out risk-model/output/fitted.json
+
+The result has the same format as config/models.json and can be used in its
+place. It keeps the model structure and replaces the numbers by estimates
+from the data. The 95% confidence intervals are added for information.
+"""
+import argparse
+import copy
+import json
+import math
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import data  # noqa: E402
+import glm  # noqa: E402
+import models  # noqa: E402
+
+
+def _ci(coef, se):
+    return [round(math.exp(coef - 1.96 * se), 4), round(math.exp(coef + 1.96 * se), 4)]
+
+
+def fit_severe_toxicity(baseline, outcomes, cfg):
+    """Logistic model: one intercept per regimen, then age, ECOG, geriatric domains."""
+    m = cfg["severe_toxicity_90d"]
+    regimens = [r for r in m["regimen_rates"] if any(p["regimen"] == r for p in baseline)]
+    ref_age = m["reference_patient"]["age_years"]
+    x, y = [], []
+    for p in baseline:
+        if p["regimen"] not in regimens:
+            continue
+        row = [1.0 if p["regimen"] == r else 0.0 for r in regimens]
+        row += [
+            (p["age_years"] - ref_age) / 10,
+            1.0 if p["ecog"] >= 2 else 0.0,
+            float(p["ga_impaired_domains"] or 0),
+        ]
+        x.append(row)
+        y.append(int(outcomes[p["patient_id"]]["severe_toxicity_90d"]))
+    result = glm.fit(x, y, link="logit")
+    coef, se = result["coefficients"], result["standard_errors"]
+    k = len(regimens)
+    fitted = {}
+    for i, r in enumerate(regimens):
+        fitted[r] = {
+            "rate": 1 / (1 + math.exp(-coef[i])),
+            "source": "fitted",
+        }
+    names = ["per_10_years_of_age", "ecog_2_or_higher", "per_impaired_ga_domain"]
+    ratios = {
+        name: {"value": math.exp(coef[k + j]), "ci95": _ci(coef[k + j], se[k + j]), "basis": "fitted"}
+        for j, name in enumerate(names)
+    }
+    return fitted, ratios
+
+
+def fit_ild(baseline, outcomes, cfg):
+    """Proportional hazards model as binomial regression with cloglog link:
+    one intercept per regimen, then the log hazard ratios."""
+    regimens = [r for r in cfg["ild"]["regimen_rates"] if any(p["regimen"] == r for p in baseline)]
+    factors = list(models.ILD_FACTORS)
+    x, y = [], []
+    for p in baseline:
+        if p["regimen"] not in regimens:
+            continue
+        row = [1.0 if p["regimen"] == r else 0.0 for r in regimens]
+        row += [1.0 if models.ILD_FACTORS[f](p) else 0.0 for f in factors]
+        x.append(row)
+        y.append(int(outcomes[p["patient_id"]]["ild"]))
+    rates = []
+    for i, r in enumerate(regimens):
+        group = [yi for row, yi in zip(x, y) if row[i]]
+        rates.append(sum(group) / len(group))
+    start = [math.log(-math.log(1 - min(max(rt, 0.001), 0.9))) for rt in rates]
+    start += [0.0] * len(factors)
+    result = glm.fit(x, y, link="cloglog", start=start)
+    coef, se = result["coefficients"], result["standard_errors"]
+    k = len(regimens)
+    fitted = {}
+    for i, r in enumerate(regimens):
+        fitted[r] = {
+            "rate": rates[i],
+            "baseline_risk": 1 - math.exp(-math.exp(coef[i])),
+            "source": "fitted; rate is the observed rate in the data",
+        }
+    ratios = {
+        f: {"value": math.exp(coef[k + j]), "ci95": _ci(coef[k + j], se[k + j]), "basis": "fitted"}
+        for j, f in enumerate(factors)
+    }
+    return fitted, ratios
+
+
+def fit(baseline, outcomes, cfg=None, label="data"):
+    """Return a new configuration with coefficients estimated from the data."""
+    cfg = copy.deepcopy(cfg or models.load_config())
+    rates, ratios = fit_severe_toxicity(baseline, outcomes, cfg)
+    cfg["severe_toxicity_90d"]["regimen_rates"] = rates
+    cfg["severe_toxicity_90d"]["odds_ratios"] = ratios
+    rates, ratios = fit_ild(baseline, outcomes, cfg)
+    cfg["ild"]["regimen_rates"] = rates
+    cfg["ild"]["hazard_ratios"] = ratios
+    cfg["version"] = cfg["version"] + "+fit"
+    cfg["basis"] = f"fitted on {label} ({len(baseline)} patients); categories and grade share unchanged"
+    return cfg
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--data", required=True, help="folder with baseline.csv and outcome.csv")
+    parser.add_argument("--out", required=True, help="output JSON file")
+    args = parser.parse_args()
+
+    baseline, outcomes = data.load(args.data)
+    cfg = fit(baseline, outcomes, label=args.data)
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, indent=2)
+
+    print(f"fitted on {len(baseline)} patients, written to {out}")
+    for model, key in (("severe_toxicity_90d", "odds_ratios"), ("ild", "hazard_ratios")):
+        print(f"\n{model}: {key}")
+        for name, v in cfg[model][key].items():
+            print(f"  {name:<36}{v['value']:>7.2f}  (95% CI {v['ci95'][0]:.2f}-{v['ci95'][1]:.2f})")
+
+
+if __name__ == "__main__":
+    main()

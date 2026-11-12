@@ -1,0 +1,79 @@
+{
+  "description": "Configuration of the risk models for candidates 1 and 2. Every value states its basis: a literature value or an assumption of this project. This file is kept separate from the engine configuration on purpose, so that the risk model does not read the parameters that generated the data.",
+  "version": "0.1.0",
+  "basis": "literature and assumptions",
+  "severe_toxicity_90d": {
+    "description": "Candidate 1. Logistic model. The regimen rate is the risk of the reference patient; odds ratios shift the risk for patient factors.",
+    "reference_patient": {
+      "age_years": 65,
+      "ecog": "0 or 1",
+      "ga_impaired_domains": 0
+    },
+    "regimen_rates": {
+      "nalirifox": {"rate": 0.87, "source": "Wainberg et al. (2023), NAPOLI 3"},
+      "gemcitabine_nab_paclitaxel": {"rate": 0.86, "source": "Wainberg et al. (2023), NAPOLI 3"},
+      "adt_docetaxel": {"rate": 0.635, "source": "Smith et al. (2022), ARASENS, placebo arm"},
+      "adt_docetaxel_abiraterone": {"rate": 0.63, "source": "Fizazi et al. (2022), PEACE-1"},
+      "adt_docetaxel_darolutamide": {"rate": 0.661, "source": "Smith et al. (2022), ARASENS"},
+      "lu_psma_617": {"rate": 0.527, "source": "Sartor et al. (2021), VISION"},
+      "olaparib": {"rate": 0.51, "source": "de Bono et al. (2020), PROfound"},
+      "trastuzumab_deruxtecan": {"rate": 0.526, "source": "Modi et al. (2022), DESTINY-Breast04"},
+      "chemotherapy_single_agent": {"rate": 0.674, "source": "Modi et al. (2022), DESTINY-Breast04, physician's choice arm"},
+      "pembrolizumab_chemotherapy": {"rate": 0.681, "source": "Cortes et al. (2022), KEYNOTE-355, treatment-related"}
+    },
+    "odds_ratios": {
+      "per_10_years_of_age": {
+        "value": 1.2,
+        "basis": "assumption; together with the geriatric odds ratio it reproduces about 71% severe toxicity for the average GAP70+ patient (Mohile et al., 2021)"
+      },
+      "ecog_2_or_higher": {
+        "value": 2.0,
+        "basis": "assumption; performance status is a selection criterion in Conroy et al. (2023) and Sohal et al. (2020), without an effect size"
+      },
+      "per_impaired_ga_domain": {
+        "value": 1.1,
+        "basis": "assumption; see per_10_years_of_age"
+      }
+    },
+    "categories": {
+      "intermediate_from": 0.5,
+      "high_from": 0.7,
+      "basis": "assumption; 0.7 is close to the 71% of the usual-care arm in GAP70+ (Mohile et al., 2021), 0.5 close to the 51% of its intervention arm"
+    }
+  },
+  "ild": {
+    "description": "Candidate 2. Proportional hazards model: risk = 1 - (1 - r0)^HR, with r0 the risk of a patient without risk factors and HR the product of the hazard ratios that apply. r0 is set so that the mean risk in the reference population equals the regimen rate.",
+    "window_days": 730,
+    "regimen_rates": {
+      "trastuzumab_deruxtecan": {"rate": 0.121, "source": "Modi et al. (2022), DESTINY-Breast04, adjudicated drug-related"},
+      "chemotherapy_single_agent": {"rate": 0.006, "source": "Modi et al. (2022), DESTINY-Breast04, physician's choice arm"}
+    },
+    "hazard_ratios": {
+      "age_below_65": {"value": 1.56, "basis": "Powell et al. (2022), Figure 2B"},
+      "lung_comorbidity": {"value": 1.75, "basis": "Powell et al. (2022), Figure 2B"},
+      "renal_mild_decrease": {"value": 1.24, "basis": "Powell et al. (2022), Figure 2B"},
+      "renal_moderate_severe_decrease": {"value": 2.73, "basis": "Powell et al. (2022), Figure 2B"},
+      "more_than_4_years_since_diagnosis": {"value": 1.82, "basis": "Powell et al. (2022), Figure 2B"},
+      "spo2_below_95": {"value": 2.14, "basis": "Powell et al. (2022), Figure 2B"}
+    },
+    "reference_population": {
+      "description": "Share of patients with each risk factor, used to set r0. Factors are treated as independent.",
+      "age_below_65": 0.656,
+      "lung_comorbidity": 0.070,
+      "renal_mild_decrease": 0.407,
+      "renal_moderate_severe_decrease": 0.174,
+      "more_than_4_years_since_diagnosis": 0.392,
+      "spo2_below_95": 0.050,
+      "basis": "Powell et al. (2022), Table 2 and Figure 2B: 754 of 1150 under 65, 81 of 1150 with lung comorbidity, 458 and 196 of 1124 with mild and moderate or severe renal decrease, 403 of 1027 more than 4 years since diagnosis, 57 of 1137 with SpO2 below 95%"
+    },
+    "grade2plus_share": {
+      "value": 0.711,
+      "basis": "Modi et al. (2022): 32 of 45 events of grade 2 or higher; assumed to be the same for all patients"
+    },
+    "categories": {
+      "intermediate_from": 0.05,
+      "high_from": 0.15,
+      "basis": "assumption; 0.15 is close to the 15.4% incidence in Powell et al. (2022)"
+    }
+  }
+}

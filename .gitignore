@@ -3,4 +3,5 @@ temp*
 bak*
 *bak.*
 engine/output/
+risk-model/output/
 __pycache__/

@@ -58,7 +58,7 @@
       "renal_moderate_severe_decrease": 2.73,
       "more_than_4_years_since_diagnosis": 1.82,
       "spo2_below_95": 2.14,
-      "basis": "Powell et al. (2022), multivariable Cox model, Figure 3B"
+      "basis": "Powell et al. (2022), multivariable Cox model, Figure 2B"
     },
     "onset_days": {
       "median": 129,

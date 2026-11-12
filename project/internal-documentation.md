@@ -13,9 +13,9 @@ Technical and organisational details that go beyond the public [README](../READM
 | Folder | Purpose | Status |
 |---|---|---|
 | `background/` | Literature, report, concepts | 28 references, report with ten risk model candidates, 20 PDFs |
-| `schema/` | Central data schema | version 0.1.0: baseline and outcome table, Python loader and validator |
+| `schema/` | Central data schema | version 0.1.0: baseline, outcome and risk_score table, Python loader, validator, CSV reader and writer |
 | `engine/` | Synthetic data generator | simple models for candidates 1 and 2, ten regimens, tests |
-| `risk-model/` | Toxicity risk model | empty |
+| `risk-model/` | Toxicity risk model | baseline models for candidates 1 and 2, fitting, evaluation, tests, list of extensions |
 | `app/` | Inspection app | empty |
 | `project/` | Project management, internal documentation | prompt log, start prompt, this file |
 
@@ -74,6 +74,14 @@ The copyrighted PDFs must not be in the repository when it becomes public. Befor
 - Generated data go to `engine/output/`, which is not under version control. Data are reproduced from the seed.
 - Tests run with `python3 -m unittest discover engine/tests`.
 
+## Risk model
+
+- The risk model has its own configuration in `risk-model/config/models.json` and does not read the engine parameters. Both draw on the same literature, so the literature configuration fits the current synthetic data almost perfectly. This is a check of the code, not a validation.
+- The risk model is plain Python 3 without further packages, like the engine. Refitting uses its own binomial regression in `glm.py`.
+- Scores go to `risk-model/output/`, which is not under version control.
+- Tests run with `python3 -m unittest discover risk-model/tests`. They generate data with the engine.
+- Possible extensions are collected in `risk-model/EXTENSIONS.md`. Items are removed there when done.
+
 ## Cloud environment
 
 Sessions for this repository run in the cloud environment `toxage-sim`. Its network allows the package registries and these hosts:
@@ -89,5 +97,5 @@ The literature services work from scripts. The publisher hosts answer scripted r
 - Extend the literature to the topics in section 9 of the report, first of all published prediction models and the evidence for home measurements.
 - Replace the assumed parameters of the engine by literature values where possible: effects of age, performance status and geriatric impairments on severe toxicity, and the age distributions per regimen.
 - Add measurements during therapy to schema and engine, so that detection models become possible.
-- Build the first risk models on the generated data.
+- Give the engine scenarios that deviate from the risk model, so that evaluation becomes meaningful (`risk-model/EXTENSIONS.md`, B.1).
 - Decide on a licence for the repository before it becomes public.

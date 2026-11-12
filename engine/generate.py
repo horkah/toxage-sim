@@ -3,7 +3,6 @@
 Usage: python3 engine/generate.py --n 5000 --seed 1 --out engine/output
 """
 import argparse
-import csv
 import json
 import random
 import sys
@@ -55,23 +54,6 @@ def generate(n, seed):
     return baseline, outcomes, metadata
 
 
-def _cell(value):
-    if value is None:
-        return ""
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    return value
-
-
-def write_csv(path, table, records):
-    names = toxage_schema.fields(table)
-    with open(path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(names)
-        for record in records:
-            writer.writerow([_cell(record[name]) for name in names])
-
-
 def summary(baseline, outcomes):
     """Return rows (regimen, n, severe toxicity rate, lung toxicity rate)."""
     by_id = {o["patient_id"]: o for o in outcomes}
@@ -98,8 +80,8 @@ def main():
     baseline, outcomes, metadata = generate(args.n, args.seed)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    write_csv(out / "baseline.csv", "baseline", baseline)
-    write_csv(out / "outcome.csv", "outcome", outcomes)
+    toxage_schema.write_csv(out / "baseline.csv", "baseline", baseline)
+    toxage_schema.write_csv(out / "outcome.csv", "outcome", outcomes)
     with open(out / "metadata.json", "w", encoding="utf-8") as f:
         json.dump(metadata, f, indent=2)
 
