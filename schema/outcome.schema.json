@@ -2,25 +2,43 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "toxage-sim/outcome",
   "title": "Outcome record",
-  "description": "Toxicity outcomes of one patient after therapy start. One record per patient, linked to the baseline record by patient_id. Days count from therapy start (day 1).",
-  "version": "0.1.0",
+  "description": "Summary of the course of one patient, derived from the event and observation records. One record per patient. Days count from therapy start (day 1).",
+  "version": "0.2.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "patient_id", "severe_toxicity_90d", "severe_toxicity_day",
-    "ild", "ild_onset_day", "ild_grade"
+    "patient_id",
+    "follow_up_days",
+    "severe_toxicity_90d",
+    "severe_toxicity_day",
+    "ild",
+    "ild_onset_day",
+    "ild_diagnosis_day",
+    "ild_grade",
+    "treatment_end_day",
+    "treatment_end_reason",
+    "death_day"
   ],
   "properties": {
     "patient_id": {
       "type": "string",
-      "description": "Identifier of the patient, as in the baseline record."
+      "description": "Unique identifier of the patient."
+    },
+    "follow_up_days": {
+      "type": "integer",
+      "minimum": 1,
+      "unit": "days",
+      "description": "Length of follow-up: until death or the end of the simulated period."
     },
     "severe_toxicity_90d": {
       "type": "boolean",
-      "description": "At least one adverse event of CTCAE grade 3 to 5 within 90 days of therapy start."
+      "description": "At least one adverse event of CTCAE grade 3 to 5 recognised within 90 days of therapy start."
     },
     "severe_toxicity_day": {
-      "type": ["integer", "null"],
+      "type": [
+        "integer",
+        "null"
+      ],
       "minimum": 1,
       "maximum": 90,
       "unit": "days",
@@ -28,20 +46,63 @@
     },
     "ild": {
       "type": "boolean",
-      "description": "Drug-related interstitial lung disease or pneumonitis of any grade within 730 days of therapy start."
+      "description": "Drug-related interstitial lung disease or pneumonitis of any grade that started during follow-up."
     },
     "ild_onset_day": {
-      "type": ["integer", "null"],
+      "type": [
+        "integer",
+        "null"
+      ],
       "minimum": 1,
-      "maximum": 730,
       "unit": "days",
-      "description": "Day of onset of interstitial lung disease or pneumonitis. Null if there was none."
+      "description": "Day on which the interstitial lung disease or pneumonitis actually started. Null if there was none."
+    },
+    "ild_diagnosis_day": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "unit": "days",
+      "description": "Day on which it was recognised. Null if there was none or if it was not recognised during follow-up."
     },
     "ild_grade": {
-      "type": ["integer", "null"],
+      "type": [
+        "integer",
+        "null"
+      ],
       "minimum": 1,
       "maximum": 5,
       "description": "Highest CTCAE grade of the interstitial lung disease or pneumonitis. Null if there was none."
+    },
+    "treatment_end_day": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "unit": "days",
+      "description": "Day on which the therapy ended. Null if it was still ongoing at the end of follow-up."
+    },
+    "treatment_end_reason": {
+      "type": "string",
+      "enum": [
+        "ongoing",
+        "progression",
+        "toxicity",
+        "completed",
+        "death"
+      ],
+      "description": "Why the therapy ended."
+    },
+    "death_day": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "unit": "days",
+      "description": "Day of death. Null if the patient was alive at the end of follow-up."
     }
   }
 }
