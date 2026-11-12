@@ -4,11 +4,12 @@ The schema files in this folder are the single source for field names, types
 and allowed values. This module loads them and checks records against them.
 It needs only the Python standard library.
 """
+import csv
 import json
 from pathlib import Path
 
 SCHEMA_DIR = Path(__file__).resolve().parent
-TABLES = ("baseline", "observation", "event", "outcome")
+TABLES = ("baseline", "observation", "event", "outcome", "risk_score")
 
 _TYPES = {
     "string": lambda v: isinstance(v, str),
@@ -78,3 +79,49 @@ def validate(table, records):
         found = errors(table, record, schema)
         if found:
             raise ValueError(f"{table} record {i}: " + "; ".join(found))
+
+
+def _to_cell(value):
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return value
+
+
+def _from_cell(text, spec):
+    types = spec.get("type", [])
+    types = [types] if isinstance(types, str) else types
+    if text == "" and "null" in types:
+        return None
+    if "boolean" in types:
+        if text not in ("true", "false"):
+            raise ValueError(f"{text!r} is not true or false")
+        return text == "true"
+    if "integer" in types:
+        return int(text)
+    if "number" in types:
+        return float(text)
+    return text
+
+
+def write_csv(path, table, records):
+    """Write records of a table as CSV, with the field names as header."""
+    names = fields(table)
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(names)
+        for record in records:
+            writer.writerow([_to_cell(record[name]) for name in names])
+
+
+def read_csv(path, table):
+    """Read a CSV file of a table and return typed, validated records."""
+    props = load(table)["properties"]
+    with open(path, newline="", encoding="utf-8") as f:
+        records = [
+            {name: _from_cell(text, props[name]) for name, text in row.items()}
+            for row in csv.DictReader(f)
+        ]
+    validate(table, records)
+    return records

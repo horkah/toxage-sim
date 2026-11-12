@@ -34,7 +34,7 @@ class EngineTest(unittest.TestCase):
 
     def test_records_follow_schema(self):
         small = generate.generate(600, seed=2)
-        for table in toxage_schema.TABLES:
+        for table in generate.TABLES:
             self.assertTrue(small[table])
 
     def test_config_matches_schema(self):
