@@ -40,7 +40,12 @@ The central data schema and a first version of the data engine exist:
 - [schema/](schema/) defines a baseline record and an outcome record per patient.
 - [engine/](engine/) generates synthetic patients for ten regimens with two outcomes: any severe toxicity within 90 days, and lung toxicity. The models are simple and use published rates and risk factors where available.
 
-The risk model and the app have no code yet.
+A first version of the risk models exists:
+
+- [risk-model/](risk-model/) has baseline models for candidates 1 and 2: a logistic model for any severe toxicity within 90 days and a proportional hazards model for lung toxicity under trastuzumab deruxtecan and single-agent chemotherapy. Coefficients come from the literature or are marked as assumptions. Each patient gets a risk, the published rate of the regimen for comparison, a risk category, and the factors behind the risk.
+- Engine and risk model share the same literature basis, so tests on the current synthetic data check the code, not the medicine. [risk-model/EXTENSIONS.md](risk-model/EXTENSIONS.md) lists the next steps, among them the detection model for lung toxicity.
+
+The app has no code yet.
 
 ## Note
 

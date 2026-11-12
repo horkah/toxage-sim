@@ -38,3 +38,8 @@ I have replaced the Wainberg pdf with the published version, and uploaded severa
 2026-11-12 18:47 (+01:00) | model: claude-fable-5-2 | attachments: none
 --------------------------------------------------------------------------------
 start with candidate 1 and 2 in the engine, start with simple models first. use a simple schema for the required input data, which can be extended later. keep the data schema somewhere central because we will need it in the app and synthetization projects.
+
+================================================================================
+2026-11-12 19:28 (+01:00) | model: not recorded | attachments: none
+--------------------------------------------------------------------------------
+start developing a simple risk model based on the literature research that was done in background/ for candidates 1 and 2. keep track of possible extensions of these two risk models for later. these risk models will later be used based on simulated data, and the risk scores will be shown in our app (to be developed).
