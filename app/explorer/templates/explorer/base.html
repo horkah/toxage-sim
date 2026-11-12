@@ -1,0 +1,58 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}toxage-sim explorer{% endblock %}</title>
+  <script>
+    try {
+      for (const key of ["theme", "textsize"]) {
+        const value = localStorage.getItem("toxage-" + key);
+        if (value) document.documentElement.dataset[key] = value;
+      }
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="{% static 'explorer/style.css' %}">
+  <script type="module" src="{% static 'explorer/app.js' %}"></script>
+  <script type="module" src="{% static 'explorer/charts.js' %}"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{% url 'explorer' %}">toxage-sim <span>explorer</span></a>
+    {% block tools %}{% endblock %}
+    {% block menu %}
+    <details class="menu">
+      <summary aria-label="Menu"><span class="burger" aria-hidden="true"></span></summary>
+      <nav class="menu-panel">
+        <h3>Navigate</h3>
+        <a href="{% url 'explorer' %}">Cohort overview</a>
+        <a href="{% url 'random' %}">Random patient</a>
+        <a href="{% url 'disclaimer' %}">Disclaimer and licence</a>
+        <h3>Settings</h3>
+        <fieldset class="setting" data-setting="theme">
+          <legend>Theme</legend>
+          <label><input type="radio" name="theme" value=""> system</label>
+          <label><input type="radio" name="theme" value="light"> bright</label>
+          <label><input type="radio" name="theme" value="dark"> dark</label>
+        </fieldset>
+        <fieldset class="setting" data-setting="textsize">
+          <legend>Text size</legend>
+          <label><input type="radio" name="textsize" value=""> normal</label>
+          <label><input type="radio" name="textsize" value="large"> large</label>
+        </fieldset>
+        <form method="post" action="{% url 'revoke' %}">{% csrf_token %}
+          <button type="submit" class="link">Show the disclaimer again</button>
+        </form>
+        {% block menu_about %}{% endblock %}
+      </nav>
+    </details>
+    {% endblock %}
+  </header>
+  {% block status %}{% endblock %}
+  <main>{% block content %}{% endblock %}</main>
+  <footer class="statusbar">
+    <span>Synthetic data only. Demonstrator, not a medical device, not for clinical use.</span>
+    {% block footer %}{% endblock %}
+  </footer>
+</body>
+</html>
