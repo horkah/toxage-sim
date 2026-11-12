@@ -1,0 +1,20 @@
+this repo starts in one folder with scientific background and concepts, in another with an engine generating synthetic data, from simple to later sophisticated, in another folder a risk model based on clinical and other personalized (synthetic) data, and in another folder an app to inspect data and risk scores, both individual and population based, and combined (relation to reference population)
+a fifth folder project/ is our project management structure, where including this first prompt one prompting.log catches all our prompts. just by prompt text, potential attachments, selected model and date-time. not more to keep it rather short and easy to overview.
+our three first patient groups are
+pancreas cancer
+prostate cancer
+breast cancer
+with advanced disease at different stages, starting from a level of systemic, chemo and/or immune therapies that have a risk of toxicity burden.
+the project goal is to predict or detect early toxicity from cancer therapies better than with the current state of the clinical care.
+we start with 
+so we start with the prompting.log and then with a web research:
+seek approx. 10-20 scientific papers, exclusively high-impact international journal papers, from the last 6 years
+on such kind of toxocity in the patient group as described above, knowledge about toxicity risks, or statistics about toxicity
+covering all three patient groups, and possibly a wider spectrum of relevant therapies
+start a references.md with APA style reference citations.
+Those pdfs that are free from the publisher you can download directly in our background folder. the others I will get later from our unversity account
+Then also write a report covering the relevant knowledge from those references, also as .md file, which we can extend later.
+then also start writing a README.md, which is for the rest of the world who might be initerested in our project and reserach (once we made it public)
+and in our project management folder internal documentation that goes beyond public interest and outreach, because it is more technical or lengthy.
+but in all such documentation, always only cover the current status and never speak about old stories. those are exclusively found in the git commit logs and older versions.
+ok, this is stage one. go.
