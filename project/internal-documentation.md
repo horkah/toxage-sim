@@ -12,7 +12,7 @@ Technical and organisational details that go beyond the public [README](../READM
 
 | Folder | Purpose | Status |
 |---|---|---|
-| `background/` | Literature, report, concepts | 20 references, report on therapy toxicity, 2 PDFs |
+| `background/` | Literature, report, concepts | 28 references, report with ten risk model candidates, 20 PDFs |
 | `engine/` | Synthetic data generator | empty |
 | `risk-model/` | Toxicity risk model | empty |
 | `app/` | Inspection app | empty |
@@ -22,7 +22,14 @@ Technical and organisational details that go beyond the public [README](../READM
 
 ### Selection
 
-The 20 references cover the three patient groups and the main therapy classes: combination chemotherapy, taxanes, androgen deprivation and androgen receptor inhibitors, PARP inhibitors, radioligand therapy, antibody–drug conjugates, checkpoint inhibitors, and CDK4/6 inhibitors. They are ten phase 3 trials, two cluster-randomised trials, one pooled safety analysis, one meta-analysis, one review and five guidelines, from The New England Journal of Medicine, The Lancet, JAMA, JAMA Network Open, Journal of Clinical Oncology, Annals of Oncology, European Heart Journal, Nature Reviews Clinical Oncology and ESMO Open.
+The first 20 references cover the three patient groups and the main therapy classes: combination chemotherapy, taxanes, androgen deprivation and androgen receptor inhibitors, PARP inhibitors, radioligand therapy, antibody–drug conjugates, checkpoint inhibitors, and CDK4/6 inhibitors. They are ten phase 3 trials, two cluster-randomised trials, one pooled safety analysis, one meta-analysis, one review and five guidelines, from The New England Journal of Medicine, The Lancet, JAMA, JAMA Network Open, Journal of Clinical Oncology, Annals of Oncology, European Heart Journal, Nature Reviews Clinical Oncology and ESMO Open.
+
+Eight further guidelines were added for the derivation of risk models:
+
+- Treatment guidelines that define the therapy settings: ASCO on metastatic pancreatic cancer, ASCO and EAU on advanced prostate cancer, ESMO on metastatic breast cancer.
+- Guidelines on risk assessment and monitoring: ASCO on older patients, ASCO on venous thromboembolism, ASCO and IDSA on febrile neutropenia, ESMO on patient-reported outcome measures.
+
+The febrile neutropenia guideline is from 2018 and so older than the six-year window of the first selection.
 
 Section 9 of the report lists the topics that the references do not cover.
 
@@ -34,30 +41,30 @@ Section 9 of the report lists the topics that the references do not cover.
 
 ### Sources for the report
 
-The report uses full texts where they are available through the PubMed Central article datasets, and abstracts from PubMed otherwise. The table "Full texts" in `background/references.md` shows the source for each paper. Numbers in the report are taken from these texts only.
+The report uses the PDFs in `background/papers/`, converted to text with `pdftotext`. For references without a PDF it uses the accepted manuscript from the PubMed Central article datasets where one exists, and the PubMed abstract otherwise. The table "Full texts" in `background/references.md` shows the source for each reference. Numbers in the report are taken from these texts only.
 
-Three guidelines (Conroy 2023, Haanen 2022, Lyon 2022) have no abstract in PubMed and no accessible full text. The report names their scope but does not use their content.
+Sections 2 to 7 of the report state what the sources say. Section 8, the risk model candidates, is our own derivation and is marked as such.
+
+Limits of the current reading:
+
+- The two longest guidelines (Lyon 2022 with 133 pages, Schneider 2021 with 64 pages) were read in selected sections.
+- The online supplements of the papers are not in the repository. This affects Haanen 2022 most, where baseline screening and details on several organs are in the supplement.
+- In the text extracted from Conroy 2023, the signs "≥" and "≤" are lost. The thresholds for Karnofsky score and bilirubin in section 3 of the report follow from the wording of the neighbouring recommendations.
 
 ### PDFs
 
-| PDF status | Count | Papers |
-|---|---|---|
-| In `background/papers/` | 2 | Powell 2022 (publisher version), Wainberg 2023 (accepted manuscript) |
-| Free, to be downloaded by hand | 1 | Nichetti 2024 (open access) |
-| Usually free on the journal website, to be checked | 5 | Conroy 2023, Haanen 2022, Lyon 2022, Schneider 2021, Loprinzi 2020 |
-| Free accepted manuscript or full text in PubMed Central, publisher PDF via university account | 5 | Basch 2022, Modi 2022, Mohile 2021, Sartor 2021, Smith 2022 |
-| University account needed | 7 | Bardia 2021, Cortes 2022, de Bono 2020, Fizazi 2022, Hortobagyi 2022, Shore 2020, Tarantino 2023 |
+All 20 PDFs of the first selection are in `background/papers/`. File names follow the pattern `<first author>-<year>-<publisher file name>.pdf`. The file of Haanen 2022 is spelled `Haanan-…` .
+
+The PDFs of the eight added guidelines are missing: Dale 2023, Di Maio 2022, Gennari 2021, Key 2020, Sohal 2020, Taplitz 2018, Tilki 2024, Virgo 2021.
 
 Automated download is limited because the publisher websites and the Europe PMC website block scripted access. The only automated source for PDFs is the PubMed Central article dataset on AWS (`pmc-oa-opendata`), which holds PDFs only for articles with an open licence.
 
-File names in `background/papers/` follow the pattern `<first author><year>_<short title>.pdf`.
-
 ### Licences of the stored PDFs
 
-- Powell 2022: CC BY. May be redistributed.
-- Wainberg 2023 (accepted manuscript): CC BY-NC-ND. May be redistributed unchanged for non-commercial use.
+- Powell 2022 and Nichetti 2024 are open access under CC BY and may be redistributed.
+- All other PDFs are publisher versions under publisher copyright, obtained through the university account or free to read on the journal website.
 
-PDFs from the university account are under publisher copyright. They must not be in the repository when it becomes public. Before publication, `background/papers/` has to be reduced to openly licensed files, and the git history has to be checked for the others.
+The copyrighted PDFs must not be in the repository when it becomes public. Before publication, `background/papers/` has to be reduced to openly licensed files, and the PDFs have to be removed from the git history as well.
 
 ## Cloud environment
 
@@ -70,7 +77,7 @@ The literature services work from scripts. The publisher hosts answer scripted r
 
 ## Open points
 
-- Add the missing PDFs to `background/papers/`.
-- Read the three guidelines and add their content to the report (section 7 of the report).
-- Extend the literature to the topics in section 9 of the report, first of all prediction models and early detection.
+- Add the PDFs of the eight added guidelines to `background/papers/` and read the six that are not yet covered by a full text.
+- Extend the literature to the topics in section 9 of the report, first of all published prediction models and the evidence for home measurements.
+- Choose the first risk models to build. The report proposes candidate 1 (any severe toxicity in the first three months) and candidate 2 (lung toxicity), see section 8 of the report.
 - Decide on a licence for the repository before it becomes public.

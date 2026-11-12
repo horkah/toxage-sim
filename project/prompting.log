@@ -28,3 +28,8 @@ then also start writing a README.md, which is for the rest of the world who migh
 and in our project management folder internal documentation that goes beyond public interest and outreach, because it is more technical or lengthy.
 but in all such documentation, always only cover the current status and never speak about old stories. those are exclusively found in the git commit logs and older versions.
 ok, this is stage one. go.
+
+================================================================================
+2026-11-12 18:26 (+01:00) | model: claude-fable-5-2 | attachments: none
+--------------------------------------------------------------------------------
+I have replaced the Wainberg pdf with the published version, and uploaded several from your list. Please update your background material section and extend the report for our purpose. We want also to integrate the relevant us-american and/or european guidelines for the purpose. the main purpose is to derive potential candidates for risk models that help to early identify patients at risk for severe adverse therapy side effects in those three main patient groups under various conditions.

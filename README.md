@@ -30,8 +30,9 @@ The project works with synthetic data. A data engine generates patients, therapi
 
 The scientific background is in place:
 
-- [background/references.md](background/references.md) lists 20 papers from high-impact journals on toxicity in the three patient groups.
-- [background/toxicity-report.md](background/toxicity-report.md) summarises their findings: how often severe toxicity occurs with which therapy, when it starts, who is at risk, and where early detection can gain time.
+- [background/references.md](background/references.md) lists 28 sources: 20 papers from high-impact journals on toxicity in the three patient groups and 8 further clinical guidelines from the US and Europe.
+- [background/toxicity-report.md](background/toxicity-report.md) summarises their findings: how often severe toxicity occurs with which therapy, when it starts, who is at risk, and what guidelines ask for in risk assessment and monitoring.
+- The report derives ten candidates for risk models, from a general model for severe toxicity in the first three months of a therapy line to specific models for lung toxicity, neutropenia, diarrhoea, cardiovascular events and others.
 
 The data engine, the risk model and the app have no code yet.
 
