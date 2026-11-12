@@ -90,3 +90,20 @@ please merge the claude/confident-hypatia-at85tk branch into main. in case of co
 2026-11-12 20:50 (+01:00) | model: claude-fable-5-2 | attachments: none
 --------------------------------------------------------------------------------
 please merge the claude/focused-edison-25yqls branch into main. in case of conflicts, analyze these and find the appropriate, forward looking, and clean solution.
+
+================================================================================
+2026-11-12 21:12 (+01:00) | model: claude-fable-5-2 | attachments: none
+--------------------------------------------------------------------------------
+now implement and integrate the intervention model into the engine and app, also simulate more than 52 weeks of course. we need long-term simulations until death or a stopping time, such as 10 years. the app should have the suitable functions to display the time-resolved data and intervention effects.
+
+everything always in main for this repo.
+
+================================================================================
+2026-11-12 21:50 (+01:00) | model: claude-fable-5-2 | attachments: none
+--------------------------------------------------------------------------------
+bitte bereite die app als docker container deployment vor, und überlege ein leichtgewichtiges und doch gut funktionales datenbankschema. ich kann mir sqlite als technologie in dem docker vorstellen, bei dem die daten sauber auf SDD gehalten werden. aber du darfst auch andere begründete verianten wählen, wenn die besser passen. die daten sollen ebenfalls von der app ausgehend generiert, inspiziert und sinnvoll in teilen oder ganz gelöscht werden können. bitte stelle sicher, dass alle aspekte des projekts stets durch geeignete subscreens und menüführungen über die app erreichbar sind, also auch alle modellparameter (sinnvolle defaults sind im repo, aber der user kann davon abweichen und auch wieder zu den defaults zurück diese änderungen so
+
+================================================================================
+2026-11-12 21:58 (+01:00) | model: claude-fable-5-2 | attachments: none
+--------------------------------------------------------------------------------
+der letzte prompt war gedacht, dass du ihn ausführst, nachdem der vorherige abgeschlossen ist.

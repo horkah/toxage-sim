@@ -1,11 +1,12 @@
 # engine
 
-Generator for synthetic patient data. It is a microsimulation: every patient is simulated individually, week by week, from the start of a systemic therapy line. The output follows the central [schema](../schema/).
+Generator for synthetic patient data. It is a microsimulation: every patient is simulated individually, week by week, from the start of a systemic therapy line until death or for ten years. The same patients are simulated under several intervention scenarios, so that the effect of an intervention can be read off patient by patient. The output follows the central [schema](../schema/).
 
-The engine serves the first two risk model candidates of the [toxicity report](../background/toxicity-report.md):
+The engine serves the first two risk model candidates of the [toxicity report](../background/toxicity-report.md) and the [intervention model](../background/intervention-model.md):
 
 - Candidate 1: any adverse event of grade 3 to 5 within 90 days of therapy start.
 - Candidate 2: interstitial lung disease or pneumonitis, including the delay until it is recognised.
+- Interventions: risk prediction at therapy start with an adapted start, and monitoring during therapy with early recognition and early treatment.
 
 ## Run
 
@@ -13,48 +14,56 @@ The engine serves the first two risk model candidates of the [toxicity report](.
 python3 engine/generate.py --n 3000 --seed 1 --out engine/output
 ```
 
-This writes `baseline.csv`, `observation.csv`, `event.csv`, `outcome.csv` and `metadata.json` to the output folder and prints key rates per regimen. The same seed gives the same data. The output folder is not under version control.
+This writes `scenario.csv`, `baseline.csv`, `observation.csv`, `event.csv`, `alert.csv`, `outcome.csv` and `metadata.json` to the output folder and prints key numbers per regimen and per scenario. `--scenarios` limits the run to some scenarios, for example `--scenarios usual_care`. The same seed gives the same data. The output folder is not under version control. 3000 patients under all six scenarios take about 20 seconds.
 
 ```bash
 python3 engine/calibrate.py
 python3 -m unittest discover engine/tests
 ```
 
-`calibrate.py` matches the event rates to the literature and writes `config/calibration.json`. It has to be run again after every change of the model or its parameters. The engine needs Python 3 and no further packages.
+`calibrate.py` matches the event rates of usual care to the literature and writes `config/calibration.json`. It takes about one minute and has to be run again after every change of the model or its parameters. The engine needs Python 3 and no further packages.
 
 ## Files
 
 | File | Content |
 |---|---|
-| `generate.py` | Command line entry: simulates all patients, checks the data against the schema, writes the files |
+| `generate.py` | Command line entry: simulates all patients under all scenarios, checks the data against the schema, writes the files |
 | `population.py` | Baseline characteristics and choice of therapy |
 | `hazards.py` | Weekly hazards of adverse events |
-| `course.py` | Course of one patient in weekly steps, and the outcome summary |
+| `draws.py` | Fixed random numbers per patient, purpose and week |
+| `interventions.py` | What a scenario means for one patient: participation, adapted start, detection |
+| `course.py` | Course of one patient in weekly steps under one scenario, and the outcome summary |
 | `measurements.py` | Weekly observations derived from the course |
 | `calibrate.py` | Calibration against the literature |
 | `config/regimens.json` | Regimens with reference values and sources |
-| `config/parameters.json` | All other parameters, each block marked as literature value or assumption |
+| `config/parameters.json` | Parameters of population, hazards, actions, survival and measurements |
+| `config/interventions.json` | Parameters of the intervention model and the list of scenarios |
 | `config/calibration.json` | Calibration factors, written by `calibrate.py` |
 | `tests/test_engine.py` | Tests |
+
+Every block of the configuration files states whether its values come from the literature or are assumptions. `generate.default_config()` returns the whole configuration as one dictionary; a caller can change values in a copy and pass it to `generate.generate()`.
 
 ## Structure of the simulation
 
 ```
 latent frailty ──► baseline characteristics ──► choice of regimen and starting dose
        │                    │                              │
+       │                    │         scenario: adapted start for flagged patients
        └────────────────────┴───────────┬──────────────────┘
                                         ▼
         every week:   hazards of adverse events  ◄── dose level, time on therapy
                                         │
-                              event with grade and action
+                      an event starts mild and worsens
                                         │
-              dose reduction, interruption or end of therapy, death
+           recognised by usual care, or earlier by monitoring (scenario)
+                                        │
+        grade, change of therapy, hospital stay, death; costs and quality of life
                                         │
                                         ▼
         observations of the week: blood values, oxygen saturation, symptoms
 ```
 
-A patient is followed for 52 weeks or until death. The three tumour types always have equal numbers of patients.
+A patient is followed until death or for 520 weeks. Observations are written while the patient is on therapy and for four weeks after. The three tumour types always have equal numbers of patients.
 
 ## Patient groups
 
@@ -110,12 +119,14 @@ The subgroups differ in age, earlier therapy lines, time since diagnosis, blood 
 | Oxygen saturation, cough, shortness of breath | Lung toxicity from its true onset |
 | Fatigue, diarrhoea | Exposure, frailty, events |
 | Death | Tumour, frailty, ECOG, fatal adverse events |
+| Alerts of the monitoring components | Developing events, participation, false alerts |
+| Hospital days, unplanned visits, costs, quality-adjusted life years | Recognised events and their grade, alerts, participation |
 
 ### Event types
 
 `neutropenia`, `febrile_neutropenia`, `anaemia`, `thrombocytopenia`, `diarrhoea`, `peripheral_neuropathy`, `hypertension`, `immune_related`, `interstitial_lung_disease`, `other`.
 
-The engine records events of grade 3 to 5, and interstitial lung disease of any grade.
+The engine generates events that reach grade 3 to 5 in usual care, and interstitial lung disease of any grade. With monitoring such an event can be recognised at grade 1 or 2.
 
 ## Covariate mechanisms
 
@@ -148,38 +159,84 @@ hazard = target hazard of the regimen
 - **Patient multiplier.** The product of the general factors (frailty, age, bilirubin above 1.5 times the upper limit) and the type-specific factors. For lung toxicity only the published hazard ratios apply.
 - **Calibration factor.** Set by `calibrate.py` so that generated patients with ECOG 0 or 1, who resemble trial patients, reach the published rates within the 52 weeks.
 
-In each week at most one new event starts per patient.
+Each event type has its own fixed random number per week. A lower hazard therefore removes events and adds none. No new event of a type starts while an earlier one of the same type is not yet recognised.
+
+## Natural course of an event
+
+An event starts at grade 1 and worsens until it is recognised.
+
+- **Usual care** recognises an event at a fixed later day and at the grade it has reached by then. For lung toxicity this is the published recognition delay. For the other types the event passes through the lower grades first; the days per grade are in `config/interventions.json`.
+- **Monitoring** can recognise the event on a report day before that. The grade is then the stage the event has reached. With a given probability early treatment stops the worsening; otherwise the event still reaches its usual-care grade.
+- Every event record holds both: the day and grade of recognition, and the day and grade it would have had in usual care.
+
+In the scenario "usual care" this gives the same events and grades as the literature, which stay the calibration targets.
+
+## Scenarios
+
+| Scenario | Content |
+|---|---|
+| `usual_care` | No intervention |
+| `risk_adapted_start` | A risk prediction at therapy start flags 30% of the patients as high risk. Flagged patients who take part get a reduced starting dose (probability 0.5), G-CSF with regimens that often cause neutropenia (0.7), supportive measures (all hazards except lung toxicity × 0.75) and weekly symptom reports. |
+| `symptom_monitoring` | All patients are offered weekly symptom reports during therapy. An alert leads to contact and, if the patient attends and the team acts, to recognition on the next day. |
+| `lung_monitoring` | Patients on trastuzumab deruxtecan are offered home monitoring of oxygen saturation and symptoms with a detection model for lung toxicity. |
+| `combined` | All three |
+| `perfect_detection` | As combined, with full participation, a predictor without noise, detection of every event at its first stage, early treatment that always works, and no false alerts. Upper limit. |
+
+The components of a scenario and all their parameters are in `config/interventions.json`. A new scenario is a new entry there.
+
+**Fixed random numbers.** Every random decision of a patient is tied to a purpose and a week (`draws.py`). A scenario changes probabilities, not the random numbers. A patient whom an intervention does not reach has exactly the same course as in usual care, and a patient who is reached differs only from the point where the intervention acts. The tests check this.
+
+**Stand-ins for the risk models.** The prediction at therapy start is the true patient-related risk plus noise; the noise sets its accuracy. The detection during therapy is a sensitivity per stage of an event, times the share of events of a type that show in symptoms, plus a rate of false alerts. Real risk models can take their place in `interventions.py`.
+
+**Participation.** Whether a patient takes part depends on frailty and age. Reports are missing in some weeks, more often in frail patients. Each week a patient can drop out of the monitoring for good. After an alert the patient may not attend, and the team may not act. In all scenarios, including usual care, a patient on therapy can be lost to follow-up: therapy ends, and only events of grade 4 or 5 are still recognised.
+
+**Consequences.** The grade at recognition decides the change of therapy, the probability and length of a hospital stay, intensive care, the duration of the event and the loss of quality of life. Costs are counted for unplanned visits, hospital days, diagnostics after alerts, risk assessment, set-up, monitoring weeks and the handling of alerts. The costs of the cancer drugs are not included.
 
 ## Reference values and how well they are met
 
-Values from a run with 30 000 patients, all ECOG levels included:
+Usual care, from a run with 9000 patients, all ECOG levels included:
 
 | Regimen | Trial: any severe toxicity | Generated: any severe toxicity | Generated: within 90 days | Generated: stopped for toxicity |
 |---|---|---|---|---|
-| `nalirifox` | 87% | 90% | 89% | 27% |
-| `gemcitabine_nab_paclitaxel` | 86% | 89% | 89% | 25% |
-| `adt_docetaxel` | 63.5% | 68% | 63% | 9% |
-| `adt_docetaxel_abiraterone` | 63% | 67% | 59% | 10% |
-| `adt_docetaxel_darolutamide` | 66.1% | 73% | 69% | 10% |
-| `lu_psma_617` | 52.7% | 58% | 52% | 11% |
-| `olaparib` | 51% | 55% | 49% | 12% |
-| `trastuzumab_deruxtecan` | 52.6% | 57% | 53% | 15% |
-| `chemotherapy_single_agent` | 67.4% | 70% | 68% | 10% |
+| `nalirifox` | 87% | 88% | 87% | 26% |
+| `gemcitabine_nab_paclitaxel` | 86% | 84% | 82% | 21% |
+| `adt_docetaxel` | 63.5% | 69% | 63% | 8% |
+| `adt_docetaxel_abiraterone` | 63% | 66% | 57% | 7% |
+| `adt_docetaxel_darolutamide` | 66.1% | 71% | 63% | 9% |
+| `lu_psma_617` | 52.7% | 56% | 48% | 11% |
+| `olaparib` | 51% | 57% | 48% | 10% |
+| `trastuzumab_deruxtecan` | 52.6% | 56% | 51% | 14% |
+| `chemotherapy_single_agent` | 67.4% | 66% | 64% | 7% |
 | `pembrolizumab_chemotherapy` | 68.1% | 69% | 66% | 15% |
 
-The generated rates are above the trial rates because the generated population includes patients with ECOG 2, who would not have entered the trials.
+The calibration matches each event type to the literature within 0.3 percentage points in generated patients with ECOG 0 or 1 during the first 52 weeks. The table differs from the trial rates because it includes patients with ECOG 2 and events after week 52.
 
 Further checks against the literature:
 
 | Quantity | Literature | Generated |
 |---|---|---|
-| Severe toxicity within 90 days in patients aged 70 or older with at least one impaired geriatric domain | 71% (Mohile et al., 2021, usual care) | about 74% |
-| Reduced starting dose in the same group | 35% (Mohile et al., 2021, usual care) | about 31% |
-| Dose reduction with NALIRIFOX | 60% (Wainberg et al., 2023) | about 56% |
-| Therapy stopped because of adverse events with NALIRIFOX | 32% (Wainberg et al., 2023) | about 27% |
-| Lung toxicity with trastuzumab deruxtecan within 52 weeks | 10.5% (12.1% overall, 87% of events within 12 months) | about 10% |
+| Severe toxicity within 90 days in patients aged 70 or older with at least one impaired geriatric domain, usual care | 71% (Mohile et al., 2021, usual care) | about 70% |
+| The same in flagged patients who take part in the risk-adapted start, against usual care | relative risk 0.74 (Mohile et al., 2021) | 55% against 72%, relative risk 0.76 |
+| Dose reduction with NALIRIFOX | 60% (Wainberg et al., 2023) | about 51% |
+| Therapy stopped because of adverse events with NALIRIFOX | 32% (Wainberg et al., 2023) | about 26% |
+| Lung toxicity with trastuzumab deruxtecan within 52 weeks | 10.5% (12.1% overall, 87% of events within 12 months) | about 9% |
 | Share of lung toxicity recognised late | 53% (Powell et al., 2022) | about 53% |
-| Median day of onset of lung toxicity | 129 (Modi et al., 2022) | about 90 |
+| Median day of onset of lung toxicity | 129 (Modi et al., 2022) | about 100 |
+
+Scenarios, from the same run, per patient of the whole cohort:
+
+| Scenario | Taking part | Severe toxicity, 90 days | Severe events | Deaths from toxicity | Hospital days | Alerts | QALY | Cost of care (€) | Cost of intervention (€) |
+|---|---|---|---|---|---|---|---|---|---|
+| `usual_care` | 0% | 66.4% | 1.19 | 197 | 3.73 | 0 | 1.823 | 3903 | 0 |
+| `risk_adapted_start` | 21.5% | 62.7% | 1.08 | 169 | 3.41 | 0.62 | 1.830 | 3554 | 170 |
+| `symptom_monitoring` | 78.8% | 63.9% | 1.11 | 137 | 3.30 | 2.82 | 1.835 | 3424 | 378 |
+| `lung_monitoring` | 9.3% | 66.4% | 1.19 | 196 | 3.73 | 0.06 | 1.824 | 3917 | 55 |
+| `combined` | 78.8% | 60.7% | 1.03 | 126 | 3.09 | 2.88 | 1.839 | 3214 | 504 |
+| `perfect_detection` | 100% | 0% | 0 | 0 | 0 | 1.31 | 1.881 | 3 | 634 |
+
+Deaths from toxicity are counts among the 9000 patients. Lung monitoring reaches only the patients on trastuzumab deruxtecan. Among them it recognised 36 of 92 lung toxicity events early, by a median of four weeks, and lowered the events of grade 3 or higher from 16 to 12. Symptom monitoring recognised about 15% of the events early, by a median of three days, because most event types worsen within days and a weekly report often comes too late.
+
+The effects of the scenarios follow from the assumed parameters of the intervention model. They show how the model behaves, not what an intervention achieves in patients.
 
 ## Basis of the parameters
 
@@ -194,31 +251,47 @@ Further checks against the literature:
 | Time patterns, grades and actions for events other than lung toxicity | Assumption |
 | Choice of regimen and starting dose | Assumption |
 | Size of the signals in the measurements, noise and missing weeks | Assumption |
+| Recognition delay of lung toxicity | Literature (Powell et al., 2022) |
+| Days per grade of the other event types | Assumption |
+| Participation, adherence, dropout, attendance, loss to follow-up | Assumption |
+| Accuracy of the stand-ins for prediction and detection, false alerts | Assumption |
+| Effect of early treatment, adapted start and supportive measures | Assumption, checked against GAP70+ (Mohile et al., 2021) |
+| Hospital stays and duration of events by grade | Assumption |
+| Unit costs and quality-of-life weights | Placeholder values, not from the literature |
 
 ## Simplifications
 
-- Events of grade 1 and 2 are not generated, except for lung toxicity.
+- Only events that reach grade 3 or higher in usual care are generated, and lung toxicity of any grade. Events that stay mild do not exist in the data.
 - The event types are treated as independent apart from the shared patient factors.
-- The median onset of lung toxicity is earlier than published, because follow-up ends after 52 weeks and many patients stop therapy before.
+- The median onset of lung toxicity is earlier than published, because many patients stop therapy before.
 - Two published risk factors for lung toxicity are not modelled: dose above the standard dose and enrolment in Japan.
 - The risk factors for lung toxicity were found for trastuzumab deruxtecan. The engine applies them to single-agent chemotherapy as well.
 - A regimen is one unit. Only the end of docetaxel after 18 weeks is modelled as a part of a combination.
 - Median treatment durations from the trials are used for the end of therapy for reasons other than toxicity, although in the trials they include stops for toxicity.
-- Blood tests are generated at fixed intervals and in weeks with a blood count event. The low point between two tests is not shown.
-- There is one therapy line per patient. What happens after the end of therapy is not simulated, apart from death.
+- Blood tests are generated at fixed intervals and in weeks with a severe blood count event. The low point between two tests is not shown.
+- There is one therapy line per patient. After its end only death is simulated, with the same hazard as before. Later therapy lines and their toxicity are missing, so the long-term course is coarse.
+- Survival depends on tumour, frailty and ECOG, not on the time on therapy or the dose received. An intervention therefore changes survival only through deaths from toxicity. A factor for a faster progression at lower dose exists and is switched off.
+- The detection stand-ins do not read the generated measurements. They draw alerts from the true stage of an event.
+- False alerts cost a contact and, for lung monitoring, diagnostics. They do not change the therapy.
+- The share of patients flagged as high risk is fixed, so the threshold depends on the cohort.
+- Costs and quality-of-life weights are placeholders. The cost per quality-adjusted life year is therefore not a result.
 
 ## Ideas for later
 
 - Further regimens: FOLFIRINOX, gemcitabine alone, sacituzumab govitecan, ribociclib with endocrine therapy, cabazitaxel.
 - A second and third therapy line per patient, with carry-over of toxicity such as neuropathy.
+- A link from time on therapy and dose received to progression and survival, so that fewer stops of therapy can show as a gain.
 - Drug components of a regimen with their own schedules and dose levels.
 - Cycle-based blood counts with a low point between cycles.
 - Further event types from the report: cardiovascular events under androgen deprivation, venous thromboembolism, QT prolongation, hypokalaemia, single immune-related organs.
-- Events of grade 1 and 2 and the worsening of an event over time, for example of lung toxicity that is recognised late.
+- Events that stay at grade 1 or 2 in usual care.
 - Genetic factors such as UGT1A1.
 - Further signals: weight, temperature, blood pressure, potassium, liver values, troponin, ECOG over time.
-- Unplanned visits and hospital stays as outcomes.
-- An intervention arm, for example geriatric assessment with adapted therapy or symptom monitoring with alerts, to study what earlier detection gains.
+- Detection by real risk models that read the weekly observations, in place of the stand-ins.
+- Alert fatigue: the share of alerts acted on falls with the number of alerts.
+- Thresholds for alerts and for the high-risk flag as parameters of a scenario, to study the balance between early recognition and false alerts.
+- Unit costs and quality-of-life weights from the literature, and costs of the cancer drugs.
+- Uncertainty: repeated runs with parameters drawn from ranges.
 - A file with the latent frailty and the true risk of each patient, to test risk models against the truth.
 - Dependence between event types beyond the shared patient factors.
 - Replacing assumed parameters by published estimates.

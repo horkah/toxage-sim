@@ -14,7 +14,7 @@ Both are baseline models: they estimate the risk before therapy starts. The dete
 ## Run
 
 ```bash
-python3 engine/generate.py --n 20000 --seed 2 --out engine/output/test
+python3 engine/generate.py --n 20000 --seed 2 --scenarios usual_care --out engine/output/test
 ```
 
 ```bash
@@ -130,26 +130,27 @@ Risk categories: low below 5%, intermediate from 5%, high from 15%. The threshol
 
 ## Results on synthetic data
 
-Literature configuration, evaluated on 20 000 patients from `engine/generate.py --seed 2`. "Regimen only" is a comparison model that gives every patient the published rate of the regimen.
+Literature configuration, evaluated on 20 000 patients under usual care from `engine/generate.py --seed 2 --scenarios usual_care`. "Regimen only" is a comparison model that gives every patient the published rate of the regimen.
 
 | | Candidate 1 | Regimen only | Candidate 2 | Regimen only |
 |---|---|---|---|---|
-| Patients, events | 20 000, 13 929 | | 4016, 226 | |
-| Observed / expected | 0.97 | 1.01 | 0.82 | 0.78 |
-| AUC | 0.713 | 0.699 | 0.783 | 0.709 |
-| Brier score | 0.187 | 0.188 | 0.050 | 0.052 |
-| Calibration slope | 1.03 | 1.18 | 1.01 | 1.04 |
+| Patients, events | 20 000, 13 280 | | 4016, 282 | |
+| Observed / expected | 0.93 | 0.96 | 1.02 | 0.97 |
+| AUC | 0.690 | 0.684 | 0.768 | 0.712 |
+| Brier score | 0.204 | 0.203 | 0.061 | 0.062 |
+| Calibration slope | 0.86 | 1.03 | 0.93 | 1.03 |
 
-Within single regimens, the AUC of candidate 1 is between 0.56 and 0.60, and the AUC of candidate 2 is 0.63 for trastuzumab deruxtecan.
+Within single regimens, the AUC of candidate 1 is between 0.51 and 0.61, and the AUC of candidate 2 is 0.60 for trastuzumab deruxtecan.
 
 How to read this:
 
-- The engine does not generate outcomes with the models used here. Severe toxicity comes from a latent frailty, type-specific hazards, dose changes and competing events. Age, ECOG and geriatric domains predict it only because they are linked to frailty. The modest gain of candidate 1 over the regimen rate is therefore a result, not an artefact.
+- The engine does not generate outcomes with the models used here. Severe toxicity comes from a latent frailty, type-specific hazards, dose changes and competing events. Age, ECOG and geriatric domains predict it only because they are linked to frailty. Candidate 1 gains almost nothing over the regimen rate, and its risks are spread too widely (calibration slope 0.86). This is a result, not an artefact.
 - For lung toxicity the engine uses the same published hazard ratios as candidate 2, so the ranking of patients is good by construction.
-- Candidate 2 predicts the risk within 730 days, while the engine follows patients for 52 weeks and many stop therapy earlier. Fewer events are observed than predicted. This explains the ratio of 0.82.
-- Candidate 1 overestimates the risk for olaparib and lutetium-177–PSMA-617 (predicted 59% and 61%, observed 45% and 52%). The published rates cover the whole treatment period, and with these regimens the engine places a larger share of the events after day 90. The model also raises the risk because these patients are older than the reference patient.
+- Candidate 1 overestimates the risk for olaparib and lutetium-177–PSMA-617 (predicted 59% and 61%, observed 47% and 47%). The published rates cover the whole treatment period, and with these regimens the engine places a larger share of the events after day 90. The model also raises the risk because these patients are older than the reference patient.
 
-Fitted on 50 000 patients from seed 1, `fit.py` gives odds ratios of 1.17 for age, 1.52 for ECOG 2 and 1.10 per geriatric domain, and hazard ratios close to the published ones, for example 2.39 for moderate or severe renal decrease. On the 20 000 test patients the fitted configuration reaches an observed to expected ratio of 1.00 and 1.07 and an AUC of 0.719 and 0.781.
+Fitted on 50 000 patients from seed 1, `fit.py` gives odds ratios of 1.16 for age, 1.37 for ECOG 2 and 1.09 per geriatric domain, and hazard ratios near the published ones, for example 2.11 for moderate or severe renal decrease. On the 20 000 test patients the fitted configuration reaches an observed to expected ratio of 1.00 and 1.09 and an AUC of 0.702 and 0.769.
+
+The models describe the risk without an intervention. `data.load` therefore reads the outcomes of usual care unless another scenario is named.
 
 **These numbers do not show that the models work in patients.** All data are synthetic, and the engine rests on the same literature and on assumptions of this project.
 
@@ -160,6 +161,6 @@ Fitted on 50 000 patients from seed 1, `fit.py` gives odds ratios of 1.17 for ag
 - The lung toxicity risk factors were found for trastuzumab deruxtecan and are applied to single-agent chemotherapy as well.
 - Dose and enrolment in Japan, two risk factors in Powell et al. (2022), are not in the schema. All patients are treated as receiving the standard dose.
 - The models use only part of the baseline record. Fields such as bilirubin, blood values, earlier therapy lines and starting dose are not used yet.
-- The time window of candidate 2 (730 days) is longer than the follow-up of the engine (52 weeks).
+- Candidate 2 gives the risk within 730 days. The engine follows patients for up to ten years, so a few events fall outside the window.
 - No lung toxicity risk for checkpoint inhibitors yet, because the references give a rate but no risk model.
 - The risk categories are assumptions and are not validated.

@@ -6,7 +6,7 @@ from explorer import cohort
 
 class CohortTestCase(TestCase):
     """Test case with a small generated cohort in the database."""
-    n = 300
+    n = 240
 
     @classmethod
     def setUpTestData(cls):

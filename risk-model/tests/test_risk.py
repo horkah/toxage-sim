@@ -15,7 +15,7 @@ from schema import toxage_schema  # noqa: E402
 class ModelTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.baseline = generate.generate(600, seed=2, validate=False)["baseline"]
+        cls.baseline = generate.generate(600, seed=2, scenarios=["usual_care"], validate=False)["baseline"]
         cls.cfg = calc.load_config()
         cls.models = {m.id: m for m in toxage_risk.load()}
 

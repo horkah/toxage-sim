@@ -1,0 +1,261 @@
+{
+  "description": "Parameters of the intervention model. 'basis' states for each block whether the values come from the literature or are assumptions of this project. See background/intervention-model.md.",
+  "participation": {
+    "uptake": {
+      "intercept": 1.4,
+      "frailty_slope": -0.5,
+      "per_10_years_above_65": -0.3
+    },
+    "adherence": {
+      "base": 0.85,
+      "frailty_slope": -0.08,
+      "minimum": 0.3,
+      "maximum": 0.98
+    },
+    "dropout_per_week": {
+      "first_8_weeks": 0.02,
+      "later": 0.005
+    },
+    "attendance_after_alert": 0.9,
+    "action_after_attended_alert": 0.85,
+    "monitoring_weeks_after_stop": 4,
+    "basis": "assumption; fitter and younger patients take part and report more often"
+  },
+  "loss_to_follow_up": {
+    "per_week_on_therapy": 0.0008,
+    "basis": "assumption; applies to all scenarios"
+  },
+  "natural_course": {
+    "stage_days": {
+      "neutropenia": 3,
+      "febrile_neutropenia": 2,
+      "anaemia": 10,
+      "thrombocytopenia": 7,
+      "diarrhoea": 3,
+      "peripheral_neuropathy": 14,
+      "hypertension": 10,
+      "immune_related": 7,
+      "other": 4
+    },
+    "basis": "assumption: days an event spends in each grade before it reaches the grade at which usual care recognises it. Lung toxicity instead uses the published recognition delay (Powell et al., 2022)."
+  },
+  "detection": {
+    "symptom_report": {
+      "stage_sensitivity": {
+        "1": 0.3,
+        "2": 0.7,
+        "3": 0.95
+      },
+      "detectability": {
+        "neutropenia": 0.15,
+        "febrile_neutropenia": 0.8,
+        "anaemia": 0.5,
+        "thrombocytopenia": 0.1,
+        "diarrhoea": 0.9,
+        "peripheral_neuropathy": 0.9,
+        "hypertension": 0.1,
+        "immune_related": 0.6,
+        "interstitial_lung_disease": 0.6,
+        "other": 0.6
+      },
+      "false_alerts_per_report": 0.1,
+      "basis": "assumption: stand-in for a detection model. Sensitivity is the product of the stage value and the share of events of a type that show in symptoms. In PRO-TECT 33.9% of surveys gave an alert for any symptom (Basch et al., 2022)."
+    },
+    "lung_monitoring": {
+      "regimens": [
+        "trastuzumab_deruxtecan"
+      ],
+      "event_types": [
+        "interstitial_lung_disease"
+      ],
+      "stage_sensitivity": {
+        "1": 0.5,
+        "2": 0.85,
+        "3": 0.98
+      },
+      "false_alerts_per_report": 0.02,
+      "basis": "assumption: stand-in for a detection model on daily oxygen saturation and symptoms"
+    }
+  },
+  "early_treatment": {
+    "halt_probability": {
+      "default": 0.7,
+      "interstitial_lung_disease": 0.8,
+      "neutropenia": 0.5,
+      "peripheral_neuropathy": 0.8
+    },
+    "actions_below_grade_3": {
+      "none": 0.5,
+      "interruption": 0.35,
+      "dose_reduction": 0.15,
+      "discontinuation": 0.0
+    },
+    "basis": "assumption: probability that an event recognised early does not worsen further"
+  },
+  "risk_adapted_start": {
+    "predictor_noise_sd": 0.6,
+    "share_flagged": 0.3,
+    "reduced_start_probability": 0.5,
+    "reduced_level": 0.8,
+    "gcsf_probability": 0.7,
+    "gcsf_from_neutropenia_rate": 0.2,
+    "supportive_hazard_ratio": 0.75,
+    "closer_monitoring": true,
+    "basis": "assumption, oriented on GAP70+ (Mohile et al., 2021): 48.7% started with reduced intensity in the intervention arm, relative risk of severe toxicity 0.74. The predictor is a stand-in: the true patient-related risk plus noise."
+  },
+  "efficacy": {
+    "progression_hazard_ratio_per_dose_step": 1.0,
+    "basis": "assumption: a lower dose does not shorten the time to progression. GAP70+ found no difference in survival. Values above 1 test the opposite."
+  },
+  "consequences": {
+    "hospital_probability": {
+      "default": {
+        "1": 0.0,
+        "2": 0.05,
+        "3": 0.35,
+        "4": 0.9,
+        "5": 1.0
+      },
+      "neutropenia": {
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.05,
+        "4": 0.2,
+        "5": 1.0
+      },
+      "febrile_neutropenia": {
+        "1": 0.0,
+        "2": 0.3,
+        "3": 0.8,
+        "4": 1.0,
+        "5": 1.0
+      },
+      "hypertension": {
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.05,
+        "4": 0.8,
+        "5": 1.0
+      },
+      "peripheral_neuropathy": {
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.02,
+        "4": 0.3,
+        "5": 1.0
+      }
+    },
+    "hospital_days_mean": {
+      "2": 3,
+      "3": 5,
+      "4": 10,
+      "5": 12
+    },
+    "intensive_care": {
+      "4": {
+        "probability": 0.3,
+        "days": 4
+      },
+      "5": {
+        "probability": 0.5,
+        "days": 5
+      }
+    },
+    "event_days": {
+      "1": 7,
+      "2": 14,
+      "3": 21,
+      "4": 35,
+      "5": 0,
+      "interstitial_lung_disease_factor": 2.0
+    },
+    "basis": "assumption"
+  },
+  "costs": {
+    "unplanned_visit": 150,
+    "hospital_day": 800,
+    "intensive_care_day": 2500,
+    "alert_handling": 25,
+    "diagnostics_after_alert": {
+      "symptom_report": 0,
+      "lung_monitoring": 300
+    },
+    "monitoring_per_week": {
+      "symptom_report": 8,
+      "lung_monitoring": 15
+    },
+    "set_up_per_participant": 120,
+    "risk_assessment_per_patient": 80,
+    "basis": "placeholder values in euros, not from the literature; the costs of the cancer drugs are not included"
+  },
+  "quality_of_life": {
+    "base": {
+      "pancreas": 0.7,
+      "prostate": 0.8,
+      "breast": 0.75
+    },
+    "frailty_slope": -0.05,
+    "minimum": 0.3,
+    "on_therapy_decrement": 0.03,
+    "event_decrement": {
+      "1": 0.02,
+      "2": 0.08,
+      "3": 0.2,
+      "4": 0.4,
+      "5": 0.5
+    },
+    "basis": "placeholder values, not from the literature"
+  },
+  "scenarios": {
+    "usual_care": {
+      "title": "Usual care",
+      "description": "No intervention. Events are recognised at regular visits or when the patient seeks help.",
+      "components": [],
+      "perfect": false
+    },
+    "risk_adapted_start": {
+      "title": "Risk-adapted start",
+      "description": "A risk prediction at therapy start flags patients at high risk. Flagged patients who take part get an adapted starting dose, G-CSF, supportive measures and closer monitoring.",
+      "components": [
+        "risk_adapted_start"
+      ],
+      "perfect": false
+    },
+    "symptom_monitoring": {
+      "title": "Symptom monitoring",
+      "description": "All patients are offered weekly symptom reports during therapy. Alerts lead to contact and early treatment.",
+      "components": [
+        "symptom_monitoring"
+      ],
+      "perfect": false
+    },
+    "lung_monitoring": {
+      "title": "Lung monitoring",
+      "description": "Patients on trastuzumab deruxtecan are offered home monitoring of oxygen saturation and symptoms with a detection model for lung toxicity.",
+      "components": [
+        "lung_monitoring"
+      ],
+      "perfect": false
+    },
+    "combined": {
+      "title": "Combined",
+      "description": "Risk-adapted start, symptom monitoring and lung monitoring together.",
+      "components": [
+        "risk_adapted_start",
+        "symptom_monitoring",
+        "lung_monitoring"
+      ],
+      "perfect": false
+    },
+    "perfect_detection": {
+      "title": "Perfect detection",
+      "description": "As combined, but every patient takes part, every event is detected at its first stage, every alert is acted on, early treatment always works and there are no false alerts. Upper limit of what detection can achieve.",
+      "components": [
+        "risk_adapted_start",
+        "symptom_monitoring",
+        "lung_monitoring"
+      ],
+      "perfect": true
+    }
+  }
+}

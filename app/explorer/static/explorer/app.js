@@ -41,3 +41,7 @@ if (filters) {
   });
   filters.addEventListener("change", () => filters.requestSubmit());
 }
+
+// Scenario choice: apply on change.
+const scenario = document.getElementById("scenario");
+if (scenario) scenario.addEventListener("change", () => scenario.requestSubmit());

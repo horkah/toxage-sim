@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "toxage-sim/scenario",
+  "title": "Scenario record",
+  "description": "One intervention scenario. All scenarios are simulated for the same patients, so their results can be compared patient by patient.",
+  "version": "0.3.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scenario_id",
+    "title",
+    "description",
+    "risk_adapted_start",
+    "symptom_monitoring",
+    "lung_monitoring"
+  ],
+  "properties": {
+    "scenario_id": {
+      "title": "Scenario",
+      "type": "string",
+      "description": "Unique identifier of the scenario. The reference scenario without intervention is usual_care."
+    },
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "Short name for display."
+    },
+    "description": {
+      "title": "Description",
+      "type": "string",
+      "description": "What the scenario contains."
+    },
+    "risk_adapted_start": {
+      "title": "Risk-adapted start",
+      "type": "boolean",
+      "description": "A risk prediction at therapy start flags patients at high risk, whose start of therapy is adapted."
+    },
+    "symptom_monitoring": {
+      "title": "Symptom monitoring",
+      "type": "boolean",
+      "description": "Weekly symptom reports with alerts are offered to all patients during therapy."
+    },
+    "lung_monitoring": {
+      "title": "Lung monitoring",
+      "type": "boolean",
+      "description": "Home monitoring for lung toxicity is offered to patients on a regimen with this risk."
+    }
+  }
+}

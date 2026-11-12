@@ -1,12 +1,18 @@
 """The scored cohort: patient records of the newest data set together with
 the risks of all registered risk models, and the field descriptions of the
-central schema."""
+central schema.
+
+A row is the baseline record of a patient, the outcome record of one scenario
+and the risks. The rows of a scenario are kept in memory after first use."""
 from dataclasses import dataclass
 
 import toxage_risk
 from schema import toxage_schema
 
-from .models import Dataset
+from .models import Course, Dataset
+
+USUAL_CARE = "usual_care"
+_CACHE = {}
 
 
 @dataclass(frozen=True)
@@ -69,14 +75,56 @@ def score(records, models):
     return [{**r, **{risk_key(m): m.risk(r) for m in models}} for r in records]
 
 
-def current():
+def clear_cache():
+    _CACHE.clear()
+
+
+def newest():
+    return Dataset.objects.order_by("-created", "-pk").first()
+
+
+def scenario_ids(dataset):
+    return [s["scenario_id"] for s in dataset.scenarios]
+
+
+def scenario(dataset, wanted):
+    """The scenario record with the wanted id, or usual care, or the first."""
+    by_id = {s["scenario_id"]: s for s in dataset.scenarios}
+    return by_id.get(wanted) or by_id.get(USUAL_CARE) or dataset.scenarios[0]
+
+
+def rows(dataset, scenario_id, models):
+    """Baseline, outcome and risks of all patients in one scenario."""
+    key = (dataset.pk, scenario_id, "rows")
+    if key not in _CACHE:
+        pairs = Course.objects.filter(patient__dataset=dataset, scenario_id=scenario_id).order_by(
+            "patient__patient_id").values_list("patient__baseline", "outcome")
+        _CACHE[key] = score([{**b, **o} for b, o in pairs], models)
+    return _CACHE[key]
+
+
+def events(dataset, scenario_id):
+    """Adverse events of one scenario as {patient_id: [event records]}."""
+    key = (dataset.pk, scenario_id, "events")
+    if key not in _CACHE:
+        _CACHE[key] = dict(Course.objects.filter(
+            patient__dataset=dataset, scenario_id=scenario_id).values_list("patient__patient_id", "events"))
+    return _CACHE[key]
+
+
+def course(dataset, scenario_id, patient_id):
+    """Events, alerts and weekly observations of one patient in one scenario, or None."""
+    return Course.objects.filter(patient__dataset=dataset, patient__patient_id=patient_id,
+                                 scenario_id=scenario_id).values("events", "alerts", "observations").first()
+
+
+def current(scenario_id=USUAL_CARE):
     """Return (dataset, models, rows) of the newest data set, or None."""
-    dataset = Dataset.objects.order_by("-created", "-pk").first()
+    dataset = newest()
     if dataset is None:
         return None
     models = toxage_risk.load()
-    records = [{**b, **o} for b, o in dataset.patients.values_list("baseline", "outcome")]
-    return dataset, models, score(records, models)
+    return dataset, models, rows(dataset, scenario(dataset, scenario_id)["scenario_id"], models)
 
 
 def normalise_id(text):

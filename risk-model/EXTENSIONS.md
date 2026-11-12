@@ -11,8 +11,8 @@ Open ideas for the risk models of candidates 1 and 2. Each item says what it nee
 | 1.3 | Pancreatic cancer: bilirubin, which guides the choice of regimen (Conroy et al., 2023; Sohal et al., 2020) and is in the baseline record. The Karnofsky score is not in the schema. | risk model; schema and engine for the Karnofsky score |
 | 1.4 | Number of earlier therapy lines, starting dose level, G-CSF prophylaxis, albumin and baseline blood values, which are in the baseline record. Number of drugs is not. | risk model |
 | 1.5 | Patients aged 65 or older without a geriatric assessment are counted as unimpaired. Better: impute the domains from age and ECOG, or show the score as uncertain. | risk model |
-| 1.6 | Scenario "with geriatric assessment-guided management": apply the relative risk of 0.74 from GAP70+ (Mohile et al., 2021) to show what the trial achieved. Only for patients like the trial population. | risk model |
-| 1.7 | Secondary events: dose reduction and stop of treatment, and the split into haematological and non-haematological toxicity as in GAP70+, all of which can be derived from the event and outcome tables. Hospital stay and falls are not in the schema. | risk model; schema and engine for hospital stay and falls |
+| 1.6 | Show next to the risk what the scenario "risk-adapted start" of the engine achieves for a patient like this one. The engine reproduces the relative risk of GAP70+ (Mohile et al., 2021) for flagged patients who take part. | risk model, app |
+| 1.7 | Secondary events: dose reduction, stop of treatment and hospital stay, and the split into haematological and non-haematological toxicity as in GAP70+, all of which can be derived from the event and outcome tables. Falls are not in the schema. | risk model; schema and engine for falls |
 | 1.8 | Time to first event: cumulative risk by day instead of one 90-day probability, so the app can show the course. The outcome table holds the day of the first severe event. | risk model |
 | 1.9 | Effects that differ by regimen, for example a stronger age effect with combination chemotherapy. | literature |
 | 1.10 | Calibrate to rates in routine care instead of trial rates, once the literature covers them (report, section 9). | literature |
@@ -34,8 +34,8 @@ Open ideas for the risk models of candidates 1 and 2. Each item says what it nee
 
 | # | Extension | Needs |
 |---|---|---|
-| B.1 | **Role in the intervention scenarios.** The intervention concept ([background/intervention-model.md](../background/intervention-model.md), section 3.2) uses a stand-in for the risk model behind a fixed interface. The models here should fit that interface, so that they can replace the stand-in: a flag at therapy start from a risk threshold, and later alerts during therapy. | risk model, engine |
-| B.9 | Match the time window of candidate 2 to the follow-up of the data, or report the risk for several windows (see 2.5). | risk model |
+| B.1 | **Role in the intervention scenarios.** The engine flags patients at therapy start with a stand-in: the true patient-related risk plus noise (`engine/interventions.py`). Candidate 1 could take its place, so that a scenario shows what this model achieves. The same holds for the detection model of 2.1 and the detection stand-in. | risk model, engine |
+| B.9 | Risk under an intervention: the models describe usual care. A scenario with an adapted start or monitoring lowers the observed rates. | risk model, engine |
 | B.2 | Uncertainty per patient: propagate the confidence intervals of the hazard ratios (Powell et al., 2022) and the sampling error of the trial rates into a risk interval. | risk model |
 | B.3 | Position of a patient in a reference population: percentile of the risk among patients with the same regimen or tumour type. The app needs this for the comparison view. | risk model or app |
 | B.4 | Store the explanation (factors and ratios) as a table in the schema, so that the app can read it without calling Python. | schema |

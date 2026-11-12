@@ -1,6 +1,6 @@
 # Intervention model: concept
 
-This document describes how interventions and their effects can be modelled in the microsimulation. It is a concept. Nothing of it is implemented in the [engine](../engine/) yet.
+This document describes how interventions and their effects are modelled in the microsimulation. Section 6 says which parts the [engine](../engine/) implements and where it is simpler than the concept.
 
 The main intervention of the project is the early detection or prediction of therapy toxicity. Detection alone changes nothing. What changes the course of a patient is what the care team does with the information, and whether the patient takes part. The model therefore describes the whole chain from the offer of the intervention to its effect on health and costs.
 
@@ -233,21 +233,34 @@ Further scenarios come from varying single parameters, for example uptake, sensi
 
 The risk-adapted start can be checked against GAP70+ as a whole: with parameters in a plausible range, the scenario should lower severe toxicity in older patients with impairments by about a quarter.
 
-## 6. What this means for schema and engine
+## 6. Implementation
 
-Changes at the time of integration:
+The engine implements the model with the parameters in `engine/config/interventions.json`. The app shows the scenarios side by side and the course of single patients under two scenarios.
 
-- **Schema.** A scenario table with the parameters of each scenario. A scenario key in the observation, event and outcome tables. An alert table with day, cause, true or false, contact and action. New fields for the natural course of events, hospital stays, costs and quality of life.
-- **Engine.** Fixed random numbers per patient and purpose. Stages for the course of events. A participation module. A stand-in for the risk model behind a fixed interface. An action module. A consequence module for resources, costs and quality of life. A loop over scenarios.
-- **Calibration.** The scenario "usual care" must reproduce the published rates as today.
+| Component | Status in the engine |
+|---|---|
+| Participation: uptake, adherence, dropout, attendance, loss to follow-up | Implemented. Uptake and adherence depend on frailty and age. |
+| Prediction at therapy start | Stand-in: true patient-related risk plus noise. A fixed share of the cohort is flagged. |
+| Detection during therapy | Stand-in: sensitivity per stage, share of events that show in symptoms, false alerts per report. It does not read the generated measurements. |
+| Perfect detector | Implemented as scenario. |
+| Natural course in stages | Implemented. Usual care recognises an event at a fixed day and grade; monitoring can recognise it at an earlier stage. |
+| Actions at therapy start | Reduced starting dose, G-CSF, supportive measures, closer monitoring. |
+| Actions after an alert | Recognition on the next day, early treatment that stops the worsening with a given probability, milder change of therapy at lower grade. |
+| Consequences | Unplanned visits, hospital days, intensive care days, duration of events, death from toxicity. |
+| Costs and quality-adjusted life years | Implemented with placeholder values. |
+| False alerts | Counted, with their costs. They do not change the therapy. |
+| Alert fatigue | Not implemented. |
+| Link from dose received to tumour control | Parameter exists, switched off. |
+| Same patients, same chance | Implemented with fixed random numbers per patient, purpose and week. |
+| Scenarios | The six scenarios of section 4.2. |
 
-Order of work:
+The check against GAP70+ holds: flagged patients who take part in the risk-adapted start have severe toxicity within 90 days in 55% against 72% in usual care, a relative risk of 0.76.
 
-1. Fixed random numbers and the scenario loop, with usual care as the only scenario. The results must equal those of today.
-2. Stages for lung toxicity and the scenario "lung monitoring". This is the case with the best evidence.
-3. Participation module and the scenario "risk-adapted start", checked against GAP70+.
-4. Stages for the other event types and the scenario "symptom monitoring".
-5. Resources, costs and quality of life, after a literature search for the values.
+Open parts:
+
+- Values from the literature for participation, the effect of early treatment, hospital stays, unit costs and quality-of-life weights.
+- Real risk models in place of the stand-ins.
+- A link from time on therapy to survival, without which an intervention changes survival only through deaths from toxicity.
 
 ## 7. Ideas for later
 

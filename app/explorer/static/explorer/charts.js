@@ -1,6 +1,7 @@
 // Charts of the explorer as the web component <tox-chart chart="id">.
 // The chart specs come from explorer/charts.py through the JSON script
 // element #chart-data. Three types: bars, line, scatter. Plain SVG, no library.
+// A line chart can carry markers (vertical lines) and dashed series.
 // Pure helpers are exported for the tests in explorer/tests/charts.test.mjs.
 
 const W = 460;
@@ -65,9 +66,9 @@ function text(x, y, content, cls = "", extra = "") {
   return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" class="${cls}" ${extra}>${esc(content)}</text>`;
 }
 
-function legend(items, patient) {
+function legend(items, highlighted, what = "selected patient") {
   const entries = items.map((s) => `<span><i class="sw s-${esc(s.cls)}"></i>${esc(s.name)}</span>`);
-  if (patient) entries.push(`<span><i class="sw s-hl"></i>selected patient</span>`);
+  if (highlighted) entries.push(`<span><i class="sw s-hl"></i>${esc(what)}</span>`);
   return entries.length ? `<div class="legend">${entries.join("")}</div>` : "";
 }
 
@@ -148,7 +149,7 @@ function bars(spec) {
     });
     parts.push(`<line class="axisline" x1="${left}" x2="${right}" y1="${bottom}" y2="${bottom}"/>`);
   }
-  return { height, svg: parts.join(""), legend: legend(series, highlight !== null && highlight !== undefined) };
+  return { height, svg: parts.join(""), legend: legend(series, highlight !== null && highlight !== undefined, spec.highlight_name) };
 }
 
 function frame(spec, height, left = 50, bottom = 40) {
@@ -179,7 +180,8 @@ function line(spec) {
     parts.push(`<line class="diagonal" x1="${sx(0)}" y1="${sy(0)}" x2="${sx(end)}" y2="${sy(end)}"><title>perfect calibration</title></line>`);
   }
   for (const s of spec.series) {
-    parts.push(`<path class="ln s-${esc(s.cls)}" d="${linePath(s.points, sx, sy, s.step)}"><title>${esc(s.name)}</title></path>`);
+    if (!s.points.length) continue;
+    parts.push(`<path class="ln s-${esc(s.cls)}${s.dash ? " dash" : ""}" d="${linePath(s.points, sx, sy, s.step)}"><title>${esc(s.name)}</title></path>`);
     if (s.dots) {
       for (const [x, y] of s.points) {
         parts.push(`<circle class="dot s-${esc(s.cls)}" cx="${sx(x).toFixed(1)}" cy="${sy(y).toFixed(1)}" r="4"><title>${esc(`predicted ${fmt(x, spec.x.format)}, observed ${fmt(y, spec.y.format)}`)}</title></circle>`);
@@ -192,7 +194,12 @@ function line(spec) {
     parts.push(`<line class="marker" x1="${x}" x2="${x}" y1="10" y2="${height - 40}"/>`);
     parts.push(text(Math.min(x + 4, W - 80), 22, m.label, "hl-text"));
   }
-  return { height, svg: parts.join(""), legend: legend(spec.series, !!m) };
+  // Markers: vertical lines at points in time, e.g. the events of a patient.
+  for (const k of spec.markers || []) {
+    const x = sx(k.x).toFixed(1);
+    parts.push(`<line class="mk mk-${esc(k.cls)}" x1="${x}" x2="${x}" y1="10" y2="${height - 40}"><title>${esc(k.label)}</title></line>`);
+  }
+  return { height, svg: parts.join(""), legend: legend(spec.series.concat(spec.marker_legend || []), !!m) };
 }
 
 function scatter(spec) {
