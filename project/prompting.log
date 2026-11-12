@@ -38,3 +38,24 @@ I have replaced the Wainberg pdf with the published version, and uploaded severa
 2026-11-12 18:47 (+01:00) | model: claude-fable-5-2 | attachments: none
 --------------------------------------------------------------------------------
 start with candidate 1 and 2 in the engine, start with simple models first. use a simple schema for the required input data, which can be extended later. keep the data schema somewhere central because we will need it in the app and synthetization projects.
+
+================================================================================
+2026-11-12 19:37 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+implement the app as web app with minimal frameworks. I request the following because I like minimal code with maximum quality. It makes the code more maintainable if we leave out any bloat 
+
+build unit tests for all testable method. for the framework, use idiomatic minimal django, with no extra packages (unless strictly needed), no javascript framework, just django templates with vanilla javascript and css/html only, client interactivity can of course use additional vanilla javascript where needed. when client reactivity is absolutely needed, use the native web components.
+
+the app shall have two modes: patient and cohort. in patient, a random patient is selected - or ingested/selected from the cohort view - or searched by id from the database. in cohort, all patients - with some appropriate and later extendable  filters applied - are displayed in multiple ways. think about various graphs that properly visualize all essential dimensions, in order to visually extract meaningful information for our purpose.
+
+the app is a mere demonstrator based on synthetic data. just start with a disclaimer screen, where you show the limitations and license terms (can be refined later) and let the user confirm, before anything else can be seen or entered. when accepting the end user license agreement, the user can check a box that lets this screen to be no longer be shown in future calls - stored in that browser through cookie.
+
+use a clean scientific design with bright or dark background. add a settings section in the hamburger menu, and proper headings and status/statistics bars.
+
+The patient view should display the cohort statistics as well such that - now thinking about it - these two modes are actually a single mode. it just differs whether a single patient is selected or not. if not, only cohort views are visible. if yes, then the specific patient is highlighted in each view, such that the comparison can be done.
+
+Integrate through a generic API all risk models that are implemented here. If needed, extend and generalize the risk model API.
+
+Then it will be possible to have the risk scores also plotted in different ways and dimensions, and also filtered or selected based on risk.
+
+for now, we do not have longitudinal data. that will come later.

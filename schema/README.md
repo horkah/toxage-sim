@@ -42,7 +42,9 @@ Both tables have one record per patient and are linked by `patient_id`. Days cou
 
 The schema files are JSON Schema (draft 2020-12), so any language can read them. All fields are flat, so a table can be stored as CSV with the field names as header. In CSV, null is an empty cell and booleans are `true` and `false`.
 
-Each schema file carries a `version`. Adding an optional field raises the minor version. Renaming or removing a field, or changing its meaning, raises the major version.
+Each schema file carries a `version`. Adding an optional field raises the minor version. Renaming or removing a field, or changing its meaning, raises the major version. Changes that leave the data as they are, such as a new `title`, raise the patch version.
+
+Every field has a `title`, which the app shows as its label, and a `unit` where one applies.
 
 ## Use from Python
 
@@ -59,7 +61,8 @@ toxage_schema.validate("baseline", records)           # raises ValueError at the
 
 ## Extending the schema
 
-- Add the field to the schema file with type, allowed range and description.
+- Add the field to the schema file with title, type, allowed range, unit and description.
 - Raise the version.
 - Add the field to the table in this README.
 - Let the engine fill the field. Its tests check every generated record against the schema.
+- The app picks up the field by itself: it gets a filter and a chart.

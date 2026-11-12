@@ -13,10 +13,10 @@ Technical and organisational details that go beyond the public [README](../READM
 | Folder | Purpose | Status |
 |---|---|---|
 | `background/` | Literature, report, concepts | 28 references, report with ten risk model candidates, 20 PDFs |
-| `schema/` | Central data schema | version 0.1.0: baseline and outcome table, Python loader and validator |
+| `schema/` | Central data schema | version 0.1.1: baseline and outcome table with titles, Python loader and validator |
 | `engine/` | Synthetic data generator | simple models for candidates 1 and 2, ten regimens, tests |
-| `risk-model/` | Toxicity risk model | empty |
-| `app/` | Inspection app | empty |
+| `risk-model/` | Toxicity risk models | common interface, the two engine models, metrics, tests |
+| `app/` | Inspection app | Django web app with cohort and patient view, filters, charts, tests |
 | `project/` | Project management, internal documentation | prompt log, start prompt, this file |
 
 ## Literature
@@ -74,6 +74,15 @@ The copyrighted PDFs must not be in the repository when it becomes public. Befor
 - Generated data go to `engine/output/`, which is not under version control. Data are reproduced from the seed.
 - Tests run with `python3 -m unittest discover engine/tests`.
 
+## Risk models and app
+
+- `risk-model/toxage_risk.py` is the only way the app reaches risk models. It imports the engine, so the engine models are not copied.
+- The app uses Django as its only package (`app/requirements.txt`). No JavaScript framework, no chart library: templates, plain JavaScript modules and CSS. Client state that must be reactive goes into native web components; so far only `<tox-chart>`.
+- The app reads field names, labels, types and units from the schema. Filters and charts per field are generated from it.
+- The full state of a view is in the address, so the server keeps no session. The only cookie is the acceptance of the disclaimer.
+- Tests: `python3 manage.py test explorer` and `node --test "explorer/tests/*.test.mjs"` in `app/`, and `python3 -m unittest discover risk-model/tests`.
+- The disclaimer and the terms of use are preliminary. Their text is in `app/explorer/templates/explorer/disclaimer.html`, their version in `app/toxage_app/settings.py`.
+
 ## Cloud environment
 
 Sessions for this repository run in the cloud environment `toxage-sim`. Its network allows the package registries and these hosts:
@@ -89,5 +98,7 @@ The literature services work from scripts. The publisher hosts answer scripted r
 - Extend the literature to the topics in section 9 of the report, first of all published prediction models and the evidence for home measurements.
 - Replace the assumed parameters of the engine by literature values where possible: effects of age, performance status and geriatric impairments on severe toxicity, and the age distributions per regimen.
 - Add measurements during therapy to schema and engine, so that detection models become possible.
-- Build the first risk models on the generated data.
+- Fit the first risk models on the generated data and compare them with the engine models in the app.
+- Add longitudinal data to schema, engine and app.
+- Write the final terms of use for the app.
 - Decide on a licence for the repository before it becomes public.

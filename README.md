@@ -23,7 +23,7 @@ The project works with synthetic data. A data engine generates patients, therapi
 | [background/](background/) | Scientific background: literature list and a report on therapy toxicity |
 | [schema/](schema/) | Central data schema, shared by engine, risk model and app |
 | [engine/](engine/) | Generator for synthetic patient data |
-| [risk-model/](risk-model/) | Toxicity risk model |
+| [risk-model/](risk-model/) | Toxicity risk models with a common interface |
 | [app/](app/) | App to inspect data and risk scores |
 | [project/](project/) | Project management and internal documentation |
 
@@ -40,7 +40,10 @@ The central data schema and a first version of the data engine exist:
 - [schema/](schema/) defines a baseline record and an outcome record per patient.
 - [engine/](engine/) generates synthetic patients for ten regimens with two outcomes: any severe toxicity within 90 days, and lung toxicity. The models are simple and use published rates and risk factors where available.
 
-The risk model and the app have no code yet.
+A common interface for risk models and a first app exist:
+
+- [risk-model/](risk-model/) gives all risk models one interface. The first two models are the engine's own models for candidates 1 and 2.
+- [app/](app/) is a web app that shows the cohort and a single patient in relation to it: risk distribution, calibration, time to event by risk group, and observed and predicted rates by patient characteristic. Filters cover every field of the schema and every risk model.
 
 ## Note
 

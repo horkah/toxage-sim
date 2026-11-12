@@ -77,6 +77,28 @@ class EngineTest(unittest.TestCase):
         rest = [o["ild"] for o in group if o["patient_id"] not in ids_low]
         self.assertGreater(sum(low) / len(low), sum(rest) / len(rest))
 
+    def test_severe_toxicity_factors_of_reference_patient_are_neutral(self):
+        patient = {"age_years": 65, "ecog": 1, "ga_impaired_domains": None}
+        ratios = dict(toxicity.severe_toxicity_factors(patient, self.params))
+        self.assertEqual(set(ratios), {"age", "ecog_2_or_higher", "ga_impaired_domains"})
+        self.assertTrue(all(r == 1.0 for r in ratios.values()))
+
+    def test_severe_toxicity_factors(self):
+        patient = {"age_years": 85, "ecog": 2, "ga_impaired_domains": 2}
+        ratios = dict(toxicity.severe_toxicity_factors(patient, self.params))
+        self.assertAlmostEqual(ratios["age"], 1.2 ** 2)
+        self.assertEqual(ratios["ecog_2_or_higher"], 2.0)
+        self.assertAlmostEqual(ratios["ga_impaired_domains"], 1.1 ** 2)
+
+    def test_ild_factors_multiply_to_hazard_ratio(self):
+        patient = {"age_years": 50, "lung_comorbidity": True,
+                   "renal_function": "moderate_severe_decrease",
+                   "years_since_diagnosis": 5.0, "spo2_percent": 93}
+        ratios = dict(toxicity.ild_factors(patient, self.params))
+        self.assertEqual(ratios["renal_mild_decrease"], 1.0)
+        self.assertAlmostEqual(toxicity.ild_hazard_ratio(patient, self.params),
+                               1.56 * 1.75 * 2.73 * 1.82 * 2.14)
+
     def test_outcome_fields_are_consistent(self):
         for o in self.outcomes:
             self.assertEqual(o["severe_toxicity_90d"], o["severe_toxicity_day"] is not None)

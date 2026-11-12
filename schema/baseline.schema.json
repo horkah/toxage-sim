@@ -3,7 +3,7 @@
   "$id": "toxage-sim/baseline",
   "title": "Baseline record",
   "description": "One patient at the start of a systemic therapy line. One record per patient.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -13,15 +13,18 @@
   ],
   "properties": {
     "patient_id": {
+      "title": "Patient ID",
       "type": "string",
       "description": "Unique identifier of the patient."
     },
     "tumour_type": {
+      "title": "Tumour type",
       "type": "string",
       "enum": ["pancreas", "prostate", "breast"],
       "description": "Primary tumour. All patients have advanced disease."
     },
     "regimen": {
+      "title": "Regimen",
       "type": "string",
       "enum": [
         "nalirifox",
@@ -38,6 +41,7 @@
       "description": "Systemic therapy that starts on day 1."
     },
     "age_years": {
+      "title": "Age",
       "type": "integer",
       "minimum": 18,
       "maximum": 100,
@@ -45,27 +49,32 @@
       "description": "Age at therapy start."
     },
     "sex": {
+      "title": "Sex",
       "type": "string",
       "enum": ["female", "male"]
     },
     "ecog": {
+      "title": "ECOG",
       "type": "integer",
       "minimum": 0,
       "maximum": 4,
       "description": "ECOG performance status at therapy start."
     },
     "ga_impaired_domains": {
+      "title": "Impaired geriatric domains",
       "type": ["integer", "null"],
       "minimum": 0,
       "maximum": 7,
       "description": "Number of impaired domains in a geriatric assessment (physical function, cognition, emotional health, comorbidity, polypharmacy, nutrition, social support). Null if no assessment was done."
     },
     "renal_function": {
+      "title": "Renal function",
       "type": "string",
       "enum": ["normal", "mild_decrease", "moderate_severe_decrease"],
       "description": "Renal function at therapy start."
     },
     "spo2_percent": {
+      "title": "Oxygen saturation",
       "type": "integer",
       "minimum": 70,
       "maximum": 100,
@@ -73,10 +82,12 @@
       "description": "Oxygen saturation at rest at therapy start."
     },
     "lung_comorbidity": {
+      "title": "Lung comorbidity",
       "type": "boolean",
       "description": "Asthma, COPD, earlier interstitial lung disease or pneumonitis, pulmonary fibrosis, emphysema or radiation pneumonitis."
     },
     "years_since_diagnosis": {
+      "title": "Years since diagnosis",
       "type": "number",
       "minimum": 0,
       "unit": "years",
