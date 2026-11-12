@@ -4,3 +4,4 @@ bak*
 *bak.*
 engine/output/
 __pycache__/
+app/db.sqlite3

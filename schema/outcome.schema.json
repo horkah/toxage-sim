@@ -3,7 +3,7 @@
   "$id": "toxage-sim/outcome",
   "title": "Outcome record",
   "description": "Toxicity outcomes of one patient after therapy start. One record per patient, linked to the baseline record by patient_id. Days count from therapy start (day 1).",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -12,14 +12,17 @@
   ],
   "properties": {
     "patient_id": {
+      "title": "Patient ID",
       "type": "string",
       "description": "Identifier of the patient, as in the baseline record."
     },
     "severe_toxicity_90d": {
+      "title": "Severe toxicity in 90 days",
       "type": "boolean",
       "description": "At least one adverse event of CTCAE grade 3 to 5 within 90 days of therapy start."
     },
     "severe_toxicity_day": {
+      "title": "Day of severe toxicity",
       "type": ["integer", "null"],
       "minimum": 1,
       "maximum": 90,
@@ -27,10 +30,12 @@
       "description": "Day of the first adverse event of grade 3 to 5. Null if there was none within 90 days."
     },
     "ild": {
+      "title": "Lung toxicity",
       "type": "boolean",
       "description": "Drug-related interstitial lung disease or pneumonitis of any grade within 730 days of therapy start."
     },
     "ild_onset_day": {
+      "title": "Day of lung toxicity",
       "type": ["integer", "null"],
       "minimum": 1,
       "maximum": 730,
@@ -38,6 +43,7 @@
       "description": "Day of onset of interstitial lung disease or pneumonitis. Null if there was none."
     },
     "ild_grade": {
+      "title": "Grade of lung toxicity",
       "type": ["integer", "null"],
       "minimum": 1,
       "maximum": 5,

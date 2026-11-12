@@ -14,42 +14,52 @@ def _sigmoid(x):
     return 1 / (1 + math.exp(-x))
 
 
+def severe_toxicity_factors(patient, params):
+    """Odds ratios of the risk factors of one patient, as (factor, odds ratio).
+
+    A factor that does not apply has an odds ratio of 1.
+    """
+    m = params["severe_toxicity"]
+    return [
+        ("age", m["odds_ratio_per_10_years_of_age"] ** (
+            (patient["age_years"] - m["reference_age"]) / 10)),
+        ("ecog_2_or_higher",
+         m["odds_ratio_ecog_2_or_higher"] if patient["ecog"] >= 2 else 1.0),
+        ("ga_impaired_domains",
+         m["odds_ratio_per_impaired_ga_domain"] ** (patient["ga_impaired_domains"] or 0)),
+    ]
+
+
 def severe_toxicity_risk(patient, regimens, params):
     """Probability of a grade 3 to 5 event within the window (logistic model).
 
     The regimen rate from the literature is the risk of a reference patient:
     reference age, ECOG 0 or 1, no impaired geriatric domain.
     """
-    m = params["severe_toxicity"]
     x = _logit(regimens[patient["regimen"]]["severe_toxicity_rate"])
-    x += math.log(m["odds_ratio_per_10_years_of_age"]) * (
-        patient["age_years"] - m["reference_age"]
-    ) / 10
-    if patient["ecog"] >= 2:
-        x += math.log(m["odds_ratio_ecog_2_or_higher"])
-    x += math.log(m["odds_ratio_per_impaired_ga_domain"]) * (
-        patient["ga_impaired_domains"] or 0
-    )
+    x += sum(math.log(r) for _, r in severe_toxicity_factors(patient, params))
     return _sigmoid(x)
+
+
+def ild_factors(patient, params):
+    """Hazard ratios of the risk factors for lung toxicity, as (factor, hazard
+    ratio). A factor that does not apply has a hazard ratio of 1."""
+    hr = params["ild"]["hazard_ratios"]
+    applies = {
+        "age_below_65": patient["age_years"] < 65,
+        "lung_comorbidity": patient["lung_comorbidity"],
+        "renal_mild_decrease": patient["renal_function"] == "mild_decrease",
+        "renal_moderate_severe_decrease":
+            patient["renal_function"] == "moderate_severe_decrease",
+        "more_than_4_years_since_diagnosis": patient["years_since_diagnosis"] > 4,
+        "spo2_below_95": patient["spo2_percent"] < 95,
+    }
+    return [(name, hr[name] if hit else 1.0) for name, hit in applies.items()]
 
 
 def ild_hazard_ratio(patient, params):
     """Combined hazard ratio of the baseline risk factors for lung toxicity."""
-    hr = params["ild"]["hazard_ratios"]
-    ratio = 1.0
-    if patient["age_years"] < 65:
-        ratio *= hr["age_below_65"]
-    if patient["lung_comorbidity"]:
-        ratio *= hr["lung_comorbidity"]
-    if patient["renal_function"] == "mild_decrease":
-        ratio *= hr["renal_mild_decrease"]
-    elif patient["renal_function"] == "moderate_severe_decrease":
-        ratio *= hr["renal_moderate_severe_decrease"]
-    if patient["years_since_diagnosis"] > 4:
-        ratio *= hr["more_than_4_years_since_diagnosis"]
-    if patient["spo2_percent"] < 95:
-        ratio *= hr["spo2_below_95"]
-    return ratio
+    return math.prod(r for _, r in ild_factors(patient, params))
 
 
 def ild_risk(patient, baseline_risk, params):

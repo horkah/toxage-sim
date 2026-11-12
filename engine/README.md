@@ -27,7 +27,7 @@ The engine needs Python 3 and no further packages.
 |---|---|
 | `generate.py` | Command line entry: generates, checks against the schema, writes the files |
 | `population.py` | Baseline characteristics of a patient |
-| `toxicity.py` | The two toxicity models |
+| `toxicity.py` | The two toxicity models; the effect of each risk factor is also available on its own, for the risk models |
 | `config/regimens.json` | Regimens with reference rates and their sources |
 | `config/parameters.json` | All other parameters, each marked as literature value or assumption |
 | `tests/test_engine.py` | Tests |
