@@ -1,0 +1,8 @@
+{% extends "explorer/base.html" %}
+{% block content %}
+<section class="panel narrow">
+  <h1>No data loaded</h1>
+  <p>Generate a synthetic cohort with the data engine:</p>
+  <pre>python3 manage.py load_cohort --n 5000 --seed 1</pre>
+</section>
+{% endblock %}

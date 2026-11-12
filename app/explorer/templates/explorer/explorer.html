@@ -1,0 +1,141 @@
+{% extends "explorer/base.html" %}
+{% load explorer_tags %}
+{% block title %}{% if patient %}{{ patient.patient_id }} · {% endif %}toxage-sim explorer{% endblock %}
+
+{% block tools %}
+<form class="search" method="get" action="{% url 'explorer' %}" role="search">
+  {% for key, value in keep %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+  <input type="search" name="patient" value="{{ patient_id }}" placeholder="Patient ID, e.g. 42"
+         aria-label="Patient ID">
+  <button type="submit">Show</button>
+</form>
+<a class="button" href="{% url 'random' %}?{{ request.GET.urlencode }}"
+   title="Random patient of the current selection">Random</a>
+{% if patient_id %}<a class="button" href="?{{ clear_patient }}">Clear patient</a>{% endif %}
+{% endblock %}
+
+{% block menu_about %}
+<h3>Data set</h3>
+<p class="muted">{{ total }} synthetic patients, seed {{ dataset.metadata.seed }},
+  schema {{ dataset.metadata.schema_version.baseline }}, generated {{ dataset.created|date:"Y-m-d H:i" }} UTC.</p>
+{% endblock %}
+
+{% block status %}
+<div class="statusbar top" role="status">
+  <span><b>{{ selection }}</b> of {{ total }} patients
+    {% if active_count %}· {{ active_count }} filter{{ active_count|pluralize }} active{% endif %}</span>
+  {% for s in summaries %}
+  <span class="{% if s.model == focus %}focus{% endif %}" title="{{ s.events }} events among {{ s.n }} patients for whom the model applies">
+    <b>{{ s.model.name }}</b> observed {{ s.observed|pct }} · predicted {{ s.predicted|pct }}
+    · AUC {{ s.auc|num }} · Brier {{ s.brier|num:3 }} · n {{ s.n }}</span>
+  {% endfor %}
+  {% if patient %}<span class="patient-tag">Patient {{ patient.patient_id }}</span>{% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="layout">
+  <aside>
+    <form method="get" class="filters" id="filters">
+      <h2>Filters</h2>
+      <input type="hidden" name="model" value="{{ focus.id }}">
+      {% if patient %}<input type="hidden" name="patient" value="{{ patient.patient_id }}">{% endif %}
+      {% for group in filter_form %}
+      <details {% if group.active or forloop.first %}open{% endif %}>
+        <summary>{{ group.name }}</summary>
+        {% for e in group.entries %}
+        <fieldset{% if e.active %} class="active"{% endif %}>
+          <legend>{{ e.spec.label }}{% if e.spec.unit %} ({{ e.spec.unit }}){% endif %}</legend>
+          {% if e.spec.kind == "choice" %}
+            {% for c in e.spec.choices %}
+            <label><input type="checkbox" name="{{ e.spec.key }}" value="{{ c }}"{% if c in e.selected %} checked{% endif %}> {{ c|label }}</label>
+            {% endfor %}
+          {% elif e.spec.kind == "bool" %}
+            <select name="{{ e.spec.key }}" aria-label="{{ e.spec.label }}">
+              <option value="">any</option>
+              <option value="true"{% if e.value == "true" %} selected{% endif %}>yes</option>
+              <option value="false"{% if e.value == "false" %} selected{% endif %}>no</option>
+            </select>
+          {% else %}
+            <span class="range">
+              <input type="number" step="any" name="{{ e.spec.key }}_min" value="{{ e.min }}" placeholder="min" aria-label="{{ e.spec.label }} minimum">
+              <span>–</span>
+              <input type="number" step="any" name="{{ e.spec.key }}_max" value="{{ e.max }}" placeholder="max" aria-label="{{ e.spec.label }} maximum">
+            </span>
+          {% endif %}
+        </fieldset>
+        {% endfor %}
+      </details>
+      {% endfor %}
+      <div class="actions">
+        <button type="submit" class="primary">Apply</button>
+        <a class="button" href="?{{ reset_filters }}">Reset</a>
+      </div>
+    </form>
+  </aside>
+
+  <div class="views">
+    {% if patient_id and not patient %}
+    <p class="notice error" role="alert">No patient with ID “{{ patient_id }}”.</p>
+    {% endif %}
+
+    {% if patient %}
+    <section class="panel patient">
+      <h2>Patient {{ patient.patient_id }}
+        {% if not patient_in_selection %}<span class="tag">outside the current filter</span>{% endif %}</h2>
+      <div class="patient-grid">
+        <table class="facts">
+          {% for f, value in patient_fields %}
+          {% ifchanged f.table %}<tr><th colspan="2" class="group">{% if f.table == "baseline" %}At therapy start{% else %}Observed outcome{% endif %}</th></tr>{% endifchanged %}
+          <tr><th>{{ f.label }}</th><td>{{ value }}</td></tr>
+          {% endfor %}
+        </table>
+        {% for r in patient_risks %}
+        <div class="riskcard{% if r.model == focus %} focus{% endif %}">
+          <h3>{{ r.model.name }}</h3>
+          {% if r.applies %}
+          <p class="big">{{ r.risk|pct }}</p>
+          <p class="muted">Reference patient on this regimen: {{ r.reference|pct }}<br>
+            Percentile in the selection: {{ r.percentile|num:0 }}</p>
+          <p>Observed: {% if r.observed %}<b class="event-text">event</b>{% if r.onset %} on day {{ r.onset }}{% endif %}{% else %}no event{% endif %}</p>
+          <table class="factors">
+            <caption>Risk factors, {{ r.model.ratio_kind }} (1 = no effect)</caption>
+            {% for f in r.factors %}
+            <tr{% if f.ratio == 1 %} class="muted"{% endif %}>
+              <th>{{ f.label }}</th>
+              <td class="fbar"><span class="{% if f.up %}up{% else %}down{% endif %}" style="width: {{ f.width }}%"></span></td>
+              <td>{{ f.ratio|num }}</td>
+            </tr>
+            {% endfor %}
+          </table>
+          {% else %}
+          <p class="muted">The model does not apply to this regimen.</p>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    <nav class="tabs" aria-label="Risk model of the charts">
+      <span>Risk model</span>
+      {% for m, query in model_links %}
+      <a href="?{{ query }}"{% if m == focus %} class="active" aria-current="page"{% endif %}>{{ m.name }}</a>
+      {% endfor %}
+    </nav>
+    <p class="muted model-info">{{ focus.name }}: candidate {{ focus.candidate }} of the toxicity report,
+      outcome within {{ focus.window_days }} days. Source: {{ focus.source }}.</p>
+
+    {% for s in sections %}
+    <section class="charts">
+      <h2>{{ s.title }}</h2>
+      <p class="note">{{ s.note }}</p>
+      <div class="grid">
+        {% for cid, spec in s.charts %}<tox-chart chart="{{ cid }}"></tox-chart>{% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+    {{ chart_data|json_script:"chart-data" }}
+  </div>
+</div>
+{% endblock %}
