@@ -1,6 +1,6 @@
 # risk-model
 
-Risk models for toxicity of systemic cancer therapy. They take the baseline record of a patient at the start of a therapy line and return risk scores in the format of the central [schema](../schema/). The app reads these scores.
+Risk models for toxicity of systemic cancer therapy. They take the baseline record of a patient at the start of a therapy line and return the risk of an outcome. All models share one interface, which the [app](../app/) uses. The scores can also be written as a table of the central [schema](../schema/).
 
 The first two models follow candidates 1 and 2 of the [toxicity report](../background/toxicity-report.md), section 8:
 
@@ -41,7 +41,8 @@ The code needs Python 3 and no further packages. The output folder is not under 
 
 | File | Content |
 |---|---|
-| `models.py` | The two models, and the class `RiskModel` with `score` and `explain` |
+| `toxage_risk.py` | Common interface to all risk models, used by the app |
+| `models.py` | The calculations of the two models, and the class `Scorer`, which writes risk score records |
 | `config/models.json` | Coefficients, reference rates and risk categories, each with its source or marked as assumption |
 | `score.py` | Command line: baseline CSV to risk score CSV |
 | `evaluate.py` | Command line: discrimination and calibration against outcomes |
@@ -49,22 +50,50 @@ The code needs Python 3 and no further packages. The output folder is not under 
 | `glm.py` | Binomial regression with logit and complementary log-log link |
 | `metrics.py` | AUC, Brier score, calibration |
 | `data.py` | Reads engine output through the schema |
-| `tests/test_risk_model.py` | Tests |
+| `tests/test_risk_model.py` | Tests of the calculations, fitting and evaluation |
+| `tests/test_risk.py` | Tests of the common interface |
 | `EXTENSIONS.md` | Possible extensions of both models |
 
-## Use from the app
+## Interface
+
+All models share one interface in [toxage_risk.py](toxage_risk.py), so that the app and evaluation code can treat them alike:
 
 ```python
-import sys
-sys.path.insert(0, "risk-model")
-import models
+import toxage_risk                     # with risk-model/ on the Python path
 
-model = models.RiskModel()          # literature configuration
-record = model.score(patient)       # one risk_score record, see schema/risk_score.schema.json
-details = model.explain(patient)    # starting risk and the factors that change it
+models = toxage_risk.load()           # one instance of every registered model
+for model in models:
+    model.describe()                  # id, name, outcome field, onset field, window, source
+    model.applies(patient)            # does the model give a risk for this patient?
+    model.risk(patient)               # probability from 0 to 1, None if not applicable
+    model.reference_risk(patient)     # risk of a patient on the same regimen without risk factors
+    model.factors(patient)            # list of Factor(name, label, ratio)
 ```
 
-`score` returns for each model the risk, the published rate of the regimen for comparison, and a risk category. `explain` returns the starting risk with its source and each factor with its odds ratio or hazard ratio, so the app can show why a patient's risk differs from the regimen rate. Multiplying the starting odds (candidate 1) or applying the hazard ratios (candidate 2) gives back the score exactly.
+`patient` is a baseline record of the [schema](../schema/). `load` takes another model configuration as argument, for example one written by `fit.py`.
+
+`Factor.ratio` is an odds ratio or a hazard ratio, as `model.ratio_kind` says. A ratio of 1 means that the factor does not apply to the patient. The reference risk combined with all ratios gives back the risk exactly.
+
+The module also offers `auc`, `brier` and `calibration` in a form that leaves out patients for whom a model gives no risk.
+
+| id | Outcome | Candidate |
+|---|---|---|
+| `severe90` | any adverse event of grade 3 to 5 within 90 days | 1 |
+| `ild` | interstitial lung disease or pneumonitis within 730 days | 2 |
+
+### Adding a model
+
+1. Put the calculation into `models.py` and its coefficients into `config/models.json`.
+2. Subclass `RiskModel` in `toxage_risk.py`, set the attributes and implement `risk`, `reference_risk` and `factors` (and `applies` if the model is limited to some patients).
+3. Add the class to `MODELS`.
+
+The app then shows the new model in the status bar, as a tab for the charts, in the patient view and as a risk filter.
+
+### Score table
+
+`models.Scorer` computes both models at once and returns one record of the risk_score table of the schema, with the risk, the published rate of the regimen and a risk category per model. `score.py` writes this table as CSV. `Scorer.explain` returns the starting risk and the factors of a patient as a dictionary.
+
+The risk models do not import the engine and do not read its parameters.
 
 ## Candidate 1: any severe toxicity in 90 days
 

@@ -3,7 +3,7 @@
   "$id": "toxage-sim/baseline",
   "title": "Baseline record",
   "description": "One patient at the start of a systemic therapy line. One record per patient.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -34,10 +34,12 @@
   ],
   "properties": {
     "patient_id": {
+      "title": "Patient ID",
       "type": "string",
       "description": "Unique identifier of the patient."
     },
     "tumour_type": {
+      "title": "Tumour type",
       "type": "string",
       "enum": [
         "pancreas",
@@ -47,6 +49,7 @@
       "description": "Primary tumour. All patients have advanced disease."
     },
     "subgroup": {
+      "title": "Subgroup",
       "type": "string",
       "enum": [
         "pancreas_metastatic",
@@ -58,6 +61,7 @@
       "description": "Disease setting within the tumour type."
     },
     "regimen": {
+      "title": "Regimen",
       "type": "string",
       "enum": [
         "nalirifox",
@@ -74,21 +78,25 @@
       "description": "Systemic therapy that starts on day 1."
     },
     "prior_therapy_lines": {
+      "title": "Earlier therapy lines",
       "type": "integer",
       "minimum": 0,
       "description": "Number of earlier systemic therapy lines for advanced disease."
     },
     "starting_dose_level": {
+      "title": "Starting dose level",
       "type": "number",
       "minimum": 0.1,
       "maximum": 1.0,
       "description": "Dose in the first cycle as a fraction of the standard dose."
     },
     "gcsf_prophylaxis": {
+      "title": "G-CSF prophylaxis",
       "type": "boolean",
       "description": "G-CSF is given with each chemotherapy cycle to prevent neutropenia."
     },
     "age_years": {
+      "title": "Age",
       "type": "integer",
       "minimum": 18,
       "maximum": 100,
@@ -96,6 +104,7 @@
       "description": "Age at therapy start."
     },
     "sex": {
+      "title": "Sex",
       "type": "string",
       "enum": [
         "female",
@@ -103,12 +112,14 @@
       ]
     },
     "ecog": {
+      "title": "ECOG",
       "type": "integer",
       "minimum": 0,
       "maximum": 4,
       "description": "ECOG performance status at therapy start."
     },
     "ga_impaired_domains": {
+      "title": "Impaired geriatric domains",
       "type": [
         "integer",
         "null"
@@ -118,6 +129,7 @@
       "description": "Number of impaired domains in a geriatric assessment (physical function, cognition, emotional health, comorbidity, polypharmacy, nutrition, social support). Null if no assessment was done."
     },
     "bmi": {
+      "title": "Body mass index",
       "type": "number",
       "minimum": 10,
       "maximum": 60,
@@ -125,6 +137,7 @@
       "description": "Body mass index."
     },
     "albumin_g_l": {
+      "title": "Albumin",
       "type": "number",
       "minimum": 10,
       "maximum": 60,
@@ -132,6 +145,7 @@
       "description": "Serum albumin."
     },
     "egfr_ml_min": {
+      "title": "eGFR",
       "type": "integer",
       "minimum": 5,
       "maximum": 150,
@@ -139,6 +153,7 @@
       "description": "Estimated glomerular filtration rate."
     },
     "renal_function": {
+      "title": "Renal function",
       "type": "string",
       "enum": [
         "normal",
@@ -148,30 +163,35 @@
       "description": "Renal function category derived from egfr_ml_min: normal from 90, mild decrease from 60 to 89, moderate or severe decrease below 60."
     },
     "bilirubin_ratio_uln": {
+      "title": "Bilirubin",
       "type": "number",
       "minimum": 0,
       "unit": "multiple of the upper limit of normal",
       "description": "Total bilirubin relative to the upper limit of normal."
     },
     "neutrophils_10e9_l": {
+      "title": "Neutrophils",
       "type": "number",
       "minimum": 0,
       "unit": "10^9/l",
       "description": "Neutrophil count."
     },
     "haemoglobin_g_dl": {
+      "title": "Haemoglobin",
       "type": "number",
       "minimum": 0,
       "unit": "g/dl",
       "description": "Haemoglobin."
     },
     "platelets_10e9_l": {
+      "title": "Platelets",
       "type": "integer",
       "minimum": 0,
       "unit": "10^9/l",
       "description": "Platelet count."
     },
     "spo2_percent": {
+      "title": "Oxygen saturation",
       "type": "integer",
       "minimum": 70,
       "maximum": 100,
@@ -179,18 +199,22 @@
       "description": "Oxygen saturation at rest."
     },
     "lung_comorbidity": {
+      "title": "Lung comorbidity",
       "type": "boolean",
       "description": "Asthma, COPD, earlier interstitial lung disease or pneumonitis, pulmonary fibrosis, emphysema or radiation pneumonitis."
     },
     "diabetes": {
+      "title": "Diabetes",
       "type": "boolean",
       "description": "Diabetes mellitus."
     },
     "cardiovascular_disease": {
+      "title": "Cardiovascular disease",
       "type": "boolean",
       "description": "Earlier cardiovascular event or established cardiovascular disease."
     },
     "years_since_diagnosis": {
+      "title": "Years since diagnosis",
       "type": "number",
       "minimum": 0,
       "unit": "years",

@@ -115,7 +115,9 @@ Risks are probabilities. The `ild_` fields are null if the lung toxicity model d
 
 The schema files are JSON Schema (draft 2020-12), so any language can read them. All fields are flat, so a table can be stored as CSV with the field names as header. In CSV, null is an empty cell and booleans are `true` and `false`.
 
-Each schema file carries a `version`, currently 0.2.0 for the four tables of the engine and 0.1.0 for risk_score. Adding an optional field raises the minor version. Renaming or removing a field, or changing its meaning, raises the major version.
+Each schema file carries a `version`, currently 0.2.1 for the four tables of the engine and 0.1.1 for risk_score. Adding an optional field raises the minor version. Renaming or removing a field, or changing its meaning, raises the major version. Changes that leave the data as they are, such as a new `title`, raise the patch version.
+
+Every field has a `title`, which the app shows as its label, and a `unit` where one applies.
 
 ## Use from Python
 
@@ -135,7 +137,8 @@ toxage_schema.read_csv(path, "baseline")              # read a CSV with typed va
 
 ## Extending the schema
 
-- Add the field to the schema file with type, allowed range, unit and description.
+- Add the field to the schema file with title, type, allowed range, unit and description.
 - Raise the version.
 - Update the tables in this README.
 - Let the engine fill the field, or the risk model for the risk_score table. Their tests check generated records against the schema.
+- The app picks up a new field of the baseline or outcome table by itself: it gets a filter and a chart.

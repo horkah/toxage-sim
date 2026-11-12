@@ -33,7 +33,7 @@ class ModelTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.cfg = models.load_config()
-        cls.model = models.RiskModel(cls.cfg)
+        cls.model = models.Scorer(cls.cfg)
 
     def test_regimens_match_schema(self):
         self.assertEqual(
@@ -192,7 +192,7 @@ class PipelineTest(unittest.TestCase):
             self.assertLess(abs(math.log(entry["value"]) - math.log(engine_hr[name])), 3.5 * se, name)
         # The fitted configuration works in place of the literature one and
         # describes the data it was fitted on at least as well.
-        record = models.RiskModel(cfg).score(self.baseline[0])
+        record = models.Scorer(cfg).score(self.baseline[0])
         self.assertEqual(toxage_schema.errors("risk_score", record), [])
         before = evaluate.evaluate(self.baseline, self.outcomes)
         after = evaluate.evaluate(self.baseline, self.outcomes, cfg)

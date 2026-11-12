@@ -3,7 +3,7 @@
   "$id": "toxage-sim/event",
   "title": "Event record",
   "description": "One adverse event of one patient. The engine records events of grade 3 to 5 and interstitial lung disease of any grade.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -16,10 +16,12 @@
   ],
   "properties": {
     "patient_id": {
+      "title": "Patient ID",
       "type": "string",
       "description": "Unique identifier of the patient."
     },
     "event_type": {
+      "title": "Event type",
       "type": "string",
       "enum": [
         "neutropenia",
@@ -36,24 +38,28 @@
       "description": "Type of the adverse event."
     },
     "grade": {
+      "title": "Grade",
       "type": "integer",
       "minimum": 1,
       "maximum": 5,
       "description": "CTCAE grade. Grade 5 is death from the event."
     },
     "onset_day": {
+      "title": "Day of onset",
       "type": "integer",
       "minimum": 1,
       "unit": "days",
       "description": "Day on which the event actually started."
     },
     "day": {
+      "title": "Day of recognition",
       "type": "integer",
       "minimum": 1,
       "unit": "days",
       "description": "Day on which the event was recognised by the care team. Later than onset_day if recognition was delayed."
     },
     "action": {
+      "title": "Action",
       "type": "string",
       "enum": [
         "none",

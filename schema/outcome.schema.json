@@ -3,7 +3,7 @@
   "$id": "toxage-sim/outcome",
   "title": "Outcome record",
   "description": "Summary of the course of one patient, derived from the event and observation records. One record per patient. Days count from therapy start (day 1).",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -21,20 +21,24 @@
   ],
   "properties": {
     "patient_id": {
+      "title": "Patient ID",
       "type": "string",
       "description": "Unique identifier of the patient."
     },
     "follow_up_days": {
+      "title": "Follow-up",
       "type": "integer",
       "minimum": 1,
       "unit": "days",
       "description": "Length of follow-up: until death or the end of the simulated period."
     },
     "severe_toxicity_90d": {
+      "title": "Severe toxicity in 90 days",
       "type": "boolean",
       "description": "At least one adverse event of CTCAE grade 3 to 5 recognised within 90 days of therapy start."
     },
     "severe_toxicity_day": {
+      "title": "Day of severe toxicity",
       "type": [
         "integer",
         "null"
@@ -45,10 +49,12 @@
       "description": "Day of the first adverse event of grade 3 to 5. Null if there was none within 90 days."
     },
     "ild": {
+      "title": "Lung toxicity",
       "type": "boolean",
       "description": "Drug-related interstitial lung disease or pneumonitis of any grade that started during follow-up."
     },
     "ild_onset_day": {
+      "title": "Day of lung toxicity",
       "type": [
         "integer",
         "null"
@@ -58,6 +64,7 @@
       "description": "Day on which the interstitial lung disease or pneumonitis actually started. Null if there was none."
     },
     "ild_diagnosis_day": {
+      "title": "Day lung toxicity was recognised",
       "type": [
         "integer",
         "null"
@@ -67,6 +74,7 @@
       "description": "Day on which it was recognised. Null if there was none or if it was not recognised during follow-up."
     },
     "ild_grade": {
+      "title": "Grade of lung toxicity",
       "type": [
         "integer",
         "null"
@@ -76,6 +84,7 @@
       "description": "Highest CTCAE grade of the interstitial lung disease or pneumonitis. Null if there was none."
     },
     "treatment_end_day": {
+      "title": "Day of therapy end",
       "type": [
         "integer",
         "null"
@@ -85,6 +94,7 @@
       "description": "Day on which the therapy ended. Null if it was still ongoing at the end of follow-up."
     },
     "treatment_end_reason": {
+      "title": "Reason for therapy end",
       "type": "string",
       "enum": [
         "ongoing",
@@ -96,6 +106,7 @@
       "description": "Why the therapy ended."
     },
     "death_day": {
+      "title": "Day of death",
       "type": [
         "integer",
         "null"

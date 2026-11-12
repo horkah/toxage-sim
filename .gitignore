@@ -2,6 +2,10 @@ tmp*
 temp*
 bak*
 *bak.*
+# the pattern temp* must not hide Django template folders
+!templates/
+!templatetags/
 engine/output/
 risk-model/output/
 __pycache__/
+app/db.sqlite3
