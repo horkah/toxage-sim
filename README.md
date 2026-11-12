@@ -1,0 +1,40 @@
+# toxage-sim
+
+Cancer therapies save and prolong lives, but they often harm the patient as well. In clinical trials of chemotherapy, immunotherapy and other systemic treatments for advanced cancer, more than half of the patients have at least one severe side effect. Some of them are noticed late.
+
+The goal of this project is to predict toxicity from cancer therapy, or to detect it early, better than current clinical care does.
+
+## Patient groups
+
+We start with three groups of patients with advanced disease who receive systemic therapy with a relevant risk of toxicity:
+
+- pancreatic cancer
+- prostate cancer
+- breast cancer
+
+## Approach
+
+The project works with synthetic data. A data engine generates patients, therapies and toxicity courses based on published knowledge. A risk model is built and tested on these data. An app makes data and risk scores visible, for a single patient, for a population, and for a patient compared with a reference population.
+
+## Repository
+
+| Folder | Content |
+|---|---|
+| [background/](background/) | Scientific background: literature list and a report on therapy toxicity |
+| [engine/](engine/) | Generator for synthetic patient data |
+| [risk-model/](risk-model/) | Toxicity risk model |
+| [app/](app/) | App to inspect data and risk scores |
+| [project/](project/) | Project management and internal documentation |
+
+## Status
+
+The scientific background is in place:
+
+- [background/references.md](background/references.md) lists 20 papers from high-impact journals on toxicity in the three patient groups.
+- [background/toxicity-report.md](background/toxicity-report.md) summarises their findings: how often severe toxicity occurs with which therapy, when it starts, who is at risk, and where early detection can gain time.
+
+The data engine, the risk model and the app have no code yet.
+
+## Note
+
+This is a research project. It uses synthetic data only and is not a medical device. Nothing in this repository is medical advice.
