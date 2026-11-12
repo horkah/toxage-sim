@@ -10,6 +10,7 @@ The central data schema of the project. The engine, the risk model and the app a
 | observation | [observation.schema.json](observation.schema.json) | Therapy status, measurements and patient-reported symptoms in one week | one per patient and week |
 | event | [event.schema.json](event.schema.json) | One adverse event | none, one or several per patient |
 | outcome | [outcome.schema.json](outcome.schema.json) | Summary of the course of the patient | one per patient |
+| risk_score | [risk_score.schema.json](risk_score.schema.json) | Risk scores at therapy start, computed by the [risk model](../risk-model/) | one per patient |
 
 All tables are linked by `patient_id`. Days count from therapy start, which is day 1. Week 0 covers days 1 to 7.
 
@@ -93,11 +94,28 @@ The schema files hold the full description and unit of every field. The tables b
 
 The outcome table is derived from the event and observation tables. It holds the targets of the risk models.
 
+### risk_score
+
+| Field | Type | Values |
+|---|---|---|
+| `patient_id` | string |  |
+| `model_version` | string |  |
+| `severe_toxicity_90d_risk` | number | 0–1 |
+| `severe_toxicity_90d_regimen_rate` | number | 0–1 |
+| `severe_toxicity_90d_category` | string | `low`, `intermediate`, `high` |
+| `ild_applicable` | boolean |  |
+| `ild_risk` | number or null | 0–1 |
+| `ild_grade2plus_risk` | number or null | 0–1 |
+| `ild_regimen_rate` | number or null | 0–1 |
+| `ild_category` | string or null | `low`, `intermediate`, `high` |
+
+Risks are probabilities. The `ild_` fields are null if the lung toxicity model does not apply to the regimen. The baseline, observation, event and outcome tables are written by the engine, the risk_score table by the risk model.
+
 ## Format
 
 The schema files are JSON Schema (draft 2020-12), so any language can read them. All fields are flat, so a table can be stored as CSV with the field names as header. In CSV, null is an empty cell and booleans are `true` and `false`.
 
-Each schema file carries a `version`, currently 0.2.0 for all tables. Adding an optional field raises the minor version. Renaming or removing a field, or changing its meaning, raises the major version.
+Each schema file carries a `version`, currently 0.2.0 for the four tables of the engine and 0.1.0 for risk_score. Adding an optional field raises the minor version. Renaming or removing a field, or changing its meaning, raises the major version.
 
 ## Use from Python
 
@@ -111,6 +129,8 @@ toxage_schema.fields("baseline")                      # field names in order
 toxage_schema.allowed_values("baseline", "regimen")   # values of an enumerated field
 toxage_schema.errors("outcome", record)               # list of problems, empty if valid
 toxage_schema.validate("baseline", records)           # raises ValueError at the first invalid record
+toxage_schema.write_csv(path, "baseline", records)    # write a table as CSV
+toxage_schema.read_csv(path, "baseline")              # read a CSV with typed values, validated
 ```
 
 ## Extending the schema
@@ -118,4 +138,4 @@ toxage_schema.validate("baseline", records)           # raises ValueError at the
 - Add the field to the schema file with type, allowed range, unit and description.
 - Raise the version.
 - Update the tables in this README.
-- Let the engine fill the field. Its tests check generated records against the schema.
+- Let the engine fill the field, or the risk model for the risk_score table. Their tests check generated records against the schema.

@@ -3,7 +3,6 @@
 Usage: python3 engine/generate.py --n 3000 --seed 1 --out engine/output
 """
 import argparse
-import csv
 import json
 import random
 import sys
@@ -18,6 +17,9 @@ import course  # noqa: E402
 import hazards  # noqa: E402
 import measurements  # noqa: E402
 import population  # noqa: E402
+
+# Tables of the central schema that the engine writes.
+TABLES = ("baseline", "observation", "event", "outcome")
 
 
 def load_config():
@@ -53,32 +55,15 @@ def generate(n, seed, validate=True):
             measurements.observations(rng, patient, latent, regimen, params, result, mult)
         )
     if validate:
-        for name in toxage_schema.TABLES:
+        for name in TABLES:
             toxage_schema.validate(name, data[name])
     data["metadata"] = {
         "n": n,
         "seed": seed,
         "weeks": params["simulation"]["weeks"],
-        "schema_version": {t: toxage_schema.load(t)["version"] for t in toxage_schema.TABLES},
+        "schema_version": {t: toxage_schema.load(t)["version"] for t in TABLES},
     }
     return data
-
-
-def _cell(value):
-    if value is None:
-        return ""
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    return value
-
-
-def write_csv(path, table, records):
-    names = toxage_schema.fields(table)
-    with open(path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(names)
-        for record in records:
-            writer.writerow([_cell(record[name]) for name in names])
 
 
 def summary(data):
@@ -124,13 +109,13 @@ def main():
     data = generate(args.n, args.seed)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    for name in toxage_schema.TABLES:
-        write_csv(out / f"{name}.csv", name, data[name])
+    for name in TABLES:
+        toxage_schema.write_csv(out / f"{name}.csv", name, data[name])
     with open(out / "metadata.json", "w", encoding="utf-8") as f:
         json.dump(data["metadata"], f, indent=2)
 
     print(f"{args.n} patients written to {out}: "
-          + ", ".join(f"{len(data[name])} {name} records" for name in toxage_schema.TABLES))
+          + ", ".join(f"{len(data[name])} {name} records" for name in TABLES))
     print_summary(data)
 
 

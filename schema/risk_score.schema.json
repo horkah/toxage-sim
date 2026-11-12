@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "toxage-sim/risk_score",
+  "title": "Risk score record",
+  "description": "Risk scores of one patient at the start of a systemic therapy line, computed from the baseline record. One record per patient, linked by patient_id. Risks are probabilities between 0 and 1.",
+  "version": "0.1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "patient_id", "model_version",
+    "severe_toxicity_90d_risk", "severe_toxicity_90d_regimen_rate", "severe_toxicity_90d_category",
+    "ild_applicable", "ild_risk", "ild_grade2plus_risk", "ild_regimen_rate", "ild_category"
+  ],
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "description": "Identifier of the patient, as in the baseline record."
+    },
+    "model_version": {
+      "type": "string",
+      "description": "Version of the model configuration that produced the scores."
+    },
+    "severe_toxicity_90d_risk": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Candidate 1: probability of at least one adverse event of CTCAE grade 3 to 5 within 90 days of therapy start."
+    },
+    "severe_toxicity_90d_regimen_rate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Candidate 1: risk of the reference patient (age 65, ECOG 0 or 1, no impaired geriatric domain) on the same regimen. Equals the published rate of the regimen."
+    },
+    "severe_toxicity_90d_category": {
+      "type": "string",
+      "enum": ["low", "intermediate", "high"],
+      "description": "Candidate 1: risk category from the thresholds in the model configuration."
+    },
+    "ild_applicable": {
+      "type": "boolean",
+      "description": "Candidate 2: true if the model has a lung toxicity rate for the regimen. If false, the other ild fields are null."
+    },
+    "ild_risk": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Candidate 2: probability of drug-related interstitial lung disease or pneumonitis of any grade within 730 days."
+    },
+    "ild_grade2plus_risk": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Candidate 2: probability of interstitial lung disease or pneumonitis of grade 2 or higher within 730 days."
+    },
+    "ild_regimen_rate": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Candidate 2: published rate of the regimen, i.e. the mean risk in the trial population."
+    },
+    "ild_category": {
+      "type": ["string", "null"],
+      "enum": ["low", "intermediate", "high", null],
+      "description": "Candidate 2: risk category from the thresholds in the model configuration."
+    }
+  }
+}

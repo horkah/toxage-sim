@@ -13,9 +13,9 @@ Technical and organisational details that go beyond the public [README](../READM
 | Folder | Purpose | Status |
 |---|---|---|
 | `background/` | Literature, report, concepts | 28 references, report with ten risk model candidates, 20 PDFs |
-| `schema/` | Central data schema | version 0.2.0: baseline, observation, event and outcome table, Python loader and validator |
+| `schema/` | Central data schema | baseline, observation, event and outcome table (version 0.2.0), risk_score table (version 0.1.0), Python loader, validator, CSV reader and writer |
 | `engine/` | Synthetic data generator | weekly microsimulation for candidates 1 and 2, five subgroups, ten regimens, calibration, tests |
-| `risk-model/` | Toxicity risk model | empty |
+| `risk-model/` | Toxicity risk model | baseline models for candidates 1 and 2, fitting, evaluation, tests, list of extensions |
 | `app/` | Inspection app | empty |
 | `project/` | Project management, internal documentation | prompt log, start prompt, this file |
 
@@ -69,12 +69,21 @@ The copyrighted PDFs must not be in the repository when it becomes public. Befor
 
 ## Schema and engine
 
-- The schema in `schema/` is the single source for field names, types and allowed values. Code in other folders reads it from there and does not repeat field lists. Rules for extending it are in `schema/README.md`.
+- The schema in `schema/` is the single source for field names, types and allowed values. Code in other folders reads it from there and does not repeat field lists. Reading and writing CSV files also goes through `schema/toxage_schema.py`. Rules for extending it are in `schema/README.md`.
 - The engine is plain Python 3 without further packages. `engine/README.md` describes the model variables, the covariate mechanisms, the hazard model, the basis of every parameter group, the simplifications and the ideas for later extensions. The parameters themselves are in `engine/config/`.
 - After every change of the model or its parameters, `python3 engine/calibrate.py` has to be run. It takes about 20 seconds and rewrites `engine/config/calibration.json`, which is under version control.
 - Generated data go to `engine/output/`, which is not under version control. Data are reproduced from the seed. 3000 patients give about 113 000 observation records and take about 2 seconds.
 - Tests run with `python3 -m unittest discover engine/tests`.
 - The three tumour types always get equal numbers of patients. If the number of patients is not a multiple of three, the first tumour types get one patient more.
+
+## Risk model
+
+- The risk model has its own configuration in `risk-model/config/models.json` and does not read the engine parameters. Both draw on the same literature.
+- The engine generates outcomes with a richer process than the risk models assume. The evaluation in `risk-model/README.md` therefore shows how well simple baseline models do on these data. For lung toxicity, engine and risk model use the same published hazard ratios.
+- The risk model is plain Python 3 without further packages, like the engine. Refitting uses its own binomial regression in `glm.py`.
+- Scores go to `risk-model/output/`, which is not under version control.
+- Tests run with `python3 -m unittest discover risk-model/tests`. They generate data with the engine, so a change of the engine can make them fail.
+- Possible extensions are collected in `risk-model/EXTENSIONS.md`. Items are removed there when done.
 
 ## Cloud environment
 
@@ -93,5 +102,5 @@ The literature services work from scripts. The publisher hosts answer scripted r
 - Integrate the intervention model into engine and schema, in the order given in section 6 of `background/intervention-model.md`. The real risk model is added after the basic app is stable; until then a stand-in with adjustable performance is used.
 - Search the literature for unit costs, quality-of-life weights, hospital stays by event grade and participation rates, which the intervention model needs.
 - Pick the next extensions of the engine from the list "Ideas for later" in `engine/README.md`.
-- Build the first risk models on the generated data.
+- Extend the risk models, see `risk-model/EXTENSIONS.md`. The detection model for lung toxicity (2.1) can now be built on the weekly observations.
 - Decide on a licence for the repository before it becomes public.
