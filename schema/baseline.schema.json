@@ -3,13 +3,34 @@
   "$id": "toxage-sim/baseline",
   "title": "Baseline record",
   "description": "One patient at the start of a systemic therapy line. One record per patient.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "patient_id", "tumour_type", "regimen", "age_years", "sex", "ecog",
-    "ga_impaired_domains", "renal_function", "spo2_percent",
-    "lung_comorbidity", "years_since_diagnosis"
+    "patient_id",
+    "tumour_type",
+    "subgroup",
+    "regimen",
+    "prior_therapy_lines",
+    "starting_dose_level",
+    "gcsf_prophylaxis",
+    "age_years",
+    "sex",
+    "ecog",
+    "ga_impaired_domains",
+    "bmi",
+    "albumin_g_l",
+    "egfr_ml_min",
+    "renal_function",
+    "bilirubin_ratio_uln",
+    "neutrophils_10e9_l",
+    "haemoglobin_g_dl",
+    "platelets_10e9_l",
+    "spo2_percent",
+    "lung_comorbidity",
+    "diabetes",
+    "cardiovascular_disease",
+    "years_since_diagnosis"
   ],
   "properties": {
     "patient_id": {
@@ -18,8 +39,23 @@
     },
     "tumour_type": {
       "type": "string",
-      "enum": ["pancreas", "prostate", "breast"],
+      "enum": [
+        "pancreas",
+        "prostate",
+        "breast"
+      ],
       "description": "Primary tumour. All patients have advanced disease."
+    },
+    "subgroup": {
+      "type": "string",
+      "enum": [
+        "pancreas_metastatic",
+        "prostate_hormone_sensitive",
+        "prostate_castration_resistant",
+        "breast_her2_low",
+        "breast_triple_negative"
+      ],
+      "description": "Disease setting within the tumour type."
     },
     "regimen": {
       "type": "string",
@@ -37,6 +73,21 @@
       ],
       "description": "Systemic therapy that starts on day 1."
     },
+    "prior_therapy_lines": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of earlier systemic therapy lines for advanced disease."
+    },
+    "starting_dose_level": {
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 1.0,
+      "description": "Dose in the first cycle as a fraction of the standard dose."
+    },
+    "gcsf_prophylaxis": {
+      "type": "boolean",
+      "description": "G-CSF is given with each chemotherapy cycle to prevent neutropenia."
+    },
     "age_years": {
       "type": "integer",
       "minimum": 18,
@@ -46,7 +97,10 @@
     },
     "sex": {
       "type": "string",
-      "enum": ["female", "male"]
+      "enum": [
+        "female",
+        "male"
+      ]
     },
     "ecog": {
       "type": "integer",
@@ -55,26 +109,86 @@
       "description": "ECOG performance status at therapy start."
     },
     "ga_impaired_domains": {
-      "type": ["integer", "null"],
+      "type": [
+        "integer",
+        "null"
+      ],
       "minimum": 0,
       "maximum": 7,
       "description": "Number of impaired domains in a geriatric assessment (physical function, cognition, emotional health, comorbidity, polypharmacy, nutrition, social support). Null if no assessment was done."
     },
+    "bmi": {
+      "type": "number",
+      "minimum": 10,
+      "maximum": 60,
+      "unit": "kg/m2",
+      "description": "Body mass index."
+    },
+    "albumin_g_l": {
+      "type": "number",
+      "minimum": 10,
+      "maximum": 60,
+      "unit": "g/l",
+      "description": "Serum albumin."
+    },
+    "egfr_ml_min": {
+      "type": "integer",
+      "minimum": 5,
+      "maximum": 150,
+      "unit": "ml/min/1.73 m2",
+      "description": "Estimated glomerular filtration rate."
+    },
     "renal_function": {
       "type": "string",
-      "enum": ["normal", "mild_decrease", "moderate_severe_decrease"],
-      "description": "Renal function at therapy start."
+      "enum": [
+        "normal",
+        "mild_decrease",
+        "moderate_severe_decrease"
+      ],
+      "description": "Renal function category derived from egfr_ml_min: normal from 90, mild decrease from 60 to 89, moderate or severe decrease below 60."
+    },
+    "bilirubin_ratio_uln": {
+      "type": "number",
+      "minimum": 0,
+      "unit": "multiple of the upper limit of normal",
+      "description": "Total bilirubin relative to the upper limit of normal."
+    },
+    "neutrophils_10e9_l": {
+      "type": "number",
+      "minimum": 0,
+      "unit": "10^9/l",
+      "description": "Neutrophil count."
+    },
+    "haemoglobin_g_dl": {
+      "type": "number",
+      "minimum": 0,
+      "unit": "g/dl",
+      "description": "Haemoglobin."
+    },
+    "platelets_10e9_l": {
+      "type": "integer",
+      "minimum": 0,
+      "unit": "10^9/l",
+      "description": "Platelet count."
     },
     "spo2_percent": {
       "type": "integer",
       "minimum": 70,
       "maximum": 100,
       "unit": "%",
-      "description": "Oxygen saturation at rest at therapy start."
+      "description": "Oxygen saturation at rest."
     },
     "lung_comorbidity": {
       "type": "boolean",
       "description": "Asthma, COPD, earlier interstitial lung disease or pneumonitis, pulmonary fibrosis, emphysema or radiation pneumonitis."
+    },
+    "diabetes": {
+      "type": "boolean",
+      "description": "Diabetes mellitus."
+    },
+    "cardiovascular_disease": {
+      "type": "boolean",
+      "description": "Earlier cardiovascular event or established cardiovascular disease."
     },
     "years_since_diagnosis": {
       "type": "number",

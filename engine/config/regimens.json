@@ -1,65 +1,174 @@
 {
-  "description": "Regimens of the engine with reference rates from the literature. severe_toxicity_rate is the share of patients with at least one adverse event of grade 3 or higher. ild_rate is the share with drug-related interstitial lung disease or pneumonitis; null means that the sources give no rate and the engine generates none.",
+  "description": "Regimens of the engine with reference values from the literature. severe_toxicity_rate: share of patients with at least one adverse event of grade 3 or higher. severe_event_rates: share with a grade 3 or higher event of that type. ild_rate: share with drug-related interstitial lung disease or pneumonitis of any grade; null means the sources give no rate and the engine generates none. median_treatment_weeks: median time to the end of treatment for reasons other than toxicity. max_treatment_weeks: planned end of treatment. chemotherapy_weeks: weeks during which the chemotherapy part of a combination is given; null means throughout.",
   "regimens": {
     "nalirifox": {
       "tumour_type": "pancreas",
+      "subgroup": "pancreas_metastatic",
+      "lab_interval_weeks": 2,
+      "chemotherapy_weeks": null,
+      "max_treatment_weeks": null,
+      "median_treatment_weeks": 24.3,
+      "median_survival_months": 11.1,
       "severe_toxicity_rate": 0.87,
+      "severe_event_rates": {
+        "neutropenia": 0.24,
+        "anaemia": 0.11,
+        "thrombocytopenia": 0.016,
+        "diarrhoea": 0.2,
+        "peripheral_neuropathy": 0.03
+      },
       "ild_rate": null,
-      "source": "Wainberg et al. (2023), NAPOLI 3, grade 3 or higher treatment-emergent adverse events"
+      "source": "Wainberg et al. (2023), NAPOLI 3; thrombocytopenia from Nichetti et al. (2024). Neutropenia is the sum of the terms neutropenia (14%) and decreased neutrophil count (10%)."
     },
     "gemcitabine_nab_paclitaxel": {
       "tumour_type": "pancreas",
+      "subgroup": "pancreas_metastatic",
+      "lab_interval_weeks": 2,
+      "chemotherapy_weeks": null,
+      "max_treatment_weeks": null,
+      "median_treatment_weeks": 17.6,
+      "median_survival_months": 9.2,
       "severe_toxicity_rate": 0.86,
+      "severe_event_rates": {
+        "neutropenia": 0.39,
+        "anaemia": 0.17,
+        "thrombocytopenia": 0.108,
+        "diarrhoea": 0.05,
+        "peripheral_neuropathy": 0.06
+      },
       "ild_rate": null,
-      "source": "Wainberg et al. (2023), NAPOLI 3, grade 3 or higher treatment-emergent adverse events"
+      "source": "Wainberg et al. (2023), NAPOLI 3; thrombocytopenia from Nichetti et al. (2024). Neutropenia is the sum of the terms neutropenia (25%) and decreased neutrophil count (14%)."
     },
     "adt_docetaxel": {
       "tumour_type": "prostate",
+      "subgroup": "prostate_hormone_sensitive",
+      "lab_interval_weeks": 3,
+      "chemotherapy_weeks": 18,
+      "max_treatment_weeks": null,
+      "median_treatment_weeks": 72.6,
+      "median_survival_months": 48.9,
       "severe_toxicity_rate": 0.635,
+      "severe_event_rates": {
+        "neutropenia": 0.342,
+        "febrile_neutropenia": 0.074,
+        "anaemia": 0.051,
+        "hypertension": 0.032
+      },
       "ild_rate": null,
-      "source": "Smith et al. (2022), ARASENS, placebo arm, grade 3 or 4 adverse events"
+      "source": "Smith et al. (2022), ARASENS, placebo arm; median treatment duration 16.7 months"
     },
     "adt_docetaxel_abiraterone": {
       "tumour_type": "prostate",
+      "subgroup": "prostate_hormone_sensitive",
+      "lab_interval_weeks": 3,
+      "chemotherapy_weeks": 18,
+      "max_treatment_weeks": null,
+      "median_treatment_weeks": 150,
+      "median_survival_months": 68.6,
       "severe_toxicity_rate": 0.63,
+      "severe_event_rates": {
+        "neutropenia": 0.1,
+        "hypertension": 0.22,
+        "peripheral_neuropathy": 0.01
+      },
       "ild_rate": null,
-      "source": "Fizazi et al. (2022), PEACE-1, grade 3 or worse adverse events"
+      "source": "Fizazi et al. (2022), PEACE-1; median survival 5.72 years; median treatment duration is an assumption"
     },
     "adt_docetaxel_darolutamide": {
       "tumour_type": "prostate",
+      "subgroup": "prostate_hormone_sensitive",
+      "lab_interval_weeks": 3,
+      "chemotherapy_weeks": 18,
+      "max_treatment_weeks": null,
+      "median_treatment_weeks": 178,
+      "median_survival_months": 66,
       "severe_toxicity_rate": 0.661,
+      "severe_event_rates": {
+        "neutropenia": 0.337,
+        "febrile_neutropenia": 0.078,
+        "anaemia": 0.048,
+        "hypertension": 0.064
+      },
       "ild_rate": null,
-      "source": "Smith et al. (2022), ARASENS, grade 3 or 4 adverse events"
+      "source": "Smith et al. (2022), ARASENS; median treatment duration 41.0 months; median survival was not reached, 66 months is an assumption"
     },
     "lu_psma_617": {
       "tumour_type": "prostate",
+      "subgroup": "prostate_castration_resistant",
+      "lab_interval_weeks": 6,
+      "chemotherapy_weeks": null,
+      "max_treatment_weeks": 36,
+      "median_treatment_weeks": 37.7,
+      "median_survival_months": 15.3,
       "severe_toxicity_rate": 0.527,
+      "severe_event_rates": {
+        "anaemia": 0.129,
+        "thrombocytopenia": 0.079
+      },
       "ild_rate": null,
-      "source": "Sartor et al. (2021), VISION, grade 3 or higher adverse events"
+      "source": "Sartor et al. (2021), VISION; up to six cycles of six weeks; time to progression from the median imaging-based progression-free survival of 8.7 months"
     },
     "olaparib": {
       "tumour_type": "prostate",
+      "subgroup": "prostate_castration_resistant",
+      "lab_interval_weeks": 4,
+      "chemotherapy_weeks": null,
+      "max_treatment_weeks": null,
+      "median_treatment_weeks": 32.1,
+      "median_survival_months": 18.5,
       "severe_toxicity_rate": 0.51,
+      "severe_event_rates": {
+        "anaemia": 0.21
+      },
       "ild_rate": null,
-      "source": "de Bono et al. (2020), PROfound, grade 3 or higher adverse events"
+      "source": "de Bono et al. (2020), PROfound; median treatment duration 7.4 months; median survival of cohort A"
     },
     "trastuzumab_deruxtecan": {
       "tumour_type": "breast",
+      "subgroup": "breast_her2_low",
+      "lab_interval_weeks": 3,
+      "chemotherapy_weeks": null,
+      "max_treatment_weeks": null,
+      "median_treatment_weeks": 35.6,
+      "median_survival_months": 23.4,
       "severe_toxicity_rate": 0.526,
+      "severe_event_rates": {
+        "neutropenia": 0.137,
+        "anaemia": 0.081
+      },
       "ild_rate": 0.121,
-      "source": "Modi et al. (2022), DESTINY-Breast04, grade 3 or higher adverse events and adjudicated drug-related interstitial lung disease or pneumonitis"
+      "source": "Modi et al. (2022), DESTINY-Breast04; median treatment duration 8.2 months"
     },
     "chemotherapy_single_agent": {
       "tumour_type": "breast",
+      "subgroup": "breast_her2_low",
+      "lab_interval_weeks": 3,
+      "chemotherapy_weeks": null,
+      "max_treatment_weeks": null,
+      "median_treatment_weeks": 15.2,
+      "median_survival_months": 16.8,
       "severe_toxicity_rate": 0.674,
+      "severe_event_rates": {
+        "neutropenia": 0.407,
+        "anaemia": 0.047
+      },
       "ild_rate": 0.006,
-      "source": "Modi et al. (2022), DESTINY-Breast04, physician's choice arm"
+      "source": "Modi et al. (2022), DESTINY-Breast04, physician's choice arm; median treatment duration 3.5 months"
     },
     "pembrolizumab_chemotherapy": {
       "tumour_type": "breast",
+      "subgroup": "breast_triple_negative",
+      "lab_interval_weeks": 3,
+      "chemotherapy_weeks": null,
+      "max_treatment_weeks": null,
+      "median_treatment_weeks": 26.4,
+      "median_survival_months": 17.2,
       "severe_toxicity_rate": 0.681,
+      "severe_event_rates": {
+        "immune_related": 0.053
+      },
       "ild_rate": null,
-      "source": "Cortes et al. (2022), KEYNOTE-355, treatment-related adverse events of grade 3 to 5"
+      "source": "Cortes et al. (2022), KEYNOTE-355; treatment-related adverse events of grade 3 to 5; immune-mediated events of grade 3 or 4; median exposure 26.4 weeks"
     }
   }
 }

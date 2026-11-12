@@ -13,8 +13,8 @@ Technical and organisational details that go beyond the public [README](../READM
 | Folder | Purpose | Status |
 |---|---|---|
 | `background/` | Literature, report, concepts | 28 references, report with ten risk model candidates, 20 PDFs |
-| `schema/` | Central data schema | version 0.1.0: baseline and outcome table, Python loader and validator |
-| `engine/` | Synthetic data generator | simple models for candidates 1 and 2, ten regimens, tests |
+| `schema/` | Central data schema | version 0.2.0: baseline, observation, event and outcome table, Python loader and validator |
+| `engine/` | Synthetic data generator | weekly microsimulation for candidates 1 and 2, five subgroups, ten regimens, calibration, tests |
 | `risk-model/` | Toxicity risk model | empty |
 | `app/` | Inspection app | empty |
 | `project/` | Project management, internal documentation | prompt log, start prompt, this file |
@@ -70,9 +70,11 @@ The copyrighted PDFs must not be in the repository when it becomes public. Befor
 ## Schema and engine
 
 - The schema in `schema/` is the single source for field names, types and allowed values. Code in other folders reads it from there and does not repeat field lists. Rules for extending it are in `schema/README.md`.
-- The engine is plain Python 3 without further packages. `engine/README.md` describes the models and marks every parameter as literature value or assumption. The parameters themselves are in `engine/config/`.
-- Generated data go to `engine/output/`, which is not under version control. Data are reproduced from the seed.
+- The engine is plain Python 3 without further packages. `engine/README.md` describes the model variables, the covariate mechanisms, the hazard model, the basis of every parameter group, the simplifications and the ideas for later extensions. The parameters themselves are in `engine/config/`.
+- After every change of the model or its parameters, `python3 engine/calibrate.py` has to be run. It takes about 20 seconds and rewrites `engine/config/calibration.json`, which is under version control.
+- Generated data go to `engine/output/`, which is not under version control. Data are reproduced from the seed. 3000 patients give about 113 000 observation records and take about 2 seconds.
 - Tests run with `python3 -m unittest discover engine/tests`.
+- The three tumour types always get equal numbers of patients. If the number of patients is not a multiple of three, the first tumour types get one patient more.
 
 ## Cloud environment
 
@@ -87,7 +89,7 @@ The literature services work from scripts. The publisher hosts answer scripted r
 
 - Add the PDFs of the eight added guidelines to `background/papers/` and read the six that are not yet covered by a full text.
 - Extend the literature to the topics in section 9 of the report, first of all published prediction models and the evidence for home measurements.
-- Replace the assumed parameters of the engine by literature values where possible: effects of age, performance status and geriatric impairments on severe toxicity, and the age distributions per regimen.
-- Add measurements during therapy to schema and engine, so that detection models become possible.
+- Replace the assumed parameters of the engine by literature values where possible, see the table "Basis of the parameters" in `engine/README.md`.
+- Pick the next extensions of the engine from the list "Ideas for later" in `engine/README.md`.
 - Build the first risk models on the generated data.
 - Decide on a licence for the repository before it becomes public.

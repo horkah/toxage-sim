@@ -38,3 +38,8 @@ I have replaced the Wainberg pdf with the published version, and uploaded severa
 2026-11-12 18:47 (+01:00) | model: claude-fable-5-2 | attachments: none
 --------------------------------------------------------------------------------
 start with candidate 1 and 2 in the engine, start with simple models first. use a simple schema for the required input data, which can be extended later. keep the data schema somewhere central because we will need it in the app and synthetization projects.
+
+================================================================================
+2026-11-12 19:22 (+01:00) | model: claude-fable-5-2 | attachments: none
+--------------------------------------------------------------------------------
+ok, now extend the model to become more realistic. think about synthetication patterns that are suitable for a microsimulation study, where individual patients progress over time. think about and define the model variables required, and also think about suitable covariate mechanisms that add realism. stay with medium complexity, and keep ideas for extensions for later. always keep the three main cohorts with the three cancer types in equal numbers in the model. but inside, you must of course differentiate such that different patient subgroups can have different behavior. extend the data schema as needed.

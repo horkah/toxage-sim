@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "toxage-sim/event",
+  "title": "Event record",
+  "description": "One adverse event of one patient. The engine records events of grade 3 to 5 and interstitial lung disease of any grade.",
+  "version": "0.2.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "patient_id",
+    "event_type",
+    "grade",
+    "onset_day",
+    "day",
+    "action"
+  ],
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "description": "Unique identifier of the patient."
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "neutropenia",
+        "febrile_neutropenia",
+        "anaemia",
+        "thrombocytopenia",
+        "diarrhoea",
+        "peripheral_neuropathy",
+        "hypertension",
+        "immune_related",
+        "interstitial_lung_disease",
+        "other"
+      ],
+      "description": "Type of the adverse event."
+    },
+    "grade": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "CTCAE grade. Grade 5 is death from the event."
+    },
+    "onset_day": {
+      "type": "integer",
+      "minimum": 1,
+      "unit": "days",
+      "description": "Day on which the event actually started."
+    },
+    "day": {
+      "type": "integer",
+      "minimum": 1,
+      "unit": "days",
+      "description": "Day on which the event was recognised by the care team. Later than onset_day if recognition was delayed."
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "none",
+        "interruption",
+        "dose_reduction",
+        "discontinuation"
+      ],
+      "description": "Change of the therapy in response to the event."
+    }
+  }
+}

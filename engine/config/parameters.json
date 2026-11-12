@@ -1,77 +1,517 @@
 {
-  "description": "Parameters of the engine. Each block states whether its values come from the literature or are assumptions of this project.",
+  "description": "Parameters of the engine. 'basis' states for each block whether the values come from the literature or are assumptions of this project.",
+  "simulation": {
+    "weeks": 52,
+    "basis": "assumption"
+  },
   "population": {
     "basis": "assumption, except where noted",
+    "subgroup_shares": {
+      "pancreas": {
+        "pancreas_metastatic": 1.0
+      },
+      "prostate": {
+        "prostate_hormone_sensitive": 0.5,
+        "prostate_castration_resistant": 0.5
+      },
+      "breast": {
+        "breast_her2_low": 0.6,
+        "breast_triple_negative": 0.4
+      }
+    },
     "age": {
-      "pancreas": {"mean": 65, "sd": 9},
-      "prostate": {"mean": 69, "sd": 8},
-      "breast": {"mean": 57, "sd": 11},
+      "pancreas_metastatic": {
+        "mean": 65,
+        "sd": 9
+      },
+      "prostate_hormone_sensitive": {
+        "mean": 67,
+        "sd": 8
+      },
+      "prostate_castration_resistant": {
+        "mean": 71,
+        "sd": 8
+      },
+      "breast_her2_low": {
+        "mean": 57,
+        "sd": 11
+      },
+      "breast_triple_negative": {
+        "mean": 54,
+        "sd": 11
+      },
       "minimum": 30,
-      "maximum": 90
+      "maximum": 90,
+      "basis": "means follow the median ages in ARASENS (67), VISION (71) and ASCENT (54); the others are assumptions"
     },
     "share_male_pancreas": 0.55,
-    "ecog_probabilities": {"0": 0.40, "1": 0.45, "2": 0.15},
-    "ga_assessed_from_age": 65,
-    "ga_impairment_probability_at_65": 0.15,
-    "ga_impairment_probability_per_year": 0.01,
-    "renal_function_probabilities": {
-      "normal": 0.42,
-      "mild_decrease": 0.41,
-      "moderate_severe_decrease": 0.17,
-      "basis": "Powell et al. (2022), baseline distribution of the pooled population"
+    "frailty": {
+      "age_weight_per_10_years": 0.3,
+      "shift": {
+        "pancreas": 0.3,
+        "prostate": 0.0,
+        "breast": 0.0
+      },
+      "comment": "latent, not part of the data; standard normal plus an age term and a tumour shift"
     },
-    "spo2": {
-      "mean": 97.5,
-      "sd": 1.8,
-      "minimum": 88,
-      "basis": "chosen so that about 5% are below 95%, as in Powell et al. (2022)"
+    "ecog_thresholds": [
+      0.0,
+      1.2
+    ],
+    "ga": {
+      "assessed_from_age": 65,
+      "intercept": -1.7,
+      "frailty_slope": 0.9
+    },
+    "albumin_g_l": {
+      "mean": 41,
+      "frailty_slope": -3.0,
+      "pancreas_shift": -3.0,
+      "sd": 3.0,
+      "minimum": 20,
+      "maximum": 52
+    },
+    "bmi": {
+      "mean": 26.5,
+      "frailty_slope": -0.8,
+      "pancreas_shift": -2.0,
+      "sd": 4.0,
+      "minimum": 15,
+      "maximum": 45
+    },
+    "diabetes": {
+      "intercept": -2.2,
+      "per_year_above_65": 0.03,
+      "pancreas_shift": 1.3
+    },
+    "cardiovascular_disease": {
+      "intercept": -2.2,
+      "per_year_above_65": 0.06,
+      "male_shift": 0.5
     },
     "lung_comorbidity_probability": {
       "value": 0.07,
       "basis": "Powell et al. (2022), 81 of 1150 patients"
     },
+    "egfr_ml_min": {
+      "mean_at_40": 100,
+      "decline_per_year": 1.0,
+      "diabetes_shift": -5,
+      "sd": 20,
+      "minimum": 15,
+      "maximum": 130,
+      "categories": {
+        "normal_from": 90,
+        "mild_decrease_from": 60
+      }
+    },
+    "bilirubin_ratio_uln": {
+      "median": 0.6,
+      "sigma": 0.4,
+      "pancreas_obstruction_probability": 0.2,
+      "obstruction_median": 1.5,
+      "obstruction_sigma": 0.5
+    },
+    "spo2": {
+      "mean": 97.5,
+      "lung_comorbidity_shift": -1.5,
+      "frailty_slope": -0.3,
+      "sd": 1.7,
+      "minimum": 88,
+      "basis": "chosen so that about 5% are below 95%, as in Powell et al. (2022)"
+    },
     "years_since_diagnosis": {
-      "pancreas": {"median": 0.4, "sigma": 0.8},
-      "prostate": {"median": 3.0, "sigma": 0.8},
-      "breast": {
+      "pancreas_metastatic": {
+        "median": 0.2,
+        "sigma": 0.8
+      },
+      "prostate_hormone_sensitive": {
+        "median": 0.2,
+        "sigma": 0.8
+      },
+      "prostate_castration_resistant": {
+        "median": 5.0,
+        "sigma": 0.6
+      },
+      "breast_her2_low": {
         "median": 3.3,
+        "sigma": 0.8
+      },
+      "breast_triple_negative": {
+        "median": 2.5,
+        "sigma": 0.8
+      },
+      "basis": "breast_her2_low: about 39% above 4 years as in Powell et al. (2022); others assumption"
+    },
+    "prior_therapy_lines": {
+      "pancreas_metastatic": [
+        0
+      ],
+      "prostate_hormone_sensitive": [
+        0
+      ],
+      "prostate_castration_resistant": [
+        2,
+        2,
+        3,
+        3,
+        4
+      ],
+      "breast_her2_low": [
+        2,
+        3,
+        3,
+        4,
+        5
+      ],
+      "breast_triple_negative": [
+        0
+      ]
+    },
+    "neutrophils_10e9_l": {
+      "median": 4.0,
+      "sigma": 0.3,
+      "pretreated_factor": 0.85,
+      "minimum": 1.5
+    },
+    "haemoglobin_g_dl": {
+      "mean_female": 12.8,
+      "mean_male": 13.6,
+      "frailty_slope": -0.5,
+      "pretreated_shift": -0.8,
+      "renal_impairment_shift": -0.5,
+      "sd": 1.2,
+      "minimum": 9.0,
+      "maximum": 17.0
+    },
+    "platelets_10e9_l": {
+      "median": 250,
+      "sigma": 0.25,
+      "pretreated_factor": 0.9,
+      "minimum": 100
+    },
+    "pretreated_from_lines": 2
+  },
+  "treatment_choice": {
+    "basis": "assumption: fitter patients get the more intensive option; trastuzumab deruxtecan is avoided in patients with lung problems",
+    "pancreas_nalirifox": {
+      "intercept": 0.4,
+      "frailty_slope": -0.8,
+      "per_year_above_65": -0.05,
+      "bilirubin_above_1_5_shift": -1.0
+    },
+    "prostate_hormone_sensitive": {
+      "adt_docetaxel": 0.2,
+      "adt_docetaxel_abiraterone": 0.4,
+      "adt_docetaxel_darolutamide": 0.4
+    },
+    "prostate_castration_resistant": {
+      "lu_psma_617": 0.6,
+      "olaparib": 0.4
+    },
+    "breast_her2_low_trastuzumab_deruxtecan": {
+      "probability": 0.6,
+      "probability_with_lung_problem": 0.25
+    },
+    "starting_dose_reduction": {
+      "intercept": -1.8,
+      "frailty_slope": 0.8,
+      "per_year_above_70": 0.05,
+      "reduced_level": 0.8,
+      "basis": "assumption; in GAP70+ 35% of older patients with impairments started with reduced intensity under usual care"
+    },
+    "gcsf_probability_with_docetaxel": 0.5
+  },
+  "hazards": {
+    "shapes": {
+      "early": {
+        "decay_weeks": 6
+      },
+      "mid": {
+        "peak_weeks": 8
+      },
+      "cumulative": {
+        "plateau_weeks": 26
+      },
+      "basis": "assumption"
+    },
+    "event_types": {
+      "neutropenia": {
+        "shape": "early",
+        "chemotherapy": true
+      },
+      "febrile_neutropenia": {
+        "shape": "early",
+        "chemotherapy": true
+      },
+      "anaemia": {
+        "shape": "mid",
+        "chemotherapy": false
+      },
+      "thrombocytopenia": {
+        "shape": "mid",
+        "chemotherapy": false
+      },
+      "diarrhoea": {
+        "shape": "early",
+        "chemotherapy": false
+      },
+      "peripheral_neuropathy": {
+        "shape": "cumulative",
+        "chemotherapy": true
+      },
+      "hypertension": {
+        "shape": "mid",
+        "chemotherapy": false
+      },
+      "immune_related": {
+        "shape": "mid",
+        "chemotherapy": false
+      },
+      "other": {
+        "shape": "early",
+        "chemotherapy": false
+      }
+    },
+    "general": {
+      "frailty_log_hazard_ratio": 0.35,
+      "hazard_ratio_per_10_years_of_age": 1.1,
+      "reference_age": 65,
+      "hazard_ratio_bilirubin_above_1_5": 1.5,
+      "basis": "assumption; applies to all event types except interstitial lung disease"
+    },
+    "specific": {
+      "neutropenia": {
+        "baseline_neutrophils_exponent": 0.8,
+        "reference_neutrophils": 4.0,
+        "pretreated": 1.3,
+        "gcsf": 0.5
+      },
+      "febrile_neutropenia": {
+        "baseline_neutrophils_exponent": 0.8,
+        "reference_neutrophils": 4.0,
+        "pretreated": 1.3,
+        "gcsf": 0.5
+      },
+      "anaemia": {
+        "log_hazard_ratio_per_g_dl_below_12_5": 0.3,
+        "renal_moderate_severe": 1.3
+      },
+      "thrombocytopenia": {
+        "baseline_platelets_exponent": 1.0,
+        "reference_platelets": 250,
+        "pretreated": 1.3
+      },
+      "diarrhoea": {
+        "age_70_or_older": 1.3
+      },
+      "peripheral_neuropathy": {
+        "diabetes": 1.5
+      },
+      "hypertension": {
+        "cardiovascular_disease": 1.5
+      },
+      "basis": "assumption; directions follow the report (neuropathy and diabetes: Loprinzi et al., 2020; G-CSF: Fizazi et al., 2022)"
+    },
+    "dose_exponent": {
+      "value": 2.0,
+      "basis": "assumption: hazard is proportional to the dose level to this power"
+    },
+    "grade_probabilities": {
+      "default": {
+        "3": 0.73,
+        "4": 0.25,
+        "5": 0.02
+      },
+      "neutropenia": {
+        "3": 0.6,
+        "4": 0.4,
+        "5": 0.0
+      },
+      "peripheral_neuropathy": {
+        "3": 1.0,
+        "4": 0.0,
+        "5": 0.0
+      },
+      "hypertension": {
+        "3": 0.95,
+        "4": 0.05,
+        "5": 0.0
+      },
+      "basis": "assumption"
+    },
+    "ild": {
+      "hazard_ratios": {
+        "age_below_65": 1.56,
+        "lung_comorbidity": 1.75,
+        "renal_mild_decrease": 1.24,
+        "renal_moderate_severe_decrease": 2.73,
+        "more_than_4_years_since_diagnosis": 1.82,
+        "spo2_below_95": 2.14,
+        "basis": "Powell et al. (2022), multivariable Cox model, Figure 3B"
+      },
+      "onset_days": {
+        "median": 129,
+        "sigma": 0.92,
+        "share_within_52_weeks": 0.87,
+        "basis": "median from Modi et al. (2022); sigma chosen so that 87% of events start within 12 months, as in Powell et al. (2022)"
+      },
+      "grade_probabilities": {
+        "1": 0.289,
+        "2": 0.533,
+        "3": 0.111,
+        "4": 0.0,
+        "5": 0.067,
+        "basis": "Modi et al. (2022): 13 grade 1, 24 grade 2, 5 grade 3 and 3 grade 5 events among 45 patients"
+      },
+      "recognition_delay": {
+        "probability_delayed": 0.53,
+        "median_days": 43,
         "sigma": 0.8,
-        "basis": "chosen so that about 39% are above 4 years, as in Powell et al. (2022)"
+        "maximum_days_if_prompt": 7,
+        "basis": "Powell et al. (2022): onset set earlier by the adjudication committee for 53.2% of events, median difference 43 days; sigma is an assumption"
       }
     }
   },
-  "severe_toxicity": {
-    "window_days": 90,
-    "reference_age": 65,
-    "odds_ratio_per_10_years_of_age": 1.2,
-    "odds_ratio_ecog_2_or_higher": 2.0,
-    "odds_ratio_per_impaired_ga_domain": 1.1,
-    "mean_onset_day": 30,
-    "basis": "assumption. The odds ratios for age and geriatric impairments are chosen so that a patient like the average GAP70+ participant (age 77, 4.5 impaired domains, regimen rate 60%) has a risk of about 74%, close to the 71% of the usual-care arm in Mohile et al. (2021)."
-  },
-  "ild": {
-    "window_days": 730,
-    "hazard_ratios": {
-      "age_below_65": 1.56,
-      "lung_comorbidity": 1.75,
-      "renal_mild_decrease": 1.24,
-      "renal_moderate_severe_decrease": 2.73,
-      "more_than_4_years_since_diagnosis": 1.82,
-      "spo2_below_95": 2.14,
-      "basis": "Powell et al. (2022), multivariable Cox model, Figure 3B"
+  "actions": {
+    "basis": "assumption",
+    "dose_levels": [
+      1.0,
+      0.8,
+      0.6
+    ],
+    "interruption_weeks": [
+      1,
+      3
+    ],
+    "probabilities": {
+      "default": {
+        "none": 0.15,
+        "interruption": 0.28,
+        "dose_reduction": 0.45,
+        "discontinuation": 0.12
+      },
+      "neutropenia": {
+        "none": 0.2,
+        "interruption": 0.45,
+        "dose_reduction": 0.35,
+        "discontinuation": 0.0
+      },
+      "hypertension": {
+        "none": 0.7,
+        "interruption": 0.2,
+        "dose_reduction": 0.1,
+        "discontinuation": 0.0
+      }
     },
-    "onset_days": {
-      "median": 129,
-      "sigma": 0.92,
-      "basis": "median from Modi et al. (2022); sigma of the log-normal distribution chosen so that 87% of events start within 12 months, as in Powell et al. (2022)"
-    },
-    "grade_probabilities": {
-      "1": 0.289,
-      "2": 0.533,
-      "3": 0.111,
-      "4": 0.0,
-      "5": 0.067,
-      "basis": "Modi et al. (2022): 13 grade 1, 24 grade 2, 5 grade 3 and 3 grade 5 events among 45 patients"
+    "ild": {
+      "grade_1": "interruption",
+      "grade_2_or_higher": "discontinuation"
     }
+  },
+  "survival": {
+    "frailty_log_hazard_ratio": 0.4,
+    "hazard_ratio_ecog_2": 1.8,
+    "basis": "assumption; the baseline hazard follows the median survival of the regimen"
+  },
+  "measurements": {
+    "basis": "assumption",
+    "exposure_smoothing": 0.3,
+    "labs_weeks_after_stop": 4,
+    "neutrophils": {
+      "drop_per_event_rate": 1.2,
+      "noise_sigma": 0.2,
+      "grade_3": [
+        0.5,
+        0.99
+      ],
+      "grade_4": [
+        0.1,
+        0.49
+      ]
+    },
+    "haemoglobin": {
+      "drop_g_dl_per_event_rate": 10.0,
+      "maximum_drop": 3.0,
+      "noise_sd": 0.4,
+      "event_range": [
+        6.5,
+        8.0
+      ]
+    },
+    "platelets": {
+      "drop_per_event_rate": 3.0,
+      "maximum_drop": 0.6,
+      "noise_sigma": 0.15,
+      "grade_3": [
+        25,
+        49
+      ],
+      "grade_4": [
+        5,
+        24
+      ]
+    },
+    "spo2": {
+      "noise_sd": 1.0,
+      "missing": 0.15,
+      "ild_drop_per_week": 0.5,
+      "ild_maximum_drop": {
+        "1": 1.5,
+        "2": 3.0,
+        "3": 6.0,
+        "4": 8.0,
+        "5": 10.0
+      },
+      "recovery_per_week": 0.5
+    },
+    "symptoms": {
+      "missing": 0.2,
+      "noise_sd": 0.7,
+      "fatigue": {
+        "base": 0.8,
+        "frailty_slope": 0.5,
+        "exposure_slope": 1.0,
+        "severe_event_bump": 1.5
+      },
+      "diarrhoea": {
+        "base": 0.2,
+        "exposure_slope_per_event_rate": 5.0,
+        "event_level": 3.5,
+        "week_before_event_bump": 1.0
+      },
+      "cough": {
+        "base": 0.3,
+        "lung_comorbidity_shift": 0.8,
+        "ild_rise_per_week": 0.4,
+        "ild_maximum": {
+          "1": 0.0,
+          "2": 2.0,
+          "3": 3.5,
+          "4": 4.0,
+          "5": 4.0
+        }
+      },
+      "dyspnoea": {
+        "base": 0.3,
+        "lung_comorbidity_shift": 0.8,
+        "frailty_slope": 0.3,
+        "ild_rise_per_week": 0.4,
+        "ild_maximum": {
+          "1": 0.0,
+          "2": 2.0,
+          "3": 3.5,
+          "4": 4.0,
+          "5": 4.0
+        }
+      }
+    }
+  },
+  "calibration": {
+    "patients": 60000,
+    "seed": 20261112,
+    "iterations": 8,
+    "trial_like_maximum_ecog": 1,
+    "basis": "event rates are matched to the literature in generated patients with ECOG 0 or 1"
   }
 }

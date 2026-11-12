@@ -35,10 +35,10 @@ The scientific background is in place:
 - [background/toxicity-report.md](background/toxicity-report.md) summarises their findings: how often severe toxicity occurs with which therapy, when it starts, who is at risk, and what guidelines ask for in risk assessment and monitoring.
 - The report derives ten candidates for risk models, from a general model for severe toxicity in the first three months of a therapy line to specific models for lung toxicity, neutropenia, diarrhoea, cardiovascular events and others.
 
-The central data schema and a first version of the data engine exist:
+The central data schema and the data engine exist:
 
-- [schema/](schema/) defines a baseline record and an outcome record per patient.
-- [engine/](engine/) generates synthetic patients for ten regimens with two outcomes: any severe toxicity within 90 days, and lung toxicity. The models are simple and use published rates and risk factors where available.
+- [schema/](schema/) defines four tables: baseline data, weekly observations, adverse events and an outcome summary per patient.
+- [engine/](engine/) is a microsimulation. It follows each synthetic patient week by week for one year: adverse events, dose changes, end of therapy and death, together with blood values, oxygen saturation and reported symptoms. The three tumour types have equal numbers of patients, with subgroups and ten regimens inside. Event rates follow the published trials.
 
 The risk model and the app have no code yet.
 

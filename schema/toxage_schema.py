@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 SCHEMA_DIR = Path(__file__).resolve().parent
-TABLES = ("baseline", "outcome")
+TABLES = ("baseline", "observation", "event", "outcome")
 
 _TYPES = {
     "string": lambda v: isinstance(v, str),
@@ -19,12 +19,17 @@ _TYPES = {
 }
 
 
+_CACHE = {}
+
+
 def load(table):
-    """Return the JSON Schema of one table ("baseline" or "outcome")."""
+    """Return the JSON Schema of one table, see TABLES."""
     if table not in TABLES:
         raise ValueError(f"unknown table: {table}")
-    with open(SCHEMA_DIR / f"{table}.schema.json", encoding="utf-8") as f:
-        return json.load(f)
+    if table not in _CACHE:
+        with open(SCHEMA_DIR / f"{table}.schema.json", encoding="utf-8") as f:
+            _CACHE[table] = json.load(f)
+    return _CACHE[table]
 
 
 def fields(table):

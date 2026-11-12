@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "toxage-sim/observation",
+  "title": "Observation record",
+  "description": "Therapy status, measurements and patient-reported symptoms of one patient in one week of follow-up. One record per patient and week until death or the end of follow-up.",
+  "version": "0.2.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "patient_id",
+    "week",
+    "day",
+    "treatment_status",
+    "dose_level",
+    "neutrophils_10e9_l",
+    "haemoglobin_g_dl",
+    "platelets_10e9_l",
+    "spo2_percent",
+    "pro_fatigue",
+    "pro_diarrhoea",
+    "pro_cough",
+    "pro_dyspnoea"
+  ],
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "description": "Unique identifier of the patient."
+    },
+    "week": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Week of follow-up. Week 0 starts with therapy start."
+    },
+    "day": {
+      "type": "integer",
+      "minimum": 1,
+      "unit": "days",
+      "description": "First day of the week, counted from therapy start (day 1)."
+    },
+    "treatment_status": {
+      "type": "string",
+      "enum": [
+        "on_treatment",
+        "interrupted",
+        "stopped"
+      ],
+      "description": "Status of the therapy in this week."
+    },
+    "dose_level": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0.1,
+      "maximum": 1.0,
+      "description": "Current dose as a fraction of the standard dose. Null after the therapy has stopped."
+    },
+    "neutrophils_10e9_l": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "unit": "10^9/l",
+      "description": "Neutrophil count. Null if no blood test was done in this week."
+    },
+    "haemoglobin_g_dl": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "unit": "g/dl",
+      "description": "Haemoglobin. Null if no blood test was done in this week."
+    },
+    "platelets_10e9_l": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "unit": "10^9/l",
+      "description": "Platelet count. Null if no blood test was done in this week."
+    },
+    "spo2_percent": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 50,
+      "maximum": 100,
+      "unit": "%",
+      "description": "Oxygen saturation at rest, measured at home. Null if not measured."
+    },
+    "pro_fatigue": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 4,
+      "description": "Patient-reported fatigue in the last week, from 0 (none) to 4 (very severe). Null if not reported."
+    },
+    "pro_diarrhoea": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 4,
+      "description": "Patient-reported diarrhoea in the last week, from 0 (none) to 4 (very severe). Null if not reported."
+    },
+    "pro_cough": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 4,
+      "description": "Patient-reported cough in the last week, from 0 (none) to 4 (very severe). Null if not reported."
+    },
+    "pro_dyspnoea": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 4,
+      "description": "Patient-reported shortness of breath in the last week, from 0 (none) to 4 (very severe). Null if not reported."
+    }
+  }
+}
