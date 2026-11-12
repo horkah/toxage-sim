@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 
 SCHEMA_DIR = Path(__file__).resolve().parent
-TABLES = ("baseline", "observation", "event", "outcome", "risk_score")
+TABLES = ("scenario", "baseline", "observation", "event", "alert", "outcome", "risk_score")
 
 _TYPES = {
     "string": lambda v: isinstance(v, str),

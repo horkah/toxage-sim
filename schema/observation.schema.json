@@ -2,11 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "toxage-sim/observation",
   "title": "Observation record",
-  "description": "Therapy status, measurements and patient-reported symptoms of one patient in one week of follow-up. One record per patient and week until death or the end of follow-up.",
-  "version": "0.2.1",
+  "description": "Therapy status, measurements and patient-reported symptoms of one patient in one week of follow-up, in one scenario. One record per scenario, patient and week, from therapy start until a few weeks after the end of therapy or until death.",
+  "version": "0.3.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "scenario_id",
     "patient_id",
     "week",
     "day",
@@ -22,6 +23,11 @@
     "pro_dyspnoea"
   ],
   "properties": {
+    "scenario_id": {
+      "title": "Scenario",
+      "type": "string",
+      "description": "Identifier of the intervention scenario, as in the scenario table."
+    },
     "patient_id": {
       "title": "Patient ID",
       "type": "string",

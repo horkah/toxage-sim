@@ -17,6 +17,7 @@
 {% block menu_about %}
 <h3>Data set</h3>
 <p class="muted">{{ total }} synthetic patients, seed {{ dataset.metadata.seed }},
+  {{ scenarios|length }} scenarios, followed for up to {{ dataset.metadata.weeks }} weeks,
   schema {{ dataset.metadata.schema_version.baseline }}, generated {{ dataset.created|date:"Y-m-d H:i" }} UTC.</p>
 {% endblock %}
 
@@ -29,6 +30,7 @@
     <b>{{ s.model.name }}</b> observed {{ s.observed|pct }} · predicted {{ s.predicted|pct }}
     · AUC {{ s.auc|num }} · Brier {{ s.brier|num:3 }} · n {{ s.n }}</span>
   {% endfor %}
+  <span>Scenario <b>{{ scenario.title }}</b>{% if compare %} against {{ compare.title }}{% endif %}</span>
   {% if patient %}<span class="patient-tag">Patient {{ patient.patient_id }}</span>{% endif %}
 </div>
 {% endblock %}
@@ -39,6 +41,9 @@
     <form method="get" class="filters" id="filters">
       <h2>Filters</h2>
       <input type="hidden" name="model" value="{{ focus.id }}">
+      <input type="hidden" name="view" value="{{ view }}">
+      <input type="hidden" name="scenario" value="{{ scenario.scenario_id }}">
+      {% if compare %}<input type="hidden" name="compare" value="{{ compare.scenario_id }}">{% endif %}
       {% if patient %}<input type="hidden" name="patient" value="{{ patient.patient_id }}">{% endif %}
       {% for group in filter_form %}
       <details {% if group.active or forloop.first %}open{% endif %}>
@@ -86,7 +91,7 @@
       <div class="patient-grid">
         <table class="facts">
           {% for f, value in patient_fields %}
-          {% ifchanged f.table %}<tr><th colspan="2" class="group">{% if f.table == "baseline" %}At therapy start{% else %}Observed outcome{% endif %}</th></tr>{% endifchanged %}
+          {% ifchanged f.table %}<tr><th colspan="2" class="group">{% if f.table == "baseline" %}At therapy start{% else %}Outcome in the scenario {{ scenario.title }}{% endif %}</th></tr>{% endifchanged %}
           <tr><th>{{ f.label }}</th><td>{{ value }}</td></tr>
           {% endfor %}
         </table>
@@ -117,6 +122,29 @@
     </section>
     {% endif %}
 
+    <form method="get" class="scenario" id="scenario">
+      {% for key, value in keep_state %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+      <label for="scenario-select">Scenario</label>
+      <select name="scenario" id="scenario-select">
+        {% for s in scenarios %}<option value="{{ s.scenario_id }}"{% if s.scenario_id == scenario.scenario_id %} selected{% endif %}>{{ s.title }}</option>{% endfor %}
+      </select>
+      <label for="compare-select">compared with</label>
+      <select name="compare" id="compare-select">
+        <option value="none">nothing</option>
+        {% for s in scenarios %}{% if s.scenario_id != scenario.scenario_id %}<option value="{{ s.scenario_id }}"{% if s.scenario_id == compare.scenario_id %} selected{% endif %}>{{ s.title }}</option>{% endif %}{% endfor %}
+      </select>
+      <noscript><button type="submit">Show</button></noscript>
+    </form>
+    <p class="muted scenario-note">{{ scenario.title }}: {{ scenario.description }}</p>
+
+    <nav class="tabs" aria-label="View">
+      <span>View</span>
+      {% for key, label, query in view_links %}
+      <a href="?{{ query }}"{% if key == view %} class="active" aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
+    </nav>
+
+    {% if view == "risk" or view == "characteristics" %}
     <nav class="tabs" aria-label="Risk model of the charts">
       <span>Risk model</span>
       {% for m, query in model_links %}
@@ -124,15 +152,62 @@
       {% endfor %}
     </nav>
     <p class="muted model-info">{{ focus.name }}: candidate {{ focus.candidate }} of the toxicity report,
-      outcome within {{ focus.window_days }} days. Source: {{ focus.source }}.</p>
+      outcome within {{ focus.window_days }} days. Source: {{ focus.source }}.
+      The risk models describe the risk at therapy start without an intervention.</p>
+    {% endif %}
 
     {% for s in sections %}
     <section class="charts">
       <h2>{{ s.title }}</h2>
       <p class="note">{{ s.note }}</p>
+      {% if s.table %}
+      <div class="scroll">
+      <table class="numbers">
+        <thead><tr>
+          <th>Scenario</th><th>Taking part</th><th>Severe toxicity, 90 days</th><th>Severe events per patient</th>
+          <th>Events recognised early per patient</th><th>Deaths from toxicity</th><th>Hospital days per patient</th>
+          <th>Alerts per patient</th><th>False alerts</th><th>QALY per patient</th><th>Cost per patient (€)</th>
+          <th>Cost against usual care (€)</th><th>QALY against usual care</th><th>Cost per QALY gained (€)</th>
+        </tr></thead>
+        <tbody>
+        {% for r in s.table %}
+        <tr{% if r.scenario.scenario_id == scenario.scenario_id %} class="selected"{% endif %}>
+          <td>{{ r.scenario.title }}</td><td>{{ r.participating|pct }}</td><td>{{ r.severe_90d|pct }}</td>
+          <td>{{ r.severe_events|num }}</td><td>{{ r.early|num }}</td><td>{{ r.toxic_deaths }}</td>
+          <td>{{ r.hospital_days|num }}</td><td>{{ r.alerts|num }}</td><td>{{ r.false_share|pct:0 }}</td>
+          <td>{{ r.qaly|num:3 }}</td><td>{{ r.cost|num:0 }}</td><td>{{ r.d_cost|num:0 }}</td>
+          <td>{{ r.d_qaly|num:3 }}</td><td>{{ r.icer|num:0 }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% endif %}
       <div class="grid">
         {% for cid, spec in s.charts %}<tox-chart chart="{{ cid }}"></tox-chart>{% endfor %}
       </div>
+      {% if s.events %}
+      <div class="columns">
+        {% for name, rows in s.events %}
+        <div class="scroll">
+        <h3>Adverse events: {{ name }}</h3>
+        {% if rows %}
+        <table class="numbers">
+          <thead><tr><th>Event</th><th>Onset (day)</th><th>Recognised (day)</th><th>Grade</th>
+            <th>Grade in usual care</th><th>Through</th><th>Action</th><th>Hospital days</th></tr></thead>
+          <tbody>
+          {% for e in rows %}
+          <tr><td>{{ e.name }}</td><td>{{ e.onset_day }}</td><td>{{ e.day }}</td><td>{{ e.grade }}</td>
+            <td>{{ e.usual_care_grade }}</td><td>{{ e.detected_by }}{% if e.detected_by == "monitoring" %}, {{ e.gained }} days earlier{% endif %}</td>
+            <td>{{ e.action|label }}</td><td>{{ e.hospital_days }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="muted">No adverse event recorded.</p>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
     </section>
     {% endfor %}
     {{ chart_data|json_script:"chart-data" }}

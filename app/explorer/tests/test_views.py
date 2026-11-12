@@ -125,6 +125,57 @@ class ExplorerTest(CohortTestCase):
         links = dict((m.id, q) for m, q in context["model_links"])
         self.assertEqual(links["severe90"], "sex=male&patient=5&model=severe90")
 
+    def test_scenario_choice(self):
+        context = self.client.get("/").context
+        self.assertEqual(context["scenario"]["scenario_id"], "usual_care")
+        self.assertIsNone(context["compare"])
+        context = self.client.get("/?scenario=combined").context
+        self.assertEqual(context["scenario"]["scenario_id"], "combined")
+        self.assertEqual(context["compare"]["scenario_id"], "usual_care")
+        self.assertIsNone(self.client.get("/?scenario=combined&compare=none").context["compare"])
+        context = self.client.get("/?scenario=combined&compare=lung_monitoring").context
+        self.assertEqual(context["compare"]["scenario_id"], "lung_monitoring")
+        self.assertEqual(self.client.get("/?scenario=x").context["scenario"]["scenario_id"], "usual_care")
+
+    def test_filters_use_the_outcome_of_the_scenario(self):
+        usual = self.client.get("/?participating=true").context["selection"]
+        combined = self.client.get("/?participating=true&scenario=combined").context["selection"]
+        self.assertEqual(usual, 0)
+        self.assertGreater(combined, 0)
+
+    def test_views(self):
+        for view, text in (("risk", "Distribution of predicted risk"), ("characteristics", "by patient characteristics"),
+                           ("time", "Cohort over time"), ("interventions", "Scenarios side by side")):
+            response = self.client.get(f"/?view={view}&scenario=combined")
+            self.assertEqual(response.context["view"], view)
+            self.assertContains(response, text)
+            self.assertContains(response, "<tox-chart", count=len(response.context["chart_data"]))
+        self.assertEqual(self.client.get("/?view=x").context["view"], "risk")
+
+    def test_time_view_of_a_patient(self):
+        response = self.client.get("/?view=time&scenario=combined&patient=4")
+        self.assertContains(response, "Patient P000004 over time")
+        self.assertContains(response, "Adverse events: Combined")
+        self.assertContains(response, "Adverse events: Usual care")
+        self.assertIn("patient-dose", response.context["chart_data"])
+        self.assertIn("time-survival", response.context["chart_data"])
+
+    def test_interventions_view(self):
+        response = self.client.get("/?view=interventions&scenario=lung_monitoring&tumour_type=breast")
+        self.assertContains(response, "Cost per QALY gained")
+        self.assertContains(response, "Early recognition: Lung monitoring")
+        table = response.context["sections"][0]["table"]
+        self.assertEqual(len(table), 6)
+        self.assertEqual(table[0]["n"], response.context["selection"])
+        self.assertNotContains(self.client.get("/?view=interventions"), "Early recognition:")
+
+    def test_view_links_keep_the_state(self):
+        context = self.client.get("/?sex=male&scenario=combined&view=time").context
+        links = {key: query for key, _, query in context["view_links"]}
+        self.assertEqual(links["interventions"], "sex=male&scenario=combined&view=interventions")
+        self.assertEqual(context["reset_filters"], "view=time&scenario=combined&model=severe90")
+        self.assertEqual(context["keep_state"], [("sex", "male"), ("view", "time")])
+
     def test_random_patient_respects_filters(self):
         for _ in range(5):
             response = self.client.get("/random/?tumour_type=breast")

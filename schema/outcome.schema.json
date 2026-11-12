@@ -2,13 +2,16 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "toxage-sim/outcome",
   "title": "Outcome record",
-  "description": "Summary of the course of one patient, derived from the event and observation records. One record per patient. Days count from therapy start (day 1).",
-  "version": "0.2.1",
+  "description": "Summary of the course of one patient in one scenario, derived from the event, alert and observation records. One record per scenario and patient. Days count from therapy start (day 1).",
+  "version": "0.3.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "scenario_id",
     "patient_id",
     "follow_up_days",
+    "high_risk_flag",
+    "participating",
     "severe_toxicity_90d",
     "severe_toxicity_day",
     "ild",
@@ -17,9 +20,23 @@
     "ild_grade",
     "treatment_end_day",
     "treatment_end_reason",
-    "death_day"
+    "death_day",
+    "death_from_toxicity",
+    "hospital_days",
+    "icu_days",
+    "unplanned_visits",
+    "alerts",
+    "false_alerts",
+    "cost_care",
+    "cost_intervention",
+    "qaly"
   ],
   "properties": {
+    "scenario_id": {
+      "title": "Scenario",
+      "type": "string",
+      "description": "Identifier of the intervention scenario, as in the scenario table."
+    },
     "patient_id": {
       "title": "Patient ID",
       "type": "string",
@@ -31,6 +48,16 @@
       "minimum": 1,
       "unit": "days",
       "description": "Length of follow-up: until death or the end of the simulated period."
+    },
+    "high_risk_flag": {
+      "title": "Flagged as high risk",
+      "type": "boolean",
+      "description": "The risk prediction at therapy start flagged the patient as high risk. False in scenarios without risk-adapted start."
+    },
+    "participating": {
+      "title": "Taking part",
+      "type": "boolean",
+      "description": "The patient takes part in at least one component of the scenario."
     },
     "severe_toxicity_90d": {
       "title": "Severe toxicity in 90 days",
@@ -101,6 +128,7 @@
         "progression",
         "toxicity",
         "completed",
+        "lost_to_follow_up",
         "death"
       ],
       "description": "Why the therapy ended."
@@ -114,6 +142,64 @@
       "minimum": 1,
       "unit": "days",
       "description": "Day of death. Null if the patient was alive at the end of follow-up."
+    },
+    "death_from_toxicity": {
+      "title": "Death from toxicity",
+      "type": "boolean",
+      "description": "The patient died from an adverse event of grade 5."
+    },
+    "hospital_days": {
+      "title": "Hospital days",
+      "type": "integer",
+      "minimum": 0,
+      "unit": "days",
+      "description": "Days in hospital because of adverse events."
+    },
+    "icu_days": {
+      "title": "Intensive care days",
+      "type": "integer",
+      "minimum": 0,
+      "unit": "days",
+      "description": "Days in intensive care because of adverse events."
+    },
+    "unplanned_visits": {
+      "title": "Unplanned visits",
+      "type": "integer",
+      "minimum": 0,
+      "description": "Unplanned outpatient visits because of adverse events."
+    },
+    "alerts": {
+      "title": "Alerts",
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of alerts of the monitoring components."
+    },
+    "false_alerts": {
+      "title": "False alerts",
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of alerts without a developing adverse event."
+    },
+    "cost_care": {
+      "title": "Cost of care",
+      "type": "number",
+      "minimum": 0,
+      "unit": "EUR",
+      "description": "Costs of unplanned visits, hospital stays and diagnostics after alerts. Without the costs of the cancer drugs."
+    },
+    "cost_intervention": {
+      "title": "Cost of the intervention",
+      "type": "number",
+      "minimum": 0,
+      "unit": "EUR",
+      "description": "Costs of risk assessment, set-up, monitoring and the handling of alerts."
+    },
+    "qaly": {
+      "title": "Quality-adjusted life years",
+      "type": "number",
+      "minimum": 0,
+      "unit": "years",
+      "description": "Life years during follow-up, weighted by quality of life."
     }
   }
 }

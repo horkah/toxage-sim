@@ -1,7 +1,11 @@
 """Weekly observations: therapy status, blood tests, oxygen saturation and
 patient-reported symptoms. They are derived from the course of the patient,
-so that they carry signals of the events."""
+so that they carry signals of the events.
+
+The noise of a week comes from a generator that is seeded by patient and
+week, so it is the same in every scenario."""
 import math
+import random
 
 from hazards import ILD
 
@@ -23,8 +27,10 @@ def _ild_effect(day, ild, rise_per_week, maximum, recovery_per_week):
     return effect
 
 
-def observations(rng, patient, latent, regimen, params, course, mult):
-    """Return the observation records of one patient."""
+def observations(draws, latent, regimen, params, course, mult):
+    """Return the observation records of one patient in one scenario."""
+    plan = course["plan"]
+    patient = plan["patient"]
     m = params["measurements"]
     rates = regimen["severe_event_rates"]
     frailty = latent["frailty"]
@@ -43,8 +49,9 @@ def observations(rng, patient, latent, regimen, params, course, mult):
     records = []
     for week, (status, dose, exposure) in enumerate(course["states"]):
         day = 7 * week + 1
+        rng = random.Random(draws.key("observation", week))
         here = by_week.get(week, [])
-        types = {e["event_type"]: e for e in here}
+        types = {e["event_type"]: e for e in here if e["grade"] >= 3}
 
         scheduled = week % regimen["lab_interval_weeks"] == 0 and (
             stop_week is None or week <= stop_week + m["labs_weeks_after_stop"]
@@ -101,7 +108,7 @@ def observations(rng, patient, latent, regimen, params, course, mult):
                              + b["frailty_slope"] * max(0.0, frailty) + lung)
 
         records.append({
-            "patient_id": patient["patient_id"], "week": week, "day": day,
+            "scenario_id": plan["scenario_id"], "patient_id": patient["patient_id"], "week": week, "day": day,
             "treatment_status": status, "dose_level": dose,
             "neutrophils_10e9_l": neutrophils, "haemoglobin_g_dl": haemoglobin, "platelets_10e9_l": platelets,
             "spo2_percent": spo2, "pro_fatigue": fatigue, "pro_diarrhoea": diarrhoea,

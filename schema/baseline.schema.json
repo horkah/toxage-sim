@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "toxage-sim/baseline",
   "title": "Baseline record",
-  "description": "One patient at the start of a systemic therapy line. One record per patient.",
-  "version": "0.2.1",
+  "description": "One patient at the start of a systemic therapy line, as planned in usual care. One record per patient, shared by all scenarios. A scenario can adapt the starting dose and the G-CSF prophylaxis; the observation records show what was given.",
+  "version": "0.3.0",
   "type": "object",
   "additionalProperties": false,
   "required": [

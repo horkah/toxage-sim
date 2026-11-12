@@ -12,11 +12,11 @@ Technical and organisational details that go beyond the public [README](../READM
 
 | Folder | Purpose | Status |
 |---|---|---|
-| `background/` | Literature, report, concepts | 28 references, report with ten risk model candidates, 20 PDFs |
-| `schema/` | Central data schema | baseline, observation, event and outcome table (version 0.2.1), risk_score table (version 0.1.1), titles for all fields, Python loader, validator, CSV reader and writer |
-| `engine/` | Synthetic data generator | weekly microsimulation for candidates 1 and 2, five subgroups, ten regimens, calibration, tests |
+| `background/` | Literature, report, concepts | 28 references, report with ten risk model candidates, intervention model, 20 PDFs |
+| `schema/` | Central data schema | scenario, baseline, observation, event, alert and outcome table (version 0.3.0), risk_score table (version 0.1.1), Python loader, validator, CSV reader and writer |
+| `engine/` | Synthetic data generator | weekly microsimulation until death or ten years, five subgroups, ten regimens, six intervention scenarios, calibration, tests |
 | `risk-model/` | Toxicity risk model | common interface, baseline models for candidates 1 and 2, fitting, evaluation, tests, list of extensions |
-| `app/` | Inspection app | Django app with disclaimer, cohort and patient view, filters and charts built from schema and risk models, tests |
+| `app/` | Inspection app | Django app with disclaimer, cohort and patient view, scenarios, course over time, comparison of interventions, filters and charts built from schema and risk models, tests |
 | `project/` | Project management, internal documentation | prompt log, start prompt, this file |
 
 ## Literature
@@ -71,8 +71,9 @@ The copyrighted PDFs must not be in the repository when it becomes public. Befor
 
 - The schema in `schema/` is the single source for field names, types and allowed values. Code in other folders reads it from there and does not repeat field lists. Reading and writing CSV files also goes through `schema/toxage_schema.py`. Rules for extending it are in `schema/README.md`.
 - The engine is plain Python 3 without further packages. `engine/README.md` describes the model variables, the covariate mechanisms, the hazard model, the basis of every parameter group, the simplifications and the ideas for later extensions. The parameters themselves are in `engine/config/`.
-- After every change of the model or its parameters, `python3 engine/calibrate.py` has to be run. It takes about 20 seconds and rewrites `engine/config/calibration.json`, which is under version control.
-- Generated data go to `engine/output/`, which is not under version control. Data are reproduced from the seed. 3000 patients give about 113 000 observation records and take about 2 seconds.
+- After every change of the model or its parameters, `python3 engine/calibrate.py` has to be run. It takes about one minute and rewrites `engine/config/calibration.json`, which is under version control.
+- Generated data go to `engine/output/`, which is not under version control. Data are reproduced from the seed. 3000 patients under six scenarios give about 700 000 observation records and take about 20 seconds; checking them against the schema and writing the files takes longer.
+- Scenarios must stay comparable patient by patient. Every random decision in `course.py`, `interventions.py` and `measurements.py` therefore goes through `draws.py` with a purpose and a week, never through a shared random generator. A new decision gets a new purpose name.
 - Tests run with `python3 -m unittest discover engine/tests`.
 - The three tumour types always get equal numbers of patients. If the number of patients is not a multiple of three, the first tumour types get one patient more.
 
@@ -89,7 +90,8 @@ The copyrighted PDFs must not be in the repository when it becomes public. Befor
 ## App
 
 - The app needs Django and nothing else (`app/requirements.txt`). Pages are Django templates, charts are drawn by a web component in plain JavaScript.
-- `python3 manage.py load_cohort` generates patients with the engine and stores the baseline and outcome records in `app/db.sqlite3`, which is not under version control. Weekly observations and events are not stored yet.
+- `python3 manage.py load_cohort` generates patients with the engine under all scenarios and stores them in `app/db.sqlite3`, which is not under version control. Each patient has one course per scenario with outcome, events, alerts and weekly observations.
+- The rows of a scenario are kept in memory after first use. `cohort.clear_cache()` empties this store; `store.generate` calls it.
 - Filters and the charts per patient characteristic are built from the schema, the status bar and risk filters from the registered risk models.
 - Tests run in `app/` with `python3 manage.py test explorer` and `node --test "explorer/tests/*.test.mjs"`.
 - The folders `templates/` and `templatetags/` match the pattern `temp*` in `.gitignore`. Two lines there exempt them. Without these lines git leaves the templates out without a warning.
@@ -108,10 +110,8 @@ The literature services work from scripts. The publisher hosts answer scripted r
 - Add the PDFs of the eight added guidelines to `background/papers/` and read the six that are not yet covered by a full text.
 - Extend the literature to the topics in section 9 of the report, first of all published prediction models and the evidence for home measurements.
 - Replace the assumed parameters of the engine by literature values where possible, see the table "Basis of the parameters" in `engine/README.md`.
-- Integrate the intervention model into engine and schema, in the order given in section 6 of `background/intervention-model.md`. The real risk model is added after the basic app is stable; until then a stand-in with adjustable performance is used.
-- Search the literature for unit costs, quality-of-life weights, hospital stays by event grade and participation rates, which the intervention model needs.
+- Search the literature for unit costs, quality-of-life weights, hospital stays by event grade, participation rates and the effect of early treatment. The intervention model uses assumptions and placeholders for them.
+- Replace the stand-ins for prediction and detection in the engine by the real risk models.
 - Pick the next extensions of the engine from the list "Ideas for later" in `engine/README.md`.
 - Extend the risk models, see `risk-model/EXTENSIONS.md`. The detection model for lung toxicity (2.1) can now be built on the weekly observations.
-- Bring the course over time into the app: store and show weekly observations and adverse events.
-- Add the cohort and intervention analytics mode to the app once the intervention model is in the engine.
 - Decide on a licence for the repository before it becomes public. The disclaimer of the app holds preliminary terms of use.

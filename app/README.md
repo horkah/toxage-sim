@@ -10,11 +10,13 @@ It is built with Django and nothing else. The pages are Django templates, the ch
 pip install -r app/requirements.txt
 cd app
 python3 manage.py migrate
-python3 manage.py load_cohort --n 5000 --seed 1
+python3 manage.py load_cohort --n 1500 --seed 1
 python3 manage.py runserver
 ```
 
-Then open http://localhost:8000. `load_cohort` generates patients with the [engine](../engine/), stores their baseline and outcome records and replaces the data that were stored before. The risks come from the [risk models](../risk-model/) and are computed when a page is shown. The database is the file `app/db.sqlite3`, which is not under version control.
+Then open http://localhost:8000. `load_cohort` generates patients with the [engine](../engine/) under all intervention scenarios, stores them and replaces the data that were stored before. `--scenarios` limits the scenarios. 1500 patients take about 20 seconds and 40 MB. The risks come from the [risk models](../risk-model/) and are computed when a page is shown.
+
+After a change of the storage model, delete `app/db.sqlite3` and run `migrate` and `load_cohort` again. The database is the file `app/db.sqlite3`, which is not under version control.
 
 Environment variables for a deployment: `TOXAGE_DEBUG=0`, `TOXAGE_SECRET_KEY`, `TOXAGE_ALLOWED_HOSTS` (comma-separated), `TOXAGE_DB` (path of the database file).
 
@@ -40,6 +42,21 @@ There is one page. Without a selected patient it shows the cohort. With a select
 
 A patient is selected by ID in the search field (`42` is enough for `P000042`), by the button "Random", which picks a patient of the current selection, or by a click on a point in a scatter plot. The whole state is in the address: filters, risk model and patient. A view can therefore be bookmarked and shared.
 
+### Scenarios
+
+The engine simulates the same patients under several intervention scenarios. Two choices above the charts set which scenario the page shows and which one it is compared with. Usual care is the default; another scenario is compared with usual care unless something else is chosen. Filters, status bar and patient data refer to the outcome in the selected scenario.
+
+### Views
+
+Four views share the scenario, the filters and the selected patient:
+
+| View | Content |
+|---|---|
+| Risk | Predicted risk against the observed outcome for the chosen risk model |
+| Patient characteristics | Observed rate and mean predicted risk per group of every baseline field |
+| Course over time | For the cohort: first severe adverse event, share on therapy and survival over time, for the selected scenario and the comparison. For a selected patient: dose, blood values, oxygen saturation and reported symptoms per week under both scenarios, with the adverse events, alerts and the end of therapy marked, and a table of the adverse events under each scenario. |
+| Interventions | All scenarios side by side for the selected patients: a table of key numbers, including costs and quality-adjusted life years against usual care, bar charts, lung toxicity by grade, and for a scenario with monitoring the days gained and the grades of the events recognised early. |
+
 ### Filters
 
 The filters are built from the [schema](../schema/) and from the registered risk models. Every field of the baseline and the outcome table gets a filter that fits its type: check boxes for a fixed list of values, yes/no for booleans, a range for numbers. Every risk model gets a range filter for its risk in percent. A new field in the schema or a new risk model therefore gets a filter without code changes. A click on a bar of a chart sets the filter to that group or risk band.
@@ -52,7 +69,7 @@ The status bar shows the size of the selection and, per risk model, the observed
 |---|---|
 | Distribution of predicted risk | How are risks spread, and how many patients in each risk band had the event? |
 | Calibration | Does the predicted risk match the observed rate, in ten groups of equal size? |
-| Cumulative incidence by risk group | When do events occur, and how well do the risk thirds separate? |
+| Cumulative incidence by risk group | When do events occur within the window of the risk model, and how well do the risk thirds separate? |
 | Predicted risk by age | How does risk depend on age, and where is the selected patient? |
 | Risk across models | Are patients at high risk for one outcome also at high risk for the other? |
 | One chart per patient characteristic | Observed rate and mean predicted risk per group, with the number of patients |
@@ -68,10 +85,12 @@ The menu holds the settings: bright, dark or system theme, and a larger text siz
 | File | Content |
 |---|---|
 | `toxage_app/settings.py` | Settings, including the version of the terms |
-| `explorer/models.py` | Data set and patients; records are stored in the layout of the schema |
+| `explorer/models.py` | Data set, patients and one course per patient and scenario; records are stored in the layout of the schema |
+| `explorer/store.py` | Writes generated data into the database |
 | `explorer/cohort.py` | Loads the patients, adds the risks of all models, describes the schema fields |
 | `explorer/filters.py` | Filters built from schema and risk models |
-| `explorer/charts.py` | Data of all charts and key numbers |
+| `explorer/charts.py` | Data of the risk charts and key numbers |
+| `explorer/timeline.py` | Data of the charts over time and across scenarios |
 | `explorer/views.py`, `middleware.py` | Pages, random patient, disclaimer |
 | `explorer/templates/explorer/` | Templates |
 | `explorer/static/explorer/charts.js` | Web component `<tox-chart>` that draws the charts |
@@ -82,6 +101,7 @@ The menu holds the settings: bright, dark or system theme, and a larger text siz
 
 ## Limits
 
-- The app shows the baseline and the outcome record of each patient. The weekly observations and the adverse events that the engine generates are not loaded yet, so there are no views of the course over time.
-- The lung toxicity model predicts the risk within 730 days, while the engine follows patients for 52 weeks. The chart of cumulative incidence therefore has no events after day 364.
+- The app always shows the newest data set. Generating and deleting data needs the command line.
+- The risk models describe the risk at therapy start without an intervention. In a scenario with an intervention the observed rates are lower than predicted.
+- The charts of the Risk view show time to event within the window of the risk model. The longer course is in the view "Course over time".
 - All patients are loaded and scored on every request. This is fast enough for some ten thousand patients.

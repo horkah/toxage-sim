@@ -37,20 +37,21 @@ The scientific background is in place:
 
 The central data schema and the data engine exist:
 
-- [schema/](schema/) defines five tables: baseline data, weekly observations, adverse events and an outcome summary per patient, and the risk scores.
-- [engine/](engine/) is a microsimulation. It follows each synthetic patient week by week for one year: adverse events, dose changes, end of therapy and death, together with blood values, oxygen saturation and reported symptoms. The three tumour types have equal numbers of patients, with subgroups and ten regimens inside. Event rates follow the published trials.
+- [schema/](schema/) defines seven tables: scenarios, baseline data, weekly observations, adverse events, alerts and an outcome summary per patient and scenario, and the risk scores.
+- [engine/](engine/) is a microsimulation. It follows each synthetic patient week by week until death or for ten years: adverse events, dose changes, end of therapy and death, together with blood values, oxygen saturation and reported symptoms. The three tumour types have equal numbers of patients, with subgroups and ten regimens inside. Event rates follow the published trials.
+- The engine simulates the same patients under six intervention scenarios: usual care, a risk-adapted start of therapy, symptom monitoring, lung monitoring, all three combined, and perfect detection as upper limit. Each patient has fixed random numbers, so a patient differs between scenarios only where an intervention acts. Participation, dropout, alerts, early treatment, hospital stays, costs and quality-adjusted life years are part of the model.
 
 A first version of the risk models exists:
 
 - [risk-model/](risk-model/) gives all risk models one interface and has baseline models for candidates 1 and 2: a logistic model for any severe toxicity within 90 days and a proportional hazards model for lung toxicity under trastuzumab deruxtecan and single-agent chemotherapy. Coefficients come from the literature or are marked as assumptions. Each patient gets a risk, the published rate of the regimen for comparison, a risk category, and the factors behind the risk.
 - On the synthetic data, the model for severe toxicity ranks patients only slightly better than the published rate of the regimen alone, and the model for lung toxicity clearly better. All data are synthetic, so this says nothing about real patients. [risk-model/EXTENSIONS.md](risk-model/EXTENSIONS.md) lists the next steps, among them the detection model for lung toxicity.
 
-A concept for interventions exists: [background/intervention-model.md](background/intervention-model.md) describes how early detection and prediction, participation, the actions of the care team and their effects on health and costs can be simulated, and how the same cohort can be run through several scenarios for comparison. It is not implemented yet.
+[background/intervention-model.md](background/intervention-model.md) describes the intervention model: the chain from the offer of an intervention to its effect on health and costs, and what the engine implements of it. The effect sizes, costs and quality-of-life weights are assumptions or placeholders, so the scenario results show how the model behaves, not what an intervention achieves in patients.
 
 A first app exists:
 
 - [app/](app/) is a web app that shows the cohort and a single patient in relation to it: risk distribution, calibration, time to event by risk group, and observed and predicted rates by patient characteristic. Filters cover every field of the baseline and outcome records and every risk model.
-- The app does not show the course over time yet, and it has no view for comparing interventions.
+- The app shows the course over time, for the cohort and for a single patient under two scenarios, and compares all scenarios side by side.
 
 ## Note
 

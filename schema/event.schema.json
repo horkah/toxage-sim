@@ -2,19 +2,31 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "toxage-sim/event",
   "title": "Event record",
-  "description": "One adverse event of one patient. The engine records events of grade 3 to 5 and interstitial lung disease of any grade.",
-  "version": "0.2.1",
+  "description": "One adverse event of one patient in one scenario. The engine records events that reach grade 3 to 5 in usual care, and interstitial lung disease of any grade. With monitoring such an event can be recognised at a lower grade.",
+  "version": "0.3.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "scenario_id",
     "patient_id",
     "event_type",
     "grade",
     "onset_day",
     "day",
-    "action"
+    "detected_by",
+    "usual_care_day",
+    "usual_care_grade",
+    "action",
+    "hospital_days",
+    "icu_days",
+    "unplanned_visit"
   ],
   "properties": {
+    "scenario_id": {
+      "title": "Scenario",
+      "type": "string",
+      "description": "Identifier of the intervention scenario, as in the scenario table."
+    },
     "patient_id": {
       "title": "Patient ID",
       "type": "string",
@@ -42,7 +54,7 @@
       "type": "integer",
       "minimum": 1,
       "maximum": 5,
-      "description": "CTCAE grade. Grade 5 is death from the event."
+      "description": "CTCAE grade at which the event was recognised and treated. Grade 5 is death from the event."
     },
     "onset_day": {
       "title": "Day of onset",
@@ -56,7 +68,30 @@
       "type": "integer",
       "minimum": 1,
       "unit": "days",
-      "description": "Day on which the event was recognised by the care team. Later than onset_day if recognition was delayed."
+      "description": "Day on which the event was recognised by the care team."
+    },
+    "detected_by": {
+      "title": "Recognised through",
+      "type": "string",
+      "enum": [
+        "routine",
+        "monitoring"
+      ],
+      "description": "routine: at a regular visit or because the patient sought help. monitoring: after an alert of a monitoring component."
+    },
+    "usual_care_day": {
+      "title": "Day of recognition in usual care",
+      "type": "integer",
+      "minimum": 1,
+      "unit": "days",
+      "description": "Day on which the event would have been recognised without monitoring."
+    },
+    "usual_care_grade": {
+      "title": "Grade in usual care",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Grade that the event would have reached without monitoring."
     },
     "action": {
       "title": "Action",
@@ -68,6 +103,25 @@
         "discontinuation"
       ],
       "description": "Change of the therapy in response to the event."
+    },
+    "hospital_days": {
+      "title": "Hospital days",
+      "type": "integer",
+      "minimum": 0,
+      "unit": "days",
+      "description": "Days in hospital because of the event, including intensive care."
+    },
+    "icu_days": {
+      "title": "Intensive care days",
+      "type": "integer",
+      "minimum": 0,
+      "unit": "days",
+      "description": "Days in intensive care because of the event."
+    },
+    "unplanned_visit": {
+      "title": "Unplanned visit",
+      "type": "boolean",
+      "description": "The event led to an unplanned outpatient visit."
     }
   }
 }

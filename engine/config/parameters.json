@@ -1,8 +1,10 @@
 {
   "description": "Parameters of the engine. 'basis' states for each block whether the values come from the literature or are assumptions of this project.",
   "simulation": {
-    "weeks": 52,
-    "basis": "assumption"
+    "weeks": 520,
+    "calibration_weeks": 52,
+    "observation_weeks_after_stop": 4,
+    "basis": "assumption: patients are followed until death or for ten years. The event rates are matched to the literature within the first 52 weeks. Observations are written while the patient is on therapy and for a few weeks after."
   },
   "population": {
     "basis": "assumption, except where noted",
@@ -508,9 +510,9 @@
     }
   },
   "calibration": {
-    "patients": 60000,
+    "patients": 30000,
     "seed": 20261112,
-    "iterations": 8,
+    "iterations": 6,
     "trial_like_maximum_ecog": 1,
     "basis": "event rates are matched to the literature in generated patients with ECOG 0 or 1"
   }

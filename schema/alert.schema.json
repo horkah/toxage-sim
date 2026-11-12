@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "toxage-sim/alert",
+  "title": "Alert record",
+  "description": "One alert of a monitoring component for one patient in one scenario.",
+  "version": "0.3.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scenario_id",
+    "patient_id",
+    "day",
+    "source",
+    "true_alert",
+    "event_type",
+    "attended",
+    "acted"
+  ],
+  "properties": {
+    "scenario_id": {
+      "title": "Scenario",
+      "type": "string",
+      "description": "Identifier of the intervention scenario, as in the scenario table."
+    },
+    "patient_id": {
+      "title": "Patient ID",
+      "type": "string",
+      "description": "Identifier of the patient, as in the baseline record."
+    },
+    "day": {
+      "title": "Day",
+      "type": "integer",
+      "minimum": 1,
+      "unit": "days",
+      "description": "Day of the alert, counted from therapy start (day 1)."
+    },
+    "source": {
+      "title": "Source",
+      "type": "string",
+      "enum": [
+        "symptom_report",
+        "lung_monitoring"
+      ],
+      "description": "Monitoring component that gave the alert."
+    },
+    "true_alert": {
+      "title": "True alert",
+      "type": "boolean",
+      "description": "True if an adverse event was developing at the time of the alert."
+    },
+    "event_type": {
+      "title": "Event type",
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Type of the developing adverse event, as in the event table. Null for a false alert."
+    },
+    "attended": {
+      "title": "Attended",
+      "type": "boolean",
+      "description": "The patient was reached and came to the visit that the alert called for."
+    },
+    "acted": {
+      "title": "Acted on",
+      "type": "boolean",
+      "description": "The care team recognised the event because of this alert."
+    }
+  }
+}

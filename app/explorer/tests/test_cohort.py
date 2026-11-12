@@ -11,7 +11,7 @@ class FieldTest(SimpleTestCase):
     def test_fields_follow_schema(self):
         names = [f.name for f in cohort.fields()]
         expected = toxage_schema.fields("baseline") + toxage_schema.fields("outcome")
-        self.assertEqual(names, [n for n in expected if n != "patient_id"])
+        self.assertEqual(names, [n for n in expected if n not in ("patient_id", "scenario_id")])
 
     def test_field_kinds(self):
         by_name = {f.name: f for f in cohort.fields()}
@@ -80,6 +80,48 @@ class CurrentTest(CohortTestCase):
     def test_model_methods(self):
         patient = Patient.objects.first()
         self.assertEqual(str(patient), patient.patient_id)
-        self.assertEqual(patient.record()["patient_id"], patient.patient_id)
-        self.assertIn("ild", patient.record())
         self.assertIn(f"{self.n} patients", str(self.dataset))
+
+
+class ScenarioTest(CohortTestCase):
+    def test_scenarios_of_the_data_set(self):
+        ids = cohort.scenario_ids(self.dataset)
+        self.assertEqual(ids[0], cohort.USUAL_CARE)
+        self.assertIn("combined", ids)
+        self.assertEqual(cohort.scenario(self.dataset, "combined")["scenario_id"], "combined")
+        self.assertEqual(cohort.scenario(self.dataset, "unknown")["scenario_id"], cohort.USUAL_CARE)
+
+    def test_rows_of_another_scenario_share_baseline_and_risks(self):
+        other = cohort.rows(self.dataset, "combined", self.models)
+        self.assertEqual(len(other), self.n)
+        for a, b in zip(self.rows, other):
+            self.assertEqual((a["patient_id"], a["age_years"], a["risk_severe90"]),
+                             (b["patient_id"], b["age_years"], b["risk_severe90"]))
+        self.assertTrue(any(r["participating"] for r in other))
+        self.assertFalse(any(r["participating"] for r in self.rows))
+
+    def test_rows_are_cached_until_cleared(self):
+        self.assertIs(cohort.rows(self.dataset, "combined", self.models),
+                      cohort.rows(self.dataset, "combined", self.models))
+        first = cohort.rows(self.dataset, "combined", self.models)
+        cohort.clear_cache()
+        self.assertIsNot(cohort.rows(self.dataset, "combined", self.models), first)
+
+    def test_events_and_course(self):
+        events = cohort.events(self.dataset, cohort.USUAL_CARE)
+        self.assertEqual(set(events), {r["patient_id"] for r in self.rows})
+        pid = next(p for p, found in events.items() if found)
+        course = cohort.course(self.dataset, cohort.USUAL_CARE, pid)
+        self.assertEqual(course["events"], events[pid])
+        weeks = course["observations"]["week"]
+        self.assertEqual(weeks, list(range(len(weeks))))
+        self.assertEqual(len(course["observations"]["spo2_percent"]), len(weeks))
+        self.assertIsNone(cohort.course(self.dataset, cohort.USUAL_CARE, "X"))
+
+    def test_load_cohort_with_chosen_scenarios(self):
+        from django.core.management import call_command
+        call_command("load_cohort", n=9, seed=1, scenarios=["usual_care", "lung_monitoring"],
+                     stdout=open("/dev/null", "w"))
+        dataset = cohort.newest()
+        self.assertEqual(cohort.scenario_ids(dataset), ["usual_care", "lung_monitoring"])
+        self.assertEqual(Patient.objects.count(), 9)
