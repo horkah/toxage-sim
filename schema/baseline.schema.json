@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "toxage-sim/baseline",
+  "title": "Baseline record",
+  "description": "One patient at the start of a systemic therapy line. One record per patient.",
+  "version": "0.1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "patient_id", "tumour_type", "regimen", "age_years", "sex", "ecog",
+    "ga_impaired_domains", "renal_function", "spo2_percent",
+    "lung_comorbidity", "years_since_diagnosis"
+  ],
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "description": "Unique identifier of the patient."
+    },
+    "tumour_type": {
+      "type": "string",
+      "enum": ["pancreas", "prostate", "breast"],
+      "description": "Primary tumour. All patients have advanced disease."
+    },
+    "regimen": {
+      "type": "string",
+      "enum": [
+        "nalirifox",
+        "gemcitabine_nab_paclitaxel",
+        "adt_docetaxel",
+        "adt_docetaxel_abiraterone",
+        "adt_docetaxel_darolutamide",
+        "lu_psma_617",
+        "olaparib",
+        "trastuzumab_deruxtecan",
+        "chemotherapy_single_agent",
+        "pembrolizumab_chemotherapy"
+      ],
+      "description": "Systemic therapy that starts on day 1."
+    },
+    "age_years": {
+      "type": "integer",
+      "minimum": 18,
+      "maximum": 100,
+      "unit": "years",
+      "description": "Age at therapy start."
+    },
+    "sex": {
+      "type": "string",
+      "enum": ["female", "male"]
+    },
+    "ecog": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4,
+      "description": "ECOG performance status at therapy start."
+    },
+    "ga_impaired_domains": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "maximum": 7,
+      "description": "Number of impaired domains in a geriatric assessment (physical function, cognition, emotional health, comorbidity, polypharmacy, nutrition, social support). Null if no assessment was done."
+    },
+    "renal_function": {
+      "type": "string",
+      "enum": ["normal", "mild_decrease", "moderate_severe_decrease"],
+      "description": "Renal function at therapy start."
+    },
+    "spo2_percent": {
+      "type": "integer",
+      "minimum": 70,
+      "maximum": 100,
+      "unit": "%",
+      "description": "Oxygen saturation at rest at therapy start."
+    },
+    "lung_comorbidity": {
+      "type": "boolean",
+      "description": "Asthma, COPD, earlier interstitial lung disease or pneumonitis, pulmonary fibrosis, emphysema or radiation pneumonitis."
+    },
+    "years_since_diagnosis": {
+      "type": "number",
+      "minimum": 0,
+      "unit": "years",
+      "description": "Time from first cancer diagnosis to therapy start."
+    }
+  }
+}

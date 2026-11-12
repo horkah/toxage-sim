@@ -2,3 +2,5 @@ tmp*
 temp*
 bak*
 *bak.*
+engine/output/
+__pycache__/

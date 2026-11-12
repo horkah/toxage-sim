@@ -21,6 +21,7 @@ The project works with synthetic data. A data engine generates patients, therapi
 | Folder | Content |
 |---|---|
 | [background/](background/) | Scientific background: literature list and a report on therapy toxicity |
+| [schema/](schema/) | Central data schema, shared by engine, risk model and app |
 | [engine/](engine/) | Generator for synthetic patient data |
 | [risk-model/](risk-model/) | Toxicity risk model |
 | [app/](app/) | App to inspect data and risk scores |
@@ -34,7 +35,12 @@ The scientific background is in place:
 - [background/toxicity-report.md](background/toxicity-report.md) summarises their findings: how often severe toxicity occurs with which therapy, when it starts, who is at risk, and what guidelines ask for in risk assessment and monitoring.
 - The report derives ten candidates for risk models, from a general model for severe toxicity in the first three months of a therapy line to specific models for lung toxicity, neutropenia, diarrhoea, cardiovascular events and others.
 
-The data engine, the risk model and the app have no code yet.
+The central data schema and a first version of the data engine exist:
+
+- [schema/](schema/) defines a baseline record and an outcome record per patient.
+- [engine/](engine/) generates synthetic patients for ten regimens with two outcomes: any severe toxicity within 90 days, and lung toxicity. The models are simple and use published rates and risk factors where available.
+
+The risk model and the app have no code yet.
 
 ## Note
 
