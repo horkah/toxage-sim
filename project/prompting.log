@@ -144,3 +144,8 @@ all on main as always, commit push, then close session
 2026-11-13 17:51 (+01:00) | model: claude-fable-5-2 | attachments: none
 --------------------------------------------------------------------------------
 Ich habe mein Nutzungslimit erreicht, während du gearbeitet hast, aber es wurde inzwischen zurückgesetzt. Bitte mache dort weiter, wo du aufgehört hast.
+
+================================================================================
+2026-11-13 18:10 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+der disclaimer am anfang enthält eine falschaussage: "The data have no follow-up over time yet. Each patient has one record at the start of a therapy line and the outcomes that followed." - bitte korrigieren und push.
