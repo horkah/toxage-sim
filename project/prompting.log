@@ -124,3 +124,67 @@ all on main as always, commit push, then close session
 2026-11-13 18:10 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 der disclaimer am anfang enthält eine falschaussage: "The data have no follow-up over time yet. Each patient has one record at the start of a therapy line and the outcomes that followed." - bitte korrigieren und push.
+
+================================================================================
+2026-11-13 18:38 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+Had an error after just test: 
+
+cd app && uv run python manage.py test explorer
+Found 144 test(s).
+Creating test database for alias 'default'...
+System check identified no issues (0 silenced).
+...............................Traceback (most recent call last):
+  File "/home/horst/code/toxage-sim/app/explorer/store.py", line 95, in _run
+    _fill(dataset, scenarios, recalibrate, config)
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/horst/code/toxage-sim/app/explorer/store.py", line 70, in _fill
+    toxage_schema.validate(table, data[table])
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/horst/code/toxage-sim/schema/toxage_schema.py", line 81, in validate
+    raise ValueError(f"{table} record {i}: " + "; ".join(found))
+ValueError: outcome record 0: follow_up_days: 0 is below 1
+
+fix bugs always in main, make a detailed bug and fix description in the commit message. always work on main in this entire project. then push
+
+================================================================================
+2026-11-13 18:47 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+add the work-on-main rule to CLAUDE.md
+
+================================================================================
+2026-11-13 18:50 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+I'd like a major facelift now:
+
+* the UI shall be more reactive, not reload when a parameter has changed. if you need svelte for that, go for it, but then do it right. if you are fine with the current technologies, then even better.
+* design a logo for this app and add an about screen.
+* the only developer so far was [horkah](https://github.com/horkah) who also wrote all prompts, plus support of anthropic claude. find a suitable and professional author section that is adequate for using LLM support for realizing ideas
+* add a versioning to the app such that every new build shows on the about screen and in the footer line (where also the disclaimer lives).
+* the functionality is fine. But I believe you find much more professional and modern ways to organize the content, more logically ordered,  make it more clickable and synchronized, more beautifully designed, 
+* one major goal thereby is to make the app less redundant - actually, by crosslinking and clickable objects, redundancy is good for reaching app elements and informations. but regarding the display, information and menu items should not be repeated in multiple places on one screen or repeated on several screens. avoiding redundancy helps users to orient to what is the core of each view or screen. making them interconnected in many ways helps to experience and explore the relations between information elements.
+* of course, if redundancy is needed for a purpose it is allowed
+* add a warning popup with a nice red warning symbol and text, before data is deleted.
+* make an archive export of the database in a format that can be reinjected into the app at a later stage. also this loading of a previously archived database must be implemented.
+* the prompting log and the internal developer information shall not be displayed with the app. the app shall only show whats needed for exploring the synthetic data, risk models, etc. - so the full content but not the developer perspective. that is only in the github repo.
+* then push
+
+================================================================================
+2026-11-13 19:58 (+01:00) | model: claude-opus-5-5 | attachments: screenshot of the terminal output of "just test" (test-js failed: Could not find '.../app/explorer/tests/*.test.mjs')
+--------------------------------------------------------------------------------
+With local git pull & just setup & just test, I had an error, See pasted Screenshot . In bug fixes always Write Detail Description for bug and fix in the commit Message. Write this rule also in CLAUDE.md
+
+================================================================================
+2026-11-13 20:03 (+01:00) | model: claude-opus-5-5 | attachments: screenshot of the scatter plot "Severe toxicity, 90 days vs. Cardiovascular events"
+--------------------------------------------------------------------------------
+Why is this scatter Plot not equipped with the crosshair indication of the currently selected patient
+
+================================================================================
+2026-11-13 20:10 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+Where do the Euro cost for perfect_detection come from?
+
+================================================================================
+2026-11-13 21:22 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+the last prompts were not added to the prompting.log - how could you forget this? add the rule (again?) to CLAUDE.md - you can omit simple "resume due to limit reached" type prompts, but all others must be logged there.
