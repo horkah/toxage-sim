@@ -1,5 +1,9 @@
 from django.conf import settings
-from django.test import TestCase, override_settings
+import threading
+from unittest import mock
+
+from django.db import OperationalError, connection
+from django.test import TestCase, TransactionTestCase, override_settings
 
 from explorer import cohort, params, store
 from explorer.models import Course, Dataset, Patient
@@ -81,6 +85,19 @@ class DataTest(CohortTestCase):
         self.assertFalse(Course.objects.filter(scenario_id="combined").exists())
         self.assertEqual(Course.objects.count(), 6 * self.n)
         self.assertFalse(store.delete_scenario(self.dataset, "unknown"))
+
+    def test_a_busy_database_does_not_turn_a_deletion_into_an_error(self):
+        other = store.generate(6, 3, ["usual_care"], wait=True)
+
+        def busy(*args, **kwargs):
+            raise OperationalError("database is locked")
+        with mock.patch.object(store, "connection") as fake:
+            fake.vendor, fake.in_atomic_block = "sqlite", False
+            fake.cursor.return_value.__enter__.return_value.execute.side_effect = busy
+            with self.assertLogs("explorer.store", "WARNING"):
+                response = self.client.post("/data/delete/", {"dataset": other.pk})
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Dataset.objects.filter(pk=other.pk).exists())
 
     def test_last_scenario_stays(self):
         for sid in cohort.scenario_ids(self.dataset)[1:]:
@@ -292,3 +309,35 @@ class ReferenceTest(TestCase):
         response = self.client.get("/schema/")
         for url in ("/", "/data/", "/parameters/", "/documents/", "/about/", "/disclaimer/"):
             self.assertContains(response, f'href="{url}"')
+
+
+class RunningTest(TransactionTestCase):
+    """A request that looks for interrupted data sets while a new one is
+    being created must not take the new one for interrupted."""
+
+    def test_a_new_data_set_is_not_taken_for_interrupted(self):
+        create = Dataset.objects.create
+        others = []
+
+        def create_while_another_request_looks(**kwargs):
+            dataset = create(**kwargs)
+            # Another request (another thread and connection) looks right now.
+            def look():
+                store.mark_interrupted()
+                connection.close()
+            other = threading.Thread(target=look)
+            other.start()
+            other.join(0.3)
+            others.append(other)
+            return dataset
+
+        with mock.patch.object(Dataset.objects, "create", create_while_another_request_looks), \
+                mock.patch.object(store, "_run"):     # no generating; the data set stays "running"
+            dataset = store.generate(3, 1, ["usual_care"], wait=False)
+        others[0].join(5)
+        dataset.refresh_from_db()
+        self.assertEqual(dataset.status, Dataset.RUNNING, dataset.message)
+        store._RUNNING.discard(dataset.pk)
+        store.mark_interrupted()
+        dataset.refresh_from_db()
+        self.assertEqual(dataset.message, "Interrupted by a restart of the app")

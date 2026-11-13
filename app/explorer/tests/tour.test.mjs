@@ -1,15 +1,23 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { applies, clamp, fill, onPage, place, readSeconds, words } from "../static/explorer/tour.js";
+import { applies, clamp, fill, onPage, place, readSeconds, swipedLeft, words } from "../static/explorer/tour.js";
 import { STEPS } from "../static/explorer/tour-steps.js";
 
 test("words and reading time", () => {
   assert.equal(words("one two  three\nfour"), 4);
   assert.equal(words(""), 0);
-  assert.equal(readSeconds("a b c d e f", 3), 2);
-  assert.equal(readSeconds("a b c d e f", 6), 1.5);     // never shorter than 1.5 seconds
-  assert.equal(readSeconds("a ".repeat(100), 10), 10);
+  assert.equal(readSeconds("a ".repeat(20), 6.7), 6.7);     // seconds per 20 words
+  assert.equal(readSeconds("a ".repeat(100), 2), 10);
+  assert.equal(readSeconds("a ".repeat(100), 0), 0);       // 0: no time to read
+  assert.equal(readSeconds("a b", -3), 0);
+});
+
+test("a swipe to the left is far enough and mostly sideways", () => {
+  assert.ok(swipedLeft(-80, 10));
+  assert.ok(!swipedLeft(-40, 0));           // too short
+  assert.ok(!swipedLeft(80, 0));            // to the right
+  assert.ok(!swipedLeft(-80, 70));          // rather downwards
 });
 
 test("fill replaces remembered values", () => {

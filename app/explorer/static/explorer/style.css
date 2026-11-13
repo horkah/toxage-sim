@@ -531,7 +531,14 @@ dialog { color: var(--text); }
 }
 .tour[data-side="below"]::before { display: block; top: -9px; border-right: 0; border-bottom: 0; }
 .tour[data-side="above"]::before { display: block; bottom: -9px; border-left: 0; border-top: 0; }
-.tour header { color: var(--muted); font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; }
+.tour header { color: var(--muted); font-size: .76rem; text-transform: uppercase; letter-spacing: .06em;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tour-toggle { min-height: 0; padding: 0 9px; line-height: 1.4; font-size: 1rem; border-radius: 999px; color: var(--muted); }
+.tour-toggle[aria-expanded="true"] { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+.tour:has(.tour-toggle) > p, .tour:has(.tour-toggle) > h2 { cursor: pointer; }
+.tour-controls { display: flex; flex-direction: column; gap: 6px; }
+.tour-controls[hidden] { display: none; }
+.tour-keys { color: var(--muted); font-size: .78rem; margin: 2px 0 0; }
 .tour h2 { margin: 2px 0 6px; font-size: 1.05rem; }
 .tour p { margin: 0 0 8px; }
 .tour-do { border-left: 3px solid var(--accent); padding-left: 8px; }

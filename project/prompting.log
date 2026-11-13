@@ -142,3 +142,14 @@ I'd like a major facelift now:
 * the prompting log and the internal developer information shall not be displayed with the app. the app shall only show whats needed for exploring the synthetic data, risk models, etc. - so the full content but not the developer perspective. that is only in the github repo.
 * then push
 
+
+================================================================================
+2026-11-14 00:11 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+improvements and redesign for the demo:
+
+* run the demo in endless loop until stopped by user (maybe already in place, then ignore)
+* let the user go to next step by pressing cursor-right (if with keyboard and mouse) or by left-sweep (in touch devices)
+* hide the demo loop controls (pause, stop, speed options) after first step), and show if clicked or touched on hint text. If clicked/touched again, the controls disappear again. while the controls are shown, the demo halts for an additional five seconds, then resumes automatically, in next step of course controls are hidden again (until click/touch)
+* redefine the time per word as the inverse parameter: not words per second, but seconds per 20 words, minimum 0, default the corresponding of what you had. with proper scale.
+* the delete dataset option threw an error in demo mode (probably because there is now a warning window that needs confirmation, that warning window needs to be disabled for the demo mode)

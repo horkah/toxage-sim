@@ -11,7 +11,7 @@ import os
 import threading
 
 from django.conf import settings
-from django.db import connection, transaction
+from django.db import OperationalError, connection, transaction
 
 from engine import calibrate
 from engine import generate as engine
@@ -23,6 +23,10 @@ from .models import Course, Dataset, Patient
 KEYS = ("scenario_id", "patient_id")
 TABLES = ("scenario", "baseline", "outcome", "event", "alert", "observation")
 _RUNNING = set()     # data sets that a thread of this process is generating
+# Creating a data set and registering it in _RUNNING happen under this lock,
+# and so does looking for interrupted data sets. Otherwise a request in
+# between could take a new data set for one cut off by a restart.
+_LOCK = threading.Lock()
 log = logging.getLogger(__name__)
 
 
@@ -120,11 +124,12 @@ def generate(n, seed, scenarios=None, name="", recalibrate=None, replace=False, 
         recalibrate = params.needs_calibration(changed)
     if replace:
         delete_all()
-    dataset = Dataset.objects.create(
-        name=name.strip()[:80] or f"{n} patients, seed {seed}", n=n, seed=seed,
-        settings={k: v for k, v in changed.items() if k in params.ENGINE}, message="Starting")
+    with _LOCK:
+        dataset = Dataset.objects.create(
+            name=name.strip()[:80] or f"{n} patients, seed {seed}", n=n, seed=seed,
+            settings={k: v for k, v in changed.items() if k in params.ENGINE}, message="Starting")
+        _RUNNING.add(dataset.pk)
     wait = not settings.ASYNC_JOBS if wait is None else wait
-    _RUNNING.add(dataset.pk)
     if wait:
         _run(dataset, scenarios, recalibrate, config, False)
         dataset.refresh_from_db()
@@ -136,17 +141,24 @@ def generate(n, seed, scenarios=None, name="", recalibrate=None, replace=False, 
 def mark_interrupted():
     """A data set that is 'running' without a thread of this process was cut
     off by a restart of the server."""
-    Dataset.objects.filter(status=Dataset.RUNNING).exclude(pk__in=_RUNNING).update(
-        status=Dataset.FAILED, message="Interrupted by a restart of the app")
+    with _LOCK:
+        Dataset.objects.filter(status=Dataset.RUNNING).exclude(pk__in=list(_RUNNING)).update(
+            status=Dataset.FAILED, message="Interrupted by a restart of the app")
 
 
 # Deleting ---------------------------------------------------------------------
 
 def compact():
-    """Give the freed space back to the disk (SQLite keeps it otherwise)."""
+    """Give the freed space back to the disk (SQLite keeps it otherwise).
+    Best effort: the deletion before it is done already, so a database that
+    is busy, e.g. while a data set is stored, must not turn it into an error.
+    The space is given back with the next deletion."""
     if connection.vendor == "sqlite" and not connection.in_atomic_block:
-        with connection.cursor() as cursor:
-            cursor.execute("VACUUM")
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("VACUUM")
+        except OperationalError:
+            log.warning("Could not give the free space of the database back to the disk", exc_info=True)
 
 
 def delete_dataset(dataset):

@@ -4,6 +4,11 @@
 // the control it is about. In the tutorial the user does what the hint says,
 // and the tour goes on when it sees the result. In the demo the tour reads
 // the hint for the user, does the step itself and goes on after a pause.
+// The demo runs in an endless loop until it is stopped; before every new
+// round the state before the demo is brought back. The right arrow key or a
+// swipe to the left goes to the next step at once. The controls of the demo
+// (pause, stop, speed) show on the first step and when the hint is clicked
+// or touched; while they are shown the demo waits five seconds longer.
 //
 // A tour spans many pages. Pages are mostly swapped in place (app.js); the
 // hint stays and is placed again after each swap. Its state is kept in the
@@ -14,8 +19,12 @@
 import { STEPS } from "./tour-steps.js";
 
 const KEY = "toxage-tour";
-const SPEED = { wps: { key: "toxage-tourwps", min: 1, max: 10, step: 0.5, fallback: 3 },
+// Reading time in seconds per 20 words (6.7 is 3 words per second), and the
+// pause after each step in seconds.
+const SPEED = { read: { key: "toxage-tourread", min: 0, max: 30, step: 0.1, fallback: 6.7 },
                 pause: { key: "toxage-tourpause", min: 0.5, max: 10, step: 0.5, fallback: 2 } };
+const HOLD = 5000;         // the demo waits this much longer while its controls are shown
+const SWIPE = 60;          // pixels a finger must move to the left for "next"
 const POLL = 400;
 const PATIENCE = 240000;   // the demo gives up waiting for a result after this time
 
@@ -25,9 +34,15 @@ export function words(text) {
   return (text.match(/\S+/g) || []).length;
 }
 
-// Seconds to read a text at a number of words per second, at least 1.5.
-export function readSeconds(text, wordsPerSecond) {
-  return Math.max(1.5, words(text) / Math.max(0.1, wordsPerSecond));
+// Seconds to read a text, given the seconds for 20 words.
+export function readSeconds(text, secondsPer20Words) {
+  return (words(text) / 20) * Math.max(0, secondsPer20Words);
+}
+
+// True for a movement of a finger that is a swipe to the left: far enough,
+// and more sideways than up or down.
+export function swipedLeft(dx, dy, min = SWIPE) {
+  return dx <= -min && Math.abs(dy) < Math.abs(dx) * 0.6;
 }
 
 // Replace {name} by values that the tour remembered, e.g. the id of a data set.
@@ -98,7 +113,11 @@ async function post(url) {
   const response = await fetch(url, { method: "POST", headers: { "X-CSRFToken": csrf() } });
   return response.ok ? response.json() : {};
 }
-const sleep = (ms) => new Promise((resolve) => { timer = setTimeout(resolve, ms); });
+let resume = null;      // wakes the current sleep early, e.g. for "next"
+const sleep = (ms) => new Promise((resolve) => {
+  resume = () => { clearTimeout(timer); resume = null; resolve(); };
+  timer = setTimeout(() => { resume = null; resolve(); }, ms);
+});
 
 // What a step can use.
 const api = {
@@ -164,12 +183,12 @@ function position() {
 
 function slider(name, label, unit) {
   const s = SPEED[name];
-  return `<label>${label} <output>${setting(name)}</output> ${unit}
+  return `<label><span>${label}: <output>${setting(name)}</output> ${unit}</span>
     <input type="range" data-speed="${name}" min="${s.min}" max="${s.max}" step="${s.step}" value="${setting(name)}"></label>`;
 }
 
 function speedControls() {
-  return `<div class="tour-speed">${slider("wps", "Reading speed", "words per second")}
+  return `<div class="tour-speed">${slider("read", "Reading time", "seconds per 20 words")}
     ${slider("pause", "Pause after each step", "seconds")}</div>`;
 }
 
@@ -178,8 +197,25 @@ function bindSpeed(root) {
     input.addEventListener("input", () => {
       store(SPEED[input.dataset.speed].key, input.value);
       input.parentElement.querySelector("output").textContent = input.value;
+      // Changing the speed counts as using the controls: the demo waits a little longer.
+      if (state?.controls) hold();
     });
   }
+}
+
+// The controls of the demo: shown on the first step and on request.
+function hold() {
+  state.holdUntil = Date.now() + HOLD;
+  save();
+}
+
+function toggleControls() {
+  state.controls = !state.controls;
+  state.holdUntil = state.controls ? Date.now() + HOLD : 0;
+  save();
+  panel?.querySelector(".tour-controls")?.toggleAttribute("hidden", !state.controls);
+  panel?.querySelector("[data-tour=controls]")?.setAttribute("aria-expanded", String(state.controls));
+  position();
 }
 
 function show(step, note = "", free = false) {
@@ -202,6 +238,8 @@ function show(step, note = "", free = false) {
   const task = step.do ? `<p class="tour-do"><b>${demo ? "The demo does this next:" : "Your turn:"}</b> ${step.do}</p>` : "";
   let buttons;
   if (demo) {
+    // The first step shows the controls, later steps on request.
+    if (number <= 1 && (state.round || 1) <= 1 && state.controls === undefined) state.controls = true;
     buttons = `<button type="button" data-tour="pause">${state.paused ? "Resume" : "Pause"}</button>
       <button type="button" data-tour="stop">Stop the demo</button>`;
   } else {
@@ -213,10 +251,18 @@ function show(step, note = "", free = false) {
     buttons = `<button type="button" data-tour="back"${number <= 1 ? " disabled" : ""}>Back</button>${next}
       <button type="button" data-tour="stop">End the tutorial</button>`;
   }
-  panel.innerHTML = `<header><span>${demo ? "Demo" : "Tutorial"} · step ${number} of ${shown.length}</span></header>
+  const round = demo && (state.round || 1) > 1 ? ` · round ${state.round}` : "";
+  const toggle = demo
+    ? `<button type="button" class="tour-toggle" data-tour="controls" aria-expanded="${Boolean(state.controls)}"
+         title="Controls: pause, stop, speed">⋯</button>`
+    : "";
+  const controls = `<div class="tour-buttons">${buttons}</div>${demo ? speedControls() : ""}
+    ${demo ? `<p class="tour-keys">Next step: → key or swipe to the left. Click the text to hide these controls.</p>`
+           : `<p class="tour-keys">The → key or a swipe to the left also goes on, where “Next” is offered.</p>`}`;
+  panel.innerHTML = `<header><span>${demo ? "Demo" : "Tutorial"}${round} · step ${number} of ${shown.length}</span>${toggle}</header>
     <h2>${step.title}</h2>${step.text.map((p) => `<p>${p}</p>`).join("")}${task}
     ${note ? `<p class="tour-note">${note}</p>` : ""}
-    <div class="tour-buttons">${buttons}</div>${demo ? speedControls() : ""}`;
+    <div class="tour-controls"${demo && !state.controls ? " hidden" : ""}>${controls}</div>`;
   bindSpeed(panel);
   // Bring the target into view when the hint appears, not when it is drawn
   // again while waiting: the step itself may just have closed what held it.
@@ -255,8 +301,12 @@ async function reading(step) {
   const mine = run;
   for (;;) {
     if (mine !== run) return false;
-    if (!state.paused) {
-      const left = readSeconds(hintText(step), setting("wps")) * 1000 - (Date.now() - state.shownAt);
+    if (state.skip) return true;
+    if (state.holdUntil > Date.now()) {
+      state.shownAt += POLL;
+      await sleep(POLL);
+    } else if (!state.paused) {
+      const left = readSeconds(hintText(step), setting("read")) * 1000 - (Date.now() - state.shownAt);
       if (left <= 0) return true;
       await sleep(Math.min(left, POLL));
     } else {
@@ -270,7 +320,11 @@ async function pausing() {
   const mine = run;
   for (;;) {
     if (mine !== run) return false;
-    if (!state.paused) {
+    if (state.skip) return true;
+    if (state.holdUntil > Date.now()) {
+      state.doneAt += POLL;
+      await sleep(POLL);
+    } else if (!state.paused) {
       const left = setting("pause") * 1000 - (Date.now() - state.doneAt);
       if (left <= 0) return true;
       await sleep(Math.min(left, POLL));
@@ -288,7 +342,53 @@ function move(by) {
   state.i = Math.max(0, i);
   state.acted = false;
   state.shownAt = state.doneAt = null;
+  // A new step starts with the controls of the demo hidden and no wait or skip pending.
+  state.skip = false;
+  state.holdUntil = 0;
+  state.controls = false;
   save();
+}
+
+// The right arrow key or a swipe to the left. The demo goes on at once
+// (a result it waits for, such as a data set, still has to come); the
+// tutorial goes on where it offers "Next".
+function next() {
+  if (!state) return;
+  if (state.mode === "demo") {
+    state.skip = true;
+    state.holdUntil = 0;
+    save();
+    clearTimeout(timer);
+    // Wake the waiting loop now instead of after its sleep.
+    if (resume) resume();
+  } else {
+    panel?.querySelector('[data-tour="next"]')?.click();
+  }
+}
+
+function typing(target) {
+  return target.closest?.("input, select, textarea, [contenteditable]") !== null;
+}
+
+function onKey(event) {
+  if (!state || event.key !== "ArrowRight" || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (typing(event.target) || document.querySelector("dialog[open]")) return;
+  event.preventDefault();
+  next();
+}
+
+let touch = null;
+function onTouchStart(event) {
+  const t = event.touches[0];
+  // Swipes inside wide tables and form fields scroll or change them.
+  touch = event.touches.length === 1 && !event.target.closest(".scroll, input, select, textarea")
+    ? { x: t.clientX, y: t.clientY } : null;
+}
+function onTouchEnd(event) {
+  if (!touch || !state) return;
+  const t = event.changedTouches[0];
+  if (swipedLeft(t.clientX - touch.x, t.clientY - touch.y)) next();
+  touch = null;
 }
 
 async function play() {
@@ -347,6 +447,15 @@ async function finish(stopped = false) {
   run++;
   const demo = state.mode === "demo";
   const needsRestore = demo && !api.readOnly;
+  if (demo && !stopped) {
+    // The demo runs in a loop: bring the state before the demo back and start again.
+    const round = (state.round || 1) + 1;
+    hide();
+    if (needsRestore) await post("/tour/restore/");
+    await begin("demo", round);
+    location.href = "/";
+    return;
+  }
   state = null;
   save();
   hide();
@@ -370,9 +479,20 @@ function message(title, text, reload) {
 
 async function onPanelClick(event) {
   const action = event.target.closest("[data-tour]")?.dataset.tour;
-  if (!action) return;
+  if (!action) {
+    // A click on the text of a demo hint shows or hides the controls.
+    if (state?.mode === "demo" && !event.target.closest(".tour-controls, a, button, input, label")) toggleControls();
+    return;
+  }
+  if (action === "controls") return toggleControls();
   if (action === "stop") return finish(true);
-  if (action === "pause") { state.paused = !state.paused; save(); event.target.textContent = state.paused ? "Resume" : "Pause"; return; }
+  if (action === "pause") {
+    state.paused = !state.paused;
+    if (!state.paused) state.holdUntil = 0;
+    save();
+    event.target.textContent = state.paused ? "Resume" : "Pause";
+    return;
+  }
   if (action === "back") { move(-1); return play(); }
   if (action === "next") { move(1); return play(); }
   if (action === "auto") {
@@ -385,14 +505,20 @@ async function onPanelClick(event) {
   }
 }
 
-export async function start(mode) {
-  if (state) { run++; hide(); }
+// Note the state before a tour and set the tour to its first step.
+async function begin(mode, round = 1) {
   const before = await api.state();
   if (before.snapshot) await post("/tour/restore/");     // an earlier demo did not finish
   if (mode === "demo" && !before.read_only) await post("/tour/snapshot/");
-  state = { mode, i: 0, acted: false, shownAt: null, doneAt: null, paused: false,
+  state = { mode, i: 0, acted: false, shownAt: null, doneAt: null, paused: false, round,
+            controls: undefined, holdUntil: 0, skip: false,
             mem: { known: before.datasets.map((d) => d.id) } };
   save();
+}
+
+export async function start(mode) {
+  if (state) { run++; hide(); }
+  await begin(mode);
   for (const pop of document.querySelectorAll("details.popover[open]")) pop.open = false;
   play();
 }
@@ -408,8 +534,9 @@ function welcome() {
       <p>Step by step. A hint points to each feature, and you click and type yourself.
         What you create or change stays until you remove it.</p>
       <button type="button" class="primary" data-choice="demo">Demo</button>
-      <p>The same tour, running by itself. It creates data and changes parameters,
-        and puts everything back at the end.</p>
+      <p>The same tour, running by itself in a loop until you stop it. It creates data and
+        changes parameters, and puts everything back after each round. The → key or a swipe to
+        the left goes to the next step; a click on the hint shows pause, stop and speed.</p>
     </div>
     ${speedControls()}
     <label class="check"><input type="checkbox" data-off> Do not offer this at start again
@@ -447,6 +574,9 @@ function init() {
     const button = event.target.closest("[data-tour-start]");
     if (button) start(button.dataset.tourStart);
   });
+  document.addEventListener("keydown", onKey);
+  document.addEventListener("touchstart", onTouchStart, { passive: true });
+  document.addEventListener("touchend", onTouchEnd, { passive: true });
   // A page swapped in place moves the target of the hint.
   document.addEventListener("toxage:swap", () => { if (panel) requestAnimationFrame(position); });
   state = read(KEY);
