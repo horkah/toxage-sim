@@ -18,7 +18,7 @@ Technical and organisational details that go beyond the public [README](../READM
 | `schema/` | Central data schema | scenario, baseline, observation, event, alert and outcome table (version 0.3.0), risk_score table (version 0.1.1), Python loader, validator, CSV reader and writer |
 | `engine/` | Synthetic data generator | weekly microsimulation until death or ten years, five subgroups, ten regimens, six intervention scenarios, calibration, tests |
 | `risk-model/` | Toxicity risk model | common interface, baseline models for candidates 1 and 2, fitting, evaluation, tests, list of extensions |
-| `app/` | Inspection app | Django app with disclaimer, explorer (risk, characteristics, course over time, interventions), data sets, parameters, schema and documents; Docker image; tests |
+| `app/` | Inspection app | Django app with disclaimer, explorer (risk, characteristics, course over time, interventions), data sets, parameters, schema and documents, tutorial and demo; Docker image; tests |
 | `project/` | Project management, internal documentation | prompt log, start prompt, this file |
 
 ## Literature
@@ -100,6 +100,7 @@ The copyrighted PDFs must not be in the repository when it becomes public. Befor
 - The storage model has one initial migration. As long as no installation has to be kept, a change of the models replaces this migration; afterwards changes get migrations of their own.
 - The rows of a scenario are kept in memory after first use. `cohort.clear_cache()` empties this store; `store.generate` calls it.
 - Filters and the charts per patient characteristic are built from the schema, the status bar and risk filters from the registered risk models.
+- The steps of tutorial and demo are in `explorer/static/explorer/tour-steps.js`. A new function of the app gets a step there. A step that changes data or parameters is marked with `changes`, and the demo must undo it in a later step; the server restores the state at the end in any case.
 - Tests run in `app/` with `python3 manage.py test explorer` and `node --test "explorer/tests/*.test.mjs"`.
 
 ## Cloud environment

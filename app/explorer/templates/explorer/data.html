@@ -12,7 +12,7 @@
   <section class="panel">
     <h2>Stored data sets</h2>
     {% for d in datasets %}
-    <article class="dataset{% if d.pk == active.pk %} active{% endif %}">
+    <article class="dataset{% if d.pk == active.pk %} active{% endif %}" data-id="{{ d.pk }}" data-status="{{ d.status }}">
       <header>
         <h3>{{ d.name }}{% if d.pk == active.pk %} <span class="tag">shown in the explorer</span>{% endif %}</h3>
         <p class="muted">{{ d.n }} patients · seed {{ d.seed }} · {{ d.created|date:"Y-m-d H:i" }} UTC

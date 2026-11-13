@@ -141,7 +141,7 @@ def mark_interrupted():
 
 # Deleting ---------------------------------------------------------------------
 
-def _compact():
+def compact():
     """Give the freed space back to the disk (SQLite keeps it otherwise)."""
     if connection.vendor == "sqlite" and not connection.in_atomic_block:
         with connection.cursor() as cursor:
@@ -151,7 +151,7 @@ def _compact():
 def delete_dataset(dataset):
     dataset.delete()
     cohort.clear_cache()
-    _compact()
+    compact()
 
 
 def delete_scenario(dataset, scenario_id):
@@ -166,14 +166,14 @@ def delete_scenario(dataset, scenario_id):
         dataset.metadata["scenarios"] = [s["scenario_id"] for s in left]
         dataset.save(update_fields=["scenarios", "metadata"])
     cohort.clear_cache()
-    _compact()
+    compact()
     return True
 
 
 def delete_all():
     Dataset.objects.all().delete()
     cohort.clear_cache()
-    _compact()
+    compact()
 
 
 def database_size():

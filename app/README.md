@@ -68,6 +68,7 @@ The bar at the top and the menu lead to every part of the project:
 | Parameters | All model parameters of the engine and the risk models, with their defaults and notes; change, save, reset |
 | Schema | Tables and fields of the central data schema |
 | Documents | The documents of the repository: project overview, toxicity report, references, intervention model, the components, internal documentation, prompt log |
+| Guided tours | Tutorial and demo; in the menu |
 | Disclaimer and licence | Terms of use; in the menu |
 
 ## How it works
@@ -150,9 +151,22 @@ Records are stored as JSON in the layout of the schema, so the database needs no
 
 SQLite fits because there is one server process, the data are written once per data set and then only read, and one file in a volume is easy to keep and to back up. Write-ahead logging lets pages be read while a data set is stored and keeps disk writes low. A database server would be the choice for several server processes or many users writing at the same time; Django makes that change a matter of settings.
 
+### Tutorial and demo
+
+Two guided tours lead through the whole app in about 70 steps: the menu, generating a data set, the risk models and their charts, filters, a single patient, patient characteristics, the course over time, the scenarios and interventions, the parameters, records, deleting and resetting, the schema and the documents. Each step shows a hint with a short explanation next to the part of the page it is about.
+
+- In the **tutorial** the user does every step herself. The hint says what to do and moves on when it is done. "Do it for me" carries out a step, "Back" and "Next" move freely, "End" stops. The tutorial changes nothing on its own and leaves the data sets and parameters as the user made them; its last steps point to the ways to delete and reset.
+- The **demo** does every step itself. Two speed values control it: words per second for reading a hint, and seconds a new state of the screen is shown before the next step. Both can be changed while the demo runs, and it can be paused and stopped.
+
+The demo leaves the app exactly as it was. At its start the server notes the changed parameters, the stored data sets and the chosen data set. The demo deletes what it created and resets what it changed step by step, and at its end, or when it is stopped, the server puts the noted state back: parameters, data sets and chosen data set. If a demo is cut off, for example by closing the browser, the next page offers to restore the state.
+
+The app offers both tours once per browser session after the disclaimer. This offer can be turned off in the offer itself and turned on and off in the settings. Both tours can be started from the menu at any time.
+
+In read-only mode the tours leave out all steps that change data or parameters.
+
 ### Settings
 
-The menu holds the settings: bright, dark or system theme, and a larger text size. They are stored in the browser (local storage).
+The menu holds the settings: bright, dark or system theme, a larger text size, and whether the tours are offered at start. They are stored in the browser (local storage).
 
 ## Files
 
@@ -172,6 +186,9 @@ The menu holds the settings: bright, dark or system theme, and a larger text siz
 | `explorer/templates/explorer/` | Templates |
 | `explorer/static/explorer/charts.js` | Web component `<tox-chart>` that draws the charts |
 | `explorer/static/explorer/app.js` | Settings and filter form |
+| `explorer/static/explorer/tour.js` | Tutorial and demo: hints, speed, offer at start |
+| `explorer/static/explorer/tour-steps.js` | The steps of the tours: text, page, target, action |
+| `explorer/tour.py` | State of the app for the tours; notes and restores the state around a demo |
 | `explorer/static/explorer/style.css` | Layout and colours for bright and dark mode |
 | `explorer/management/commands/load_cohort.py` | Generates and stores a data set from the command line |
 | `../Dockerfile`, `../docker-compose.yml` | Container image and its start |
@@ -180,6 +197,7 @@ The menu holds the settings: bright, dark or system theme, and a larger text siz
 ## Limits
 
 - The app has no login and no user accounts. Parameters and data sets are shared by all users.
+- A demo restores the state of the whole app. Data sets and parameter changes that another user makes while a demo runs are removed with it.
 - One data set is generated at a time, and at most 20 000 patients per data set.
 - The Markdown renderer covers what the documents of the repository use, not all of Markdown.
 - The risk models describe the risk at therapy start without an intervention. In a scenario with an intervention the observed rates are lower than predicted.
