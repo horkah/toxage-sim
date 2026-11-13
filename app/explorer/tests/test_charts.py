@@ -166,8 +166,13 @@ class ChartTest(CohortTestCase):
         self.assertEqual(spec["highlight"][2], self.ild_rows[0]["patient_id"])
         self.assertEqual(spec["y"]["min"], 0)
         self.assertLessEqual(spec["x"]["min"], min(r["age_years"] for r in self.ild_rows))
+        self.assertIsNone(spec["note"])
         outsider = next(r for r in self.rows if r["risk_ild"] is None)
-        self.assertIsNone(charts.scatter(self.rows, x, y, "ild", outsider)["highlight"])
+        missing = charts.scatter(self.rows, x, ("risk_ild", "risk: Lung toxicity", "pct"), "ild", outsider)
+        self.assertIsNone(missing["highlight"])
+        self.assertEqual(missing["note"], f"Patient {outsider['patient_id']} is not in this chart: "
+                                          "the model “Lung toxicity” does not apply to this patient.")
+        self.assertIsNone(charts.scatter(self.rows, x, y, "ild")["note"])     # no patient selected
 
     def test_summary(self):
         s = charts.summary(self.rows, self.ild)

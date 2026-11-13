@@ -276,6 +276,14 @@ def scatter(rows, x, y, outcome, patient=None, title=""):
     if not rows:
         return _empty("scatter", title)
     shown = patient and patient.get(xk) is not None and patient.get(yk) is not None
+    note = None
+    if patient and not shown:
+        # Say why the selected patient has no point here, instead of leaving it out silently.
+        missing = next(label for key, label in ((xk, xl), (yk, yl)) if patient.get(key) is None)
+        note = (f"Patient {patient['patient_id']} is not in this chart: the model "
+                f"“{missing.removeprefix('risk: ')}” does not apply to this patient."
+                if missing.startswith("risk: ") else
+                f"Patient {patient['patient_id']} is not in this chart: no value for {missing}.")
 
     def axis(key, label, fmt):
         values = [r[key] for r in rows] + ([patient[key]] if shown else [])
@@ -291,6 +299,7 @@ def scatter(rows, x, y, outcome, patient=None, title=""):
         "x": axis(xk, xl, xf),
         "y": axis(yk, yl, yf),
         "highlight": [_r(patient[xk]), _r(patient[yk]), patient["patient_id"]] if shown else None,
+        "note": note,
     }
 
 

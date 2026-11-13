@@ -243,6 +243,7 @@ export class ToxChart extends (globalThis.HTMLElement ?? class {}) {
     } else {
       const { height, svg, legend: keys } = RENDER[spec.type](spec);
       body = `<svg viewBox="0 0 ${W} ${height}" role="img" aria-label="${esc(spec.title)}">${svg}</svg>${keys}`;
+      if (spec.note) body += `<p class="chart-note">${esc(spec.note)}</p>`;
     }
     this.innerHTML = `<figure><figcaption>${esc(spec.title)}</figcaption>${body}</figure>`;
     this.addEventListener("click", (event) => this.follow(event));

@@ -337,6 +337,7 @@ tox-chart figure { margin: 0; }
 tox-chart figcaption { font-weight: 600; font-size: .92rem; margin-bottom: 4px; }
 tox-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
 tox-chart .empty { color: var(--muted); }
+tox-chart .chart-note { margin: 6px 0 0; font-size: .82rem; color: var(--muted); border-left: 2px solid var(--hl); padding-left: 8px; }
 tox-chart text { fill: var(--muted); font-size: 12.5px; }
 tox-chart text.cat { fill: var(--text); }
 tox-chart text.hl-text { fill: var(--hl); font-weight: 700; }
