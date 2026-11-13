@@ -95,7 +95,8 @@ def _intervention_sections(dataset, scenario, ids, models):
                              "years per patient", "num", sid)),
             ("iv-cost", bars(table, "Costs", [("care", "sb", "cost_care"), ("intervention", "sa", "cost_intervention")],
                              "euros per patient", "int", sid, stacked=True)),
-            ("iv-lung", timeline.lung_grades(dataset.scenarios, events_of, ids, sid)),
+            *[(cid, timeline.event_grades(dataset.scenarios, events_of, ids, sid, kind, title))
+              for cid, kind, title in timeline.GRADED_EVENTS],
         ],
     }]
     if sid != cohort.USUAL_CARE:

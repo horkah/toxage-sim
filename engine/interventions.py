@@ -8,8 +8,10 @@ import math
 
 from hazards import general_multiplier
 
-COMPONENTS = ("risk_adapted_start", "symptom_monitoring", "lung_monitoring")
-SOURCES = ("lung_monitoring", "symptom_report")   # order of priority for an alert
+COMPONENTS = ("risk_adapted_start", "symptom_monitoring", "lung_monitoring", "cardiovascular_monitoring")
+# Monitoring for one kind of event, offered to patients on the regimens at risk.
+TARGETED = ("lung_monitoring", "cardiovascular_monitoring")
+SOURCES = TARGETED + ("symptom_report",)   # order of priority for an alert
 
 
 def _sigmoid(x):
@@ -82,10 +84,10 @@ def plan(patient, latent, regimen, draws, scenario, params, iv, score, threshold
         result["participating"] = True
         if "symptom_report" not in result["sources"]:
             result["sources"].append("symptom_report")
-    lung = iv["detection"]["lung_monitoring"]
-    if "lung_monitoring" in components and patient["regimen"] in lung["regimens"] and takes_part:
-        result["participating"] = True
-        result["sources"].append("lung_monitoring")
+    for source in TARGETED:
+        if source in components and patient["regimen"] in iv["detection"][source]["regimens"] and takes_part:
+            result["participating"] = True
+            result["sources"].append(source)
     result["sources"].sort(key=SOURCES.index)
     return result
 
@@ -94,7 +96,7 @@ def sensitivity(source, event_type, stage, iv, perfect=False):
     """Probability that one report of a source gives an alert for an event in
     the given stage."""
     d = iv["detection"][source]
-    if source == "lung_monitoring":
+    if source in TARGETED:
         if event_type not in d["event_types"]:
             return 0.0
         share = 1.0

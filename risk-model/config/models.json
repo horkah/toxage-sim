@@ -1,6 +1,6 @@
 {
-  "description": "Configuration of the risk models for candidates 1 and 2. Every value states its basis: a literature value or an assumption of this project. This file is kept separate from the engine configuration on purpose, so that the risk model does not read the parameters that generated the data.",
-  "version": "0.1.0",
+  "description": "Configuration of the risk models for candidates 1, 2 and 5. Every value states its basis: a literature value or an assumption of this project. This file is kept separate from the engine configuration on purpose, so that the risk model does not read the parameters that generated the data.",
+  "version": "0.2.0",
   "basis": "literature and assumptions",
   "severe_toxicity_90d": {
     "description": "Candidate 1. Logistic model. The regimen rate is the risk of the reference patient; odds ratios shift the risk for patient factors.",
@@ -10,16 +10,46 @@
       "ga_impaired_domains": 0
     },
     "regimen_rates": {
-      "nalirifox": {"rate": 0.87, "source": "Wainberg et al. (2023), NAPOLI 3"},
-      "gemcitabine_nab_paclitaxel": {"rate": 0.86, "source": "Wainberg et al. (2023), NAPOLI 3"},
-      "adt_docetaxel": {"rate": 0.635, "source": "Smith et al. (2022), ARASENS, placebo arm"},
-      "adt_docetaxel_abiraterone": {"rate": 0.63, "source": "Fizazi et al. (2022), PEACE-1"},
-      "adt_docetaxel_darolutamide": {"rate": 0.661, "source": "Smith et al. (2022), ARASENS"},
-      "lu_psma_617": {"rate": 0.527, "source": "Sartor et al. (2021), VISION"},
-      "olaparib": {"rate": 0.51, "source": "de Bono et al. (2020), PROfound"},
-      "trastuzumab_deruxtecan": {"rate": 0.526, "source": "Modi et al. (2022), DESTINY-Breast04"},
-      "chemotherapy_single_agent": {"rate": 0.674, "source": "Modi et al. (2022), DESTINY-Breast04, physician's choice arm"},
-      "pembrolizumab_chemotherapy": {"rate": 0.681, "source": "Cortes et al. (2022), KEYNOTE-355, treatment-related"}
+      "nalirifox": {
+        "rate": 0.87,
+        "source": "Wainberg et al. (2023), NAPOLI 3"
+      },
+      "gemcitabine_nab_paclitaxel": {
+        "rate": 0.86,
+        "source": "Wainberg et al. (2023), NAPOLI 3"
+      },
+      "adt_docetaxel": {
+        "rate": 0.635,
+        "source": "Smith et al. (2022), ARASENS, placebo arm"
+      },
+      "adt_docetaxel_abiraterone": {
+        "rate": 0.63,
+        "source": "Fizazi et al. (2022), PEACE-1"
+      },
+      "adt_docetaxel_darolutamide": {
+        "rate": 0.661,
+        "source": "Smith et al. (2022), ARASENS"
+      },
+      "lu_psma_617": {
+        "rate": 0.527,
+        "source": "Sartor et al. (2021), VISION"
+      },
+      "olaparib": {
+        "rate": 0.51,
+        "source": "de Bono et al. (2020), PROfound"
+      },
+      "trastuzumab_deruxtecan": {
+        "rate": 0.526,
+        "source": "Modi et al. (2022), DESTINY-Breast04"
+      },
+      "chemotherapy_single_agent": {
+        "rate": 0.674,
+        "source": "Modi et al. (2022), DESTINY-Breast04, physician's choice arm"
+      },
+      "pembrolizumab_chemotherapy": {
+        "rate": 0.681,
+        "source": "Cortes et al. (2022), KEYNOTE-355, treatment-related"
+      }
     },
     "odds_ratios": {
       "per_10_years_of_age": {
@@ -45,25 +75,49 @@
     "description": "Candidate 2. Proportional hazards model: risk = 1 - (1 - r0)^HR, with r0 the risk of a patient without risk factors and HR the product of the hazard ratios that apply. r0 is set so that the mean risk in the reference population equals the regimen rate.",
     "window_days": 730,
     "regimen_rates": {
-      "trastuzumab_deruxtecan": {"rate": 0.121, "source": "Modi et al. (2022), DESTINY-Breast04, adjudicated drug-related"},
-      "chemotherapy_single_agent": {"rate": 0.006, "source": "Modi et al. (2022), DESTINY-Breast04, physician's choice arm"}
+      "trastuzumab_deruxtecan": {
+        "rate": 0.121,
+        "source": "Modi et al. (2022), DESTINY-Breast04, adjudicated drug-related"
+      },
+      "chemotherapy_single_agent": {
+        "rate": 0.006,
+        "source": "Modi et al. (2022), DESTINY-Breast04, physician's choice arm"
+      }
     },
     "hazard_ratios": {
-      "age_below_65": {"value": 1.56, "basis": "Powell et al. (2022), Figure 2B"},
-      "lung_comorbidity": {"value": 1.75, "basis": "Powell et al. (2022), Figure 2B"},
-      "renal_mild_decrease": {"value": 1.24, "basis": "Powell et al. (2022), Figure 2B"},
-      "renal_moderate_severe_decrease": {"value": 2.73, "basis": "Powell et al. (2022), Figure 2B"},
-      "more_than_4_years_since_diagnosis": {"value": 1.82, "basis": "Powell et al. (2022), Figure 2B"},
-      "spo2_below_95": {"value": 2.14, "basis": "Powell et al. (2022), Figure 2B"}
+      "age_below_65": {
+        "value": 1.56,
+        "basis": "Powell et al. (2022), Figure 2B"
+      },
+      "lung_comorbidity": {
+        "value": 1.75,
+        "basis": "Powell et al. (2022), Figure 2B"
+      },
+      "renal_mild_decrease": {
+        "value": 1.24,
+        "basis": "Powell et al. (2022), Figure 2B"
+      },
+      "renal_moderate_severe_decrease": {
+        "value": 2.73,
+        "basis": "Powell et al. (2022), Figure 2B"
+      },
+      "more_than_4_years_since_diagnosis": {
+        "value": 1.82,
+        "basis": "Powell et al. (2022), Figure 2B"
+      },
+      "spo2_below_95": {
+        "value": 2.14,
+        "basis": "Powell et al. (2022), Figure 2B"
+      }
     },
     "reference_population": {
       "description": "Share of patients with each risk factor, used to set r0. Factors are treated as independent.",
       "age_below_65": 0.656,
-      "lung_comorbidity": 0.070,
+      "lung_comorbidity": 0.07,
       "renal_mild_decrease": 0.407,
       "renal_moderate_severe_decrease": 0.174,
       "more_than_4_years_since_diagnosis": 0.392,
-      "spo2_below_95": 0.050,
+      "spo2_below_95": 0.05,
       "basis": "Powell et al. (2022), Table 2 and Figure 2B: 754 of 1150 under 65, 81 of 1150 with lung comorbidity, 458 and 196 of 1124 with mild and moderate or severe renal decrease, 403 of 1027 more than 4 years since diagnosis, 57 of 1137 with SpO2 below 95%"
     },
     "grade2plus_share": {
@@ -74,6 +128,75 @@
       "intermediate_from": 0.05,
       "high_from": 0.15,
       "basis": "assumption; 0.15 is close to the 15.4% incidence in Powell et al. (2022)"
+    }
+  },
+  "cardiovascular": {
+    "description": "Candidate 5. Major adverse cardiovascular events (myocardial infarction, stroke, cardiovascular death) under androgen deprivation for prostate cancer. Proportional hazards model: risk = 1 - (1 - r0)^HR, with r0 the risk of a man of the reference age without risk factors on the same type of androgen deprivation and HR the product of the hazard ratios that apply. r0 is set so that the mean risk in the reference population equals the published rate of that type. The effect of an earlier cardiovascular event depends on the type of androgen deprivation.",
+    "window_days": 364,
+    "rate_window_days": 336,
+    "adt_rates": {
+      "gnrh_agonist": {
+        "rate": 0.062,
+        "source": "Shore et al. (2020), HERO, leuprolide arm, 19 of 308 within 48 weeks"
+      },
+      "gnrh_antagonist": {
+        "rate": 0.029,
+        "source": "Shore et al. (2020), HERO, relugolix arm, 18 of 622 within 48 weeks"
+      }
+    },
+    "rate_note": "HERO counted non-fatal myocardial infarction, non-fatal stroke and death from any cause. The rates are therefore an upper limit for cardiovascular events alone.",
+    "prior_event_hazard_ratios": {
+      "gnrh_agonist": {
+        "value": 4.57,
+        "basis": "Shore et al. (2020), Table 3: 8 of 45 men with and 11 of 263 without an earlier event under leuprolide; ratio of the cumulative hazards. Small groups."
+      },
+      "gnrh_antagonist": {
+        "value": 1.29,
+        "basis": "Shore et al. (2020), Table 3: 3 of 84 men with and 15 of 538 without an earlier event under relugolix; ratio of the cumulative hazards. Small groups."
+      }
+    },
+    "hazard_ratios": {
+      "per_10_years_of_age": {
+        "value": 1.4,
+        "basis": "assumption; the ESC guideline names higher age as a risk factor (Lyon et al., 2022)"
+      },
+      "diabetes": {
+        "value": 1.5,
+        "basis": "assumption; risk factor named in the ESC guideline (Lyon et al., 2022)"
+      },
+      "arterial_hypertension": {
+        "value": 1.4,
+        "basis": "assumption; risk factor named in the ESC guideline (Lyon et al., 2022)"
+      },
+      "current_smoker": {
+        "value": 1.7,
+        "basis": "assumption; risk factor named in the ESC guideline (Lyon et al., 2022)"
+      },
+      "renal_moderate_severe_decrease": {
+        "value": 1.4,
+        "basis": "assumption; risk factor named in the ESC guideline (Lyon et al., 2022)"
+      }
+    },
+    "reference_patient": {
+      "age_years": 71,
+      "basis": "median age in HERO (Shore et al., 2020)"
+    },
+    "reference_population": {
+      "description": "Share of patients with each risk factor, used to set r0. Factors are treated as independent, and all patients as being of the reference age.",
+      "prior_cardiovascular_event": {
+        "gnrh_agonist": 0.146,
+        "gnrh_antagonist": 0.135
+      },
+      "diabetes": 0.2,
+      "arterial_hypertension": 0.6,
+      "current_smoker": 0.15,
+      "renal_moderate_severe_decrease": 0.2,
+      "basis": "earlier event: Shore et al. (2020), Table 1, 45 of 308 and 84 of 622; the other shares are assumptions, because HERO reports the risk factors only in groups"
+    },
+    "categories": {
+      "intermediate_from": 0.05,
+      "high_from": 0.1,
+      "basis": "assumption"
     }
   }
 }

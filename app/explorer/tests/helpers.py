@@ -14,5 +14,6 @@ class CohortTestCase(TestCase):
 
     def setUp(self):
         self.dataset, self.models, self.rows = cohort.current()
-        self.severe, self.ild = self.models
+        self.severe, self.ild, self.cv = self.models
         self.ild_rows = [r for r in self.rows if r["risk_ild"] is not None]
+        self.cv_rows = [r for r in self.rows if r["risk_cv"] is not None]

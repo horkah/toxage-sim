@@ -37,7 +37,7 @@
       "immune_related": 7,
       "other": 4
     },
-    "basis": "assumption: days an event spends in each grade before it reaches the grade at which usual care recognises it. Lung toxicity instead uses the published recognition delay (Powell et al., 2022)."
+    "basis": "assumption: days an event spends in each grade before it reaches the grade at which usual care recognises it. Lung toxicity instead uses the published recognition delay (Powell et al., 2022). Cardiovascular events have a warning phase of their own, see the engine parameters."
   },
   "detection": {
     "symptom_report": {
@@ -56,6 +56,7 @@
         "hypertension": 0.1,
         "immune_related": 0.6,
         "interstitial_lung_disease": 0.6,
+        "cardiovascular_event": 0.4,
         "other": 0.6
       },
       "false_alerts_per_report": 0.1,
@@ -75,12 +76,33 @@
       },
       "false_alerts_per_report": 0.02,
       "basis": "assumption: stand-in for a detection model on daily oxygen saturation and symptoms"
+    },
+    "cardiovascular_monitoring": {
+      "regimens": [
+        "adt_docetaxel",
+        "adt_docetaxel_abiraterone",
+        "adt_docetaxel_darolutamide",
+        "lu_psma_617",
+        "olaparib"
+      ],
+      "event_types": [
+        "cardiovascular_event",
+        "hypertension"
+      ],
+      "stage_sensitivity": {
+        "1": 0.4,
+        "2": 0.75,
+        "3": 0.95
+      },
+      "false_alerts_per_report": 0.04,
+      "basis": "assumption: stand-in for a detection model on blood pressure measured at home and reported chest symptoms. It can only see cardiovascular events that have a warning phase."
     }
   },
   "early_treatment": {
     "halt_probability": {
       "default": 0.7,
       "interstitial_lung_disease": 0.8,
+      "cardiovascular_event": 0.6,
       "neutropenia": 0.5,
       "peripheral_neuropathy": 0.8
     },
@@ -143,6 +165,13 @@
         "3": 0.02,
         "4": 0.3,
         "5": 1.0
+      },
+      "cardiovascular_event": {
+        "1": 0.0,
+        "2": 0.4,
+        "3": 1.0,
+        "4": 1.0,
+        "5": 1.0
       }
     },
     "hospital_days_mean": {
@@ -167,7 +196,8 @@
       "3": 21,
       "4": 35,
       "5": 0,
-      "interstitial_lung_disease_factor": 2.0
+      "interstitial_lung_disease_factor": 2.0,
+      "cardiovascular_event_factor": 2.0
     },
     "basis": "assumption"
   },
@@ -178,11 +208,13 @@
     "alert_handling": 25,
     "diagnostics_after_alert": {
       "symptom_report": 0,
-      "lung_monitoring": 300
+      "lung_monitoring": 300,
+      "cardiovascular_monitoring": 250
     },
     "monitoring_per_week": {
       "symptom_report": 8,
-      "lung_monitoring": 15
+      "lung_monitoring": 15,
+      "cardiovascular_monitoring": 10
     },
     "set_up_per_participant": 120,
     "risk_assessment_per_patient": 80,
@@ -237,23 +269,33 @@
       ],
       "perfect": false
     },
+    "cardiovascular_monitoring": {
+      "title": "Cardiovascular monitoring",
+      "description": "Patients with prostate cancer under androgen deprivation are offered home monitoring of blood pressure and chest symptoms with a detection model for cardiovascular events.",
+      "components": [
+        "cardiovascular_monitoring"
+      ],
+      "perfect": false
+    },
     "combined": {
       "title": "Combined",
-      "description": "Risk-adapted start, symptom monitoring and lung monitoring together.",
+      "description": "Risk-adapted start, symptom monitoring, lung monitoring and cardiovascular monitoring together.",
       "components": [
         "risk_adapted_start",
         "symptom_monitoring",
-        "lung_monitoring"
+        "lung_monitoring",
+        "cardiovascular_monitoring"
       ],
       "perfect": false
     },
     "perfect_detection": {
       "title": "Perfect detection",
-      "description": "As combined, but every patient takes part, every event is detected at its first stage, every alert is acted on, early treatment always works and there are no false alerts. Upper limit of what detection can achieve.",
+      "description": "As combined, but every patient takes part, every event that can be seen in advance is detected at its first stage, every alert is acted on, early treatment always works and there are no false alerts. Upper limit of what detection can achieve.",
       "components": [
         "risk_adapted_start",
         "symptom_monitoring",
-        "lung_monitoring"
+        "lung_monitoring",
+        "cardiovascular_monitoring"
       ],
       "perfect": true
     }

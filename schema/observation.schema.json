@@ -3,7 +3,7 @@
   "$id": "toxage-sim/observation",
   "title": "Observation record",
   "description": "Therapy status, measurements and patient-reported symptoms of one patient in one week of follow-up, in one scenario. One record per scenario, patient and week, from therapy start until a few weeks after the end of therapy or until death.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -17,10 +17,12 @@
     "haemoglobin_g_dl",
     "platelets_10e9_l",
     "spo2_percent",
+    "systolic_bp_mmhg",
     "pro_fatigue",
     "pro_diarrhoea",
     "pro_cough",
-    "pro_dyspnoea"
+    "pro_dyspnoea",
+    "pro_chest_pain"
   ],
   "properties": {
     "scenario_id": {
@@ -107,6 +109,17 @@
       "unit": "%",
       "description": "Oxygen saturation at rest, measured at home. Null if not measured."
     },
+    "systolic_bp_mmhg": {
+      "title": "Systolic blood pressure",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 60,
+      "maximum": 260,
+      "unit": "mmHg",
+      "description": "Systolic blood pressure at rest, measured at home. Null if not measured."
+    },
     "pro_fatigue": {
       "title": "Fatigue",
       "type": [
@@ -146,6 +159,16 @@
       "minimum": 0,
       "maximum": 4,
       "description": "Patient-reported shortness of breath in the last week, from 0 (none) to 4 (very severe). Null if not reported."
+    },
+    "pro_chest_pain": {
+      "title": "Chest pain",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 4,
+      "description": "Patient-reported chest pain or tightness in the last week, from 0 (none) to 4 (very severe). Null if not reported."
     }
   }
 }

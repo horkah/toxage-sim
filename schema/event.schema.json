@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "toxage-sim/event",
   "title": "Event record",
-  "description": "One adverse event of one patient in one scenario. The engine records events that reach grade 3 to 5 in usual care, and interstitial lung disease of any grade. With monitoring such an event can be recognised at a lower grade.",
-  "version": "0.3.0",
+  "description": "One adverse event of one patient in one scenario. The engine records events that reach grade 3 to 5 in usual care, and interstitial lung disease of any grade. With monitoring such an event can be recognised at a lower grade; a cardiovascular event recognised below grade 3 is a warning phase that was treated before a major event.",
+  "version": "0.4.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -45,9 +45,10 @@
         "hypertension",
         "immune_related",
         "interstitial_lung_disease",
+        "cardiovascular_event",
         "other"
       ],
-      "description": "Type of the adverse event."
+      "description": "Type of the adverse event. cardiovascular_event: myocardial infarction, stroke or cardiovascular death under androgen deprivation, with its warning phase."
     },
     "grade": {
       "title": "Grade",

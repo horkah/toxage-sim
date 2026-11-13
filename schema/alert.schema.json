@@ -3,7 +3,7 @@
   "$id": "toxage-sim/alert",
   "title": "Alert record",
   "description": "One alert of a monitoring component for one patient in one scenario.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -39,7 +39,8 @@
       "type": "string",
       "enum": [
         "symptom_report",
-        "lung_monitoring"
+        "lung_monitoring",
+        "cardiovascular_monitoring"
       ],
       "description": "Monitoring component that gave the alert."
     },

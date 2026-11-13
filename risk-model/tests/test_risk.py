@@ -45,6 +45,7 @@ class ModelTest(unittest.TestCase):
         for p in self.baseline[:100]:
             self.assertEqual(self.models["severe90"].risk(p), calc.severe_toxicity_risk(p, self.cfg))
             self.assertEqual(self.models["ild"].risk(p), calc.ild_risk(p, self.cfg))
+            self.assertEqual(self.models["cv"].risk(p), calc.cv_risk(p, self.cfg))
 
     def test_models_equal_the_score_table(self):
         scorer = calc.Scorer(self.cfg)
@@ -52,6 +53,7 @@ class ModelTest(unittest.TestCase):
             record = scorer.score(p)
             self.assertEqual(self.models["severe90"].risk(p), record["severe_toxicity_90d_risk"])
             self.assertEqual(self.models["ild"].risk(p), record["ild_risk"])
+            self.assertEqual(self.models["cv"].risk(p), record["cv_risk"])
 
     def test_reference_patient_has_reference_risk(self):
         model = self.models["severe90"]
@@ -74,6 +76,26 @@ class ModelTest(unittest.TestCase):
         self.assertAlmostEqual(1 - (1 - ild.reference_risk(p)) ** ratio, ild.risk(p), places=12)
         self.assertEqual(len(ild.factors(p)), len(calc.ILD_FACTORS))
         self.assertEqual(sum(f.ratio != 1 for f in ild.factors(p)), 4)
+
+    def test_cardiovascular_model(self):
+        model = self.models["cv"]
+        p = self.patient(tumour_type="prostate", regimen="olaparib", sex="male", adt_type="gnrh_agonist",
+                         age_years=79, prior_cardiovascular_event=True, cardiovascular_disease=True,
+                         diabetes=True, arterial_hypertension=False, smoking_status="former",
+                         renal_function="normal")
+        ratio = math.prod(f.ratio for f in model.factors(p))
+        self.assertAlmostEqual(1 - (1 - model.reference_risk(p)) ** ratio, model.risk(p), places=12)
+        self.assertEqual([f.name for f in model.factors(p)], list(calc.CV_LABELS))
+        self.assertEqual(sum(f.ratio != 1 for f in model.factors(p)), 3)
+        self.assertEqual(model.describe()["outcome"], "cv_event_1y")
+        self.assertEqual(model.window_days, 364)
+        other = self.patient(adt_type=None)
+        self.assertFalse(model.applies(other))
+        self.assertIsNone(model.risk(other))
+        self.assertIsNone(model.reference_risk(other))
+        self.assertEqual(model.factors(other), [])
+        applies = [model.applies(q) for q in self.baseline]
+        self.assertEqual(applies, [q["tumour_type"] == "prostate" for q in self.baseline])
 
     def test_lung_model_applies_only_to_regimens_with_a_rate(self):
         model = self.models["ild"]

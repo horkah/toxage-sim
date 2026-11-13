@@ -91,6 +91,36 @@
       "per_year_above_65": 0.06,
       "male_shift": 0.5
     },
+    "prior_cardiovascular_event": {
+      "probability_with_cardiovascular_disease": 0.6,
+      "basis": "assumption; chosen so that about 14% of the men with prostate cancer have an earlier event, as in HERO (Shore et al., 2020: 129 of 930)"
+    },
+    "arterial_hypertension": {
+      "intercept": -0.5,
+      "per_year_above_65": 0.04,
+      "diabetes_shift": 0.6,
+      "cardiovascular_disease_shift": 0.9
+    },
+    "systolic_bp_mmhg": {
+      "mean": 126,
+      "hypertension_shift": 12,
+      "per_year_above_65": 0.3,
+      "sd": 13,
+      "minimum": 90,
+      "maximum": 200
+    },
+    "smoking_status": {
+      "default": {
+        "never": 0.5,
+        "former": 0.35,
+        "current": 0.15
+      },
+      "pancreas": {
+        "never": 0.4,
+        "former": 0.35,
+        "current": 0.25
+      }
+    },
     "lung_comorbidity_probability": {
       "value": 0.07,
       "basis": "Powell et al. (2022), 81 of 1150 patients"
@@ -195,7 +225,7 @@
     "pretreated_from_lines": 2
   },
   "treatment_choice": {
-    "basis": "assumption: fitter patients get the more intensive option; trastuzumab deruxtecan is avoided in patients with lung problems",
+    "basis": "assumption: fitter patients get the more intensive option; trastuzumab deruxtecan is avoided in patients with lung problems; a GnRH antagonist is chosen more often after a cardiovascular event, as the ESC guideline suggests (Lyon et al., 2022)",
     "pancreas_nalirifox": {
       "intercept": 0.4,
       "frailty_slope": -0.8,
@@ -214,6 +244,10 @@
     "breast_her2_low_trastuzumab_deruxtecan": {
       "probability": 0.6,
       "probability_with_lung_problem": 0.25
+    },
+    "adt_antagonist": {
+      "probability": 0.15,
+      "probability_with_prior_cardiovascular_event": 0.4
     },
     "starting_dose_reduction": {
       "intercept": -1.8,
@@ -235,6 +269,7 @@
       "cumulative": {
         "plateau_weeks": 26
       },
+      "constant": {},
       "basis": "assumption"
     },
     "event_types": {
@@ -270,6 +305,10 @@
         "shape": "mid",
         "chemotherapy": false
       },
+      "cardiovascular_event": {
+        "shape": "constant",
+        "chemotherapy": false
+      },
       "other": {
         "shape": "early",
         "chemotherapy": false
@@ -280,7 +319,7 @@
       "hazard_ratio_per_10_years_of_age": 1.1,
       "reference_age": 65,
       "hazard_ratio_bilirubin_above_1_5": 1.5,
-      "basis": "assumption; applies to all event types except interstitial lung disease"
+      "basis": "assumption; applies to all event types except interstitial lung disease and cardiovascular events"
     },
     "specific": {
       "neutropenia": {
@@ -340,6 +379,11 @@
         "4": 0.05,
         "5": 0.0
       },
+      "cardiovascular_event": {
+        "3": 0.5,
+        "4": 0.35,
+        "5": 0.15
+      },
       "basis": "assumption"
     },
     "ild": {
@@ -373,6 +417,33 @@
         "maximum_days_if_prompt": 7,
         "basis": "Powell et al. (2022): onset set earlier by the adjudication committee for 53.2% of events, median difference 43 days; sigma is an assumption"
       }
+    },
+    "cardiovascular": {
+      "rate_window_weeks": 48,
+      "hazard_ratios": {
+        "prior_event_with_agonist": 4.57,
+        "antagonist": 0.66,
+        "prior_event_with_antagonist": 1.29,
+        "basis": "Shore et al. (2020), HERO, Table 3: events within 48 weeks in 11 of 263 men without and 8 of 45 men with an earlier event under leuprolide, and in 15 of 538 and 3 of 84 under relugolix. The ratios compare the cumulative hazards of these groups; the groups with an earlier event are small."
+      },
+      "other_hazard_ratios": {
+        "per_10_years_of_age": 1.4,
+        "reference_age": 71,
+        "diabetes": 1.5,
+        "arterial_hypertension": 1.4,
+        "current_smoker": 1.7,
+        "former_smoker": 1.2,
+        "renal_moderate_severe_decrease": 1.4,
+        "cardiovascular_disease_without_event": 1.5,
+        "frailty_log_hazard_ratio": 0.2,
+        "basis": "assumption for age, diabetes, hypertension, smoking, renal function, cardiovascular disease without an event and frailty. The directions follow the risk factors named in the ESC guideline (Lyon et al., 2022); 71 is the median age in HERO."
+      },
+      "warning_phase": {
+        "probability": 0.5,
+        "median_days": 10,
+        "sigma": 0.7,
+        "basis": "assumption: share of events with a warning phase, such as unstable angina, a transient ischaemic attack or rising blood pressure, and its length in days"
+      }
     }
   },
   "actions": {
@@ -398,6 +469,12 @@
         "interruption": 0.45,
         "dose_reduction": 0.35,
         "discontinuation": 0.0
+      },
+      "cardiovascular_event": {
+        "none": 0.3,
+        "interruption": 0.5,
+        "dose_reduction": 0.0,
+        "discontinuation": 0.2
       },
       "hypertension": {
         "none": 0.7,
@@ -467,6 +544,18 @@
       },
       "recovery_per_week": 0.5
     },
+    "blood_pressure": {
+      "noise_sd": 8,
+      "missing": 0.3,
+      "rise_per_hypertension_rate": 40,
+      "hypertension_event_range": [
+        165,
+        195
+      ],
+      "warning_rise_per_week": 12,
+      "warning_maximum": 25,
+      "recovery_per_week": 12
+    },
     "symptoms": {
       "missing": 0.2,
       "noise_sd": 0.7,
@@ -506,6 +595,14 @@
           "4": 4.0,
           "5": 4.0
         }
+      },
+      "chest_pain": {
+        "base": 0.15,
+        "cardiovascular_disease_shift": 0.4,
+        "warning_rise_per_week": 1.2,
+        "warning_maximum": 2.5,
+        "event_level": 3.0,
+        "recovery_per_week": 1.5
       }
     }
   },

@@ -166,7 +166,7 @@
       <table class="numbers">
         <thead><tr>
           <th>Scenario</th><th>Taking part</th><th>Severe toxicity, 90 days</th><th>Severe events per patient</th>
-          <th>Events recognised early per patient</th><th>Deaths from toxicity</th><th>Hospital days per patient</th>
+          <th>Events recognised early per patient</th><th>Cardiovascular events</th><th>Deaths from toxicity</th><th>Hospital days per patient</th>
           <th>Alerts per patient</th><th>False alerts</th><th>QALY per patient</th><th>Cost per patient (€)</th>
           <th>Cost against usual care (€)</th><th>QALY against usual care</th><th>Cost per QALY gained (€)</th>
         </tr></thead>
@@ -174,7 +174,7 @@
         {% for r in s.table %}
         <tr{% if r.scenario.scenario_id == scenario.scenario_id %} class="selected"{% endif %}>
           <td>{{ r.scenario.title }}</td><td>{{ r.participating|pct }}</td><td>{{ r.severe_90d|pct }}</td>
-          <td>{{ r.severe_events|num }}</td><td>{{ r.early|num }}</td><td>{{ r.toxic_deaths }}</td>
+          <td>{{ r.severe_events|num }}</td><td>{{ r.early|num }}</td><td>{{ r.cv_events }}</td><td>{{ r.toxic_deaths }}</td>
           <td>{{ r.hospital_days|num }}</td><td>{{ r.alerts|num }}</td><td>{{ r.false_share|pct:0 }}</td>
           <td>{{ r.qaly|num:3 }}</td><td>{{ r.cost|num:0 }}</td><td>{{ r.d_cost|num:0 }}</td>
           <td>{{ r.d_qaly|num:3 }}</td><td>{{ r.icer|num:0 }}</td>

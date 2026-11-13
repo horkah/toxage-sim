@@ -3,7 +3,7 @@
   "$id": "toxage-sim/scenario",
   "title": "Scenario record",
   "description": "One intervention scenario. All scenarios are simulated for the same patients, so their results can be compared patient by patient.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -12,7 +12,8 @@
     "description",
     "risk_adapted_start",
     "symptom_monitoring",
-    "lung_monitoring"
+    "lung_monitoring",
+    "cardiovascular_monitoring"
   ],
   "properties": {
     "scenario_id": {
@@ -44,6 +45,11 @@
       "title": "Lung monitoring",
       "type": "boolean",
       "description": "Home monitoring for lung toxicity is offered to patients on a regimen with this risk."
+    },
+    "cardiovascular_monitoring": {
+      "title": "Cardiovascular monitoring",
+      "type": "boolean",
+      "description": "Home monitoring of blood pressure and chest symptoms is offered to patients under androgen deprivation."
     }
   }
 }

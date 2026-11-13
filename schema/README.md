@@ -30,6 +30,7 @@ The schema files hold the full description and unit of every field. The tables b
 | `risk_adapted_start` | Risk-adapted start | boolean |  |
 | `symptom_monitoring` | Symptom monitoring | boolean |  |
 | `lung_monitoring` | Lung monitoring | boolean |  |
+| `cardiovascular_monitoring` | Cardiovascular monitoring | boolean |  |
 
 ### baseline
 
@@ -42,6 +43,7 @@ The schema files hold the full description and unit of every field. The tables b
 | `prior_therapy_lines` | Earlier therapy lines | integer | 0 or more |
 | `starting_dose_level` | Starting dose level | number | 0.1–1.0 |
 | `gcsf_prophylaxis` | G-CSF prophylaxis | boolean |  |
+| `adt_type` | Androgen deprivation | string or null | `gnrh_agonist`, `gnrh_antagonist` |
 | `age_years` | Age | integer | 18–100 |
 | `sex` | Sex | string | `female`, `male` |
 | `ecog` | ECOG | integer | 0–4 |
@@ -58,9 +60,13 @@ The schema files hold the full description and unit of every field. The tables b
 | `lung_comorbidity` | Lung comorbidity | boolean |  |
 | `diabetes` | Diabetes | boolean |  |
 | `cardiovascular_disease` | Cardiovascular disease | boolean |  |
+| `prior_cardiovascular_event` | Earlier cardiovascular event | boolean |  |
+| `arterial_hypertension` | Arterial hypertension | boolean |  |
+| `systolic_bp_mmhg` | Systolic blood pressure | integer | 70–250 |
+| `smoking_status` | Smoking | string | `never`, `former`, `current` |
 | `years_since_diagnosis` | Years since diagnosis | number | 0 or more |
 
-The baseline record describes the plan in usual care. A scenario can adapt the starting dose and the G-CSF prophylaxis of a patient; the observation records show the dose that was given.
+`adt_type` is null for patients without prostate cancer. The baseline record describes the plan in usual care. A scenario can adapt the starting dose and the G-CSF prophylaxis of a patient; the observation records show the dose that was given.
 
 ### observation
 
@@ -76,10 +82,12 @@ The baseline record describes the plan in usual care. A scenario can adapt the s
 | `haemoglobin_g_dl` | Haemoglobin | number or null | 0 or more |
 | `platelets_10e9_l` | Platelets | integer or null | 0 or more |
 | `spo2_percent` | Oxygen saturation | integer or null | 50–100 |
+| `systolic_bp_mmhg` | Systolic blood pressure | integer or null | 60–260 |
 | `pro_fatigue` | Fatigue | integer or null | 0–4 |
 | `pro_diarrhoea` | Diarrhoea | integer or null | 0–4 |
 | `pro_cough` | Cough | integer or null | 0–4 |
 | `pro_dyspnoea` | Shortness of breath | integer or null | 0–4 |
+| `pro_chest_pain` | Chest pain | integer or null | 0–4 |
 
 Observations are written from therapy start until a few weeks after the end of therapy, or until death.
 
@@ -89,7 +97,7 @@ Observations are written from therapy start until a few weeks after the end of t
 |---|---|---|---|
 | `scenario_id` | Scenario | string |  |
 | `patient_id` | Patient ID | string |  |
-| `event_type` | Event type | string | 10 values, see the schema file |
+| `event_type` | Event type | string | 11 values, see the schema file |
 | `grade` | Grade | integer | 1–5 |
 | `onset_day` | Day of onset | integer | 1 or more |
 | `day` | Day of recognition | integer | 1 or more |
@@ -110,7 +118,7 @@ Observations are written from therapy start until a few weeks after the end of t
 | `scenario_id` | Scenario | string |  |
 | `patient_id` | Patient ID | string |  |
 | `day` | Day | integer | 1 or more |
-| `source` | Source | string | `symptom_report`, `lung_monitoring` |
+| `source` | Source | string | `symptom_report`, `lung_monitoring`, `cardiovascular_monitoring` |
 | `true_alert` | True alert | boolean |  |
 | `event_type` | Event type | string or null |  |
 | `attended` | Attended | boolean |  |
@@ -131,6 +139,11 @@ Observations are written from therapy start until a few weeks after the end of t
 | `ild_onset_day` | Day of lung toxicity | integer or null | 1 or more |
 | `ild_diagnosis_day` | Day lung toxicity was recognised | integer or null | 1 or more |
 | `ild_grade` | Grade of lung toxicity | integer or null | 1–5 |
+| `cv_event` | Cardiovascular event | boolean |  |
+| `cv_event_1y` | Cardiovascular event in the first year | boolean |  |
+| `cv_onset_day` | Day the cardiovascular event began | integer or null | 1 or more |
+| `cv_event_day` | Day of the cardiovascular event | integer or null | 1 or more |
+| `cv_grade` | Grade of the cardiovascular event | integer or null | 1–5 |
 | `treatment_end_day` | Day of therapy end | integer or null | 1 or more |
 | `treatment_end_reason` | Reason for therapy end | string | `ongoing`, `progression`, `toxicity`, `completed`, `lost_to_follow_up`, `death` |
 | `death_day` | Day of death | integer or null | 1 or more |
@@ -143,6 +156,8 @@ Observations are written from therapy start until a few weeks after the end of t
 | `cost_care` | Cost of care | number | 0 or more |
 | `cost_intervention` | Cost of the intervention | number | 0 or more |
 | `qaly` | Quality-adjusted life years | number | 0 or more |
+
+`cv_event` is a major cardiovascular event of grade 3 to 5. If monitoring caught the warning phase in time, `cv_onset_day` and a `cv_grade` of 1 or 2 are set and `cv_event` is false.
 
 The outcome table is derived from the event, alert and observation tables. It holds the targets of the risk models and the measures for comparing scenarios.
 
@@ -160,14 +175,18 @@ The outcome table is derived from the event, alert and observation tables. It ho
 | `ild_grade2plus_risk` | Risk of lung toxicity, grade 2 or higher | number or null | 0–1 |
 | `ild_regimen_rate` | Regimen rate of lung toxicity | number or null | 0–1 |
 | `ild_category` | Risk category, lung toxicity | string or null | `low`, `intermediate`, `high` |
+| `cv_applicable` | Cardiovascular model applies | boolean |  |
+| `cv_risk` | Risk of a cardiovascular event | number or null | 0–1 |
+| `cv_reference_rate` | Published rate of cardiovascular events | number or null | 0–1 |
+| `cv_category` | Risk category, cardiovascular events | string or null | `low`, `intermediate`, `high` |
 
-Risks are probabilities. The `ild_` fields are null if the lung toxicity model does not apply to the regimen. The risk_score table is written by the risk model, all other tables by the engine.
+Risks are probabilities. The `ild_` fields are null if the lung toxicity model does not apply to the regimen, the `cv_` fields if the patient is not under androgen deprivation. The risk_score table is written by the risk model, all other tables by the engine.
 
 ## Format
 
 The schema files are JSON Schema (draft 2020-12), so any language can read them. All fields are flat, so a table can be stored as CSV with the field names as header. In CSV, null is an empty cell and booleans are `true` and `false`.
 
-Each schema file carries a `version`, currently 0.3.0 for the six tables of the engine and 0.1.1 for risk_score. Adding an optional field raises the minor version. Renaming or removing a field, or changing its meaning, raises the major version. Changes that leave the data as they are, such as a new `title`, raise the patch version.
+Each schema file carries a `version`, currently 0.4.0 for the six tables of the engine and 0.2.0 for risk_score. Adding an optional field raises the minor version. Renaming or removing a field, or changing its meaning, raises the major version. Changes that leave the data as they are, such as a new `title`, raise the patch version.
 
 Every field has a `title`, which the app shows as its label, and a `unit` where one applies.
 

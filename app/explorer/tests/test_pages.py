@@ -23,7 +23,7 @@ class DataTest(CohortTestCase):
         self.assertContains(response, self.dataset.name)
         self.assertContains(response, "shown in the explorer")
         self.assertContains(response, "Generate a data set")
-        self.assertContains(response, "delete scenario", count=6)
+        self.assertContains(response, "delete scenario", count=7)
         self.assertEqual(response.context["section"], "data")
 
     def test_generate_with_chosen_scenarios_and_name(self):
@@ -76,7 +76,7 @@ class DataTest(CohortTestCase):
         self.assertNotIn("combined", cohort.scenario_ids(self.dataset))
         self.assertNotIn("combined", self.dataset.metadata["records"])
         self.assertFalse(Course.objects.filter(scenario_id="combined").exists())
-        self.assertEqual(Course.objects.count(), 5 * self.n)
+        self.assertEqual(Course.objects.count(), 6 * self.n)
         self.assertFalse(store.delete_scenario(self.dataset, "unknown"))
 
     def test_last_scenario_stays(self):
@@ -144,7 +144,7 @@ class DataTest(CohortTestCase):
         self.assertEqual(len(lines), self.n + 1)
         self.assertIn("attachment", response["Content-Disposition"])
         every = self.client.get(f"/data/{self.dataset.pk}/export/outcome.csv")
-        self.assertEqual(len(b"".join(every.streaming_content).decode().splitlines()), 6 * self.n + 1)
+        self.assertEqual(len(b"".join(every.streaming_content).decode().splitlines()), 7 * self.n + 1)
         baseline = self.client.get(f"/data/{self.dataset.pk}/export/baseline.csv")
         self.assertEqual(len(b"".join(baseline.streaming_content).decode().splitlines()), self.n + 1)
         self.assertEqual(self.client.get(f"/data/{self.dataset.pk}/export/x.csv").status_code, 404)

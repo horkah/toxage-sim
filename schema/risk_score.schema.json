@@ -3,7 +3,7 @@
   "$id": "toxage-sim/risk_score",
   "title": "Risk score record",
   "description": "Risk scores of one patient at the start of a systemic therapy line, computed from the baseline record. One record per patient, linked by patient_id. Risks are probabilities between 0 and 1.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -16,7 +16,11 @@
     "ild_risk",
     "ild_grade2plus_risk",
     "ild_regimen_rate",
-    "ild_category"
+    "ild_category",
+    "cv_applicable",
+    "cv_risk",
+    "cv_reference_rate",
+    "cv_category"
   ],
   "properties": {
     "patient_id": {
@@ -66,7 +70,7 @@
       ],
       "minimum": 0,
       "maximum": 1,
-      "description": "Candidate 2: probability of drug-related interstitial lung disease or pneumonitis of any grade within 730 days."
+      "description": "Candidate 2: probability of drug-related interstitial lung disease or pneumonitis of any grade within the time window of the model."
     },
     "ild_grade2plus_risk": {
       "title": "Risk of lung toxicity, grade 2 or higher",
@@ -76,7 +80,7 @@
       ],
       "minimum": 0,
       "maximum": 1,
-      "description": "Candidate 2: probability of interstitial lung disease or pneumonitis of grade 2 or higher within 730 days."
+      "description": "Candidate 2: probability of interstitial lung disease or pneumonitis of grade 2 or higher within the time window of the model."
     },
     "ild_regimen_rate": {
       "title": "Regimen rate of lung toxicity",
@@ -101,6 +105,45 @@
         null
       ],
       "description": "Candidate 2: risk category from the thresholds in the model configuration."
+    },
+    "cv_applicable": {
+      "title": "Cardiovascular model applies",
+      "type": "boolean",
+      "description": "Candidate 5: true for patients under androgen deprivation. If false, the other cv fields are null."
+    },
+    "cv_risk": {
+      "title": "Risk of a cardiovascular event",
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Candidate 5: probability of a major adverse cardiovascular event within the time window of the model."
+    },
+    "cv_reference_rate": {
+      "title": "Published rate of cardiovascular events",
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Candidate 5: published rate for the type of androgen deprivation, i.e. the mean risk in the trial population."
+    },
+    "cv_category": {
+      "title": "Risk category, cardiovascular events",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "low",
+        "intermediate",
+        "high",
+        null
+      ],
+      "description": "Candidate 5: risk category from the thresholds in the model configuration."
     }
   }
 }

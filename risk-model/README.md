@@ -2,14 +2,15 @@
 
 Risk models for toxicity of systemic cancer therapy. They take the baseline record of a patient at the start of a therapy line and return the risk of an outcome. All models share one interface, which the [app](../app/) uses. The scores can also be written as a table of the central [schema](../schema/).
 
-The first two models follow candidates 1 and 2 of the [toxicity report](../background/toxicity-report.md), section 8:
+The models follow candidates 1, 2 and 5 of the [toxicity report](../background/toxicity-report.md), section 8:
 
 | Model | Event | Applies to |
 |---|---|---|
 | Candidate 1 | At least one adverse event of grade 3 to 5 within 90 days | all ten regimens |
 | Candidate 2 | Interstitial lung disease or pneumonitis within 730 days, any grade and grade 2 or higher | trastuzumab deruxtecan, single-agent chemotherapy in breast cancer |
+| Candidate 5 | Major cardiovascular event (myocardial infarction, stroke, cardiovascular death) within 364 days | men with prostate cancer under androgen deprivation, all five prostate regimens |
 
-Both are baseline models: they estimate the risk before therapy starts. The detection model for lung toxicity named in the report would use the weekly observations that schema and engine now provide. This and other next steps are listed in [EXTENSIONS.md](EXTENSIONS.md).
+All are baseline models: they estimate the risk before therapy starts. The detection model for lung toxicity named in the report would use the weekly observations that schema and engine now provide. This and other next steps are listed in [EXTENSIONS.md](EXTENSIONS.md).
 
 ## Run
 
@@ -42,7 +43,7 @@ The code needs Python 3 and no further packages. The output folder is not under 
 | File | Content |
 |---|---|
 | `toxage_risk.py` | Common interface to all risk models, used by the app |
-| `models.py` | The calculations of the two models, and the class `Scorer`, which writes risk score records |
+| `models.py` | The calculations of the three models, and the class `Scorer`, which writes risk score records |
 | `config/models.json` | Coefficients, reference rates and risk categories, each with its source or marked as assumption |
 | `score.py` | Command line: baseline CSV to risk score CSV |
 | `evaluate.py` | Command line: discrimination and calibration against outcomes |
@@ -52,7 +53,7 @@ The code needs Python 3 and no further packages. The output folder is not under 
 | `data.py` | Reads engine output through the schema |
 | `tests/test_risk_model.py` | Tests of the calculations, fitting and evaluation |
 | `tests/test_risk.py` | Tests of the common interface |
-| `EXTENSIONS.md` | Possible extensions of both models |
+| `EXTENSIONS.md` | Possible extensions of the models |
 
 ## Interface
 
@@ -80,6 +81,7 @@ The module also offers `auc`, `brier` and `calibration` in a form that leaves ou
 |---|---|---|
 | `severe90` | any adverse event of grade 3 to 5 within 90 days | 1 |
 | `ild` | interstitial lung disease or pneumonitis within 730 days | 2 |
+| `cv` | major cardiovascular event within 364 days | 5 |
 
 ### Adding a model
 
@@ -91,7 +93,7 @@ The app then shows the new model in the status bar, as a tab for the charts, in 
 
 ### Score table
 
-`models.Scorer` computes both models at once and returns one record of the risk_score table of the schema, with the risk, the published rate of the regimen and a risk category per model. `score.py` writes this table as CSV. `Scorer.explain` returns the starting risk and the factors of a patient as a dictionary.
+`models.Scorer` computes all models at once and returns one record of the risk_score table of the schema, with the risk, the published rate of the regimen (for candidate 5 of the type of androgen deprivation) and a risk category per model. `score.py` writes this table as CSV. `Scorer.explain` returns the starting risk and the factors of a patient as a dictionary.
 
 The risk models do not import the engine and do not read its parameters.
 
@@ -128,27 +130,60 @@ The risk of grade 2 or higher is 71.1% of the risk of any grade, the share in Mo
 
 Risk categories: low below 5%, intermediate from 5%, high from 15%. The thresholds are assumptions; 15% is close to the 15.4% incidence in Powell et al. (2022).
 
+## Candidate 5: cardiovascular events under androgen deprivation
+
+The ESC guideline states that no dedicated risk calculator exists for patients under androgen deprivation (Lyon et al., 2022). This model is a first one, built on the HERO trial (Shore et al., 2020).
+
+The event is a major adverse cardiovascular event within 364 days of therapy start: myocardial infarction, stroke or cardiovascular death. The model is a proportional hazards model like candidate 2: risk = 1 − (1 − r0)^HR. It differs in three points:
+
+- The starting point is the type of androgen deprivation, not the regimen. HERO found events in 6.2% of the men on the GnRH agonist leuprolide and in 2.9% of the men on the antagonist relugolix within 48 weeks. The model brings these rates to 52 weeks (6.7% and 3.1%).
+- The effect of an earlier myocardial infarction or stroke depends on the type. Under leuprolide 17.8% of the men with and 4.2% of the men without an earlier event had a new one; under relugolix 3.6% and 2.8%.
+- Age enters as a continuous factor, with 71 years, the median age in HERO, as reference.
+
+| Risk factor | Hazard ratio | Basis |
+|---|---|---|
+| Earlier myocardial infarction or stroke, under a GnRH agonist | 4.57 | Shore et al. (2020), Table 3: 8 of 45 against 11 of 263 |
+| Earlier myocardial infarction or stroke, under a GnRH antagonist | 1.29 | Shore et al. (2020), Table 3: 3 of 84 against 15 of 538 |
+| Age, per 10 years from 71 | 1.4 | assumption |
+| Diabetes | 1.5 | assumption |
+| Arterial hypertension | 1.4 | assumption |
+| Current smoker | 1.7 | assumption |
+| Renal function, moderate or severe decrease | 1.4 | assumption |
+
+The two hazard ratios from HERO are ratios of the cumulative hazards of the groups. They rest on few events. The assumed factors are the risk factors the ESC guideline names for these patients; their sizes are not from the literature.
+
+`r0` is the risk of a 71-year-old man without any of these factors. It is set so that the mean risk in a reference population equals the rate of the type of androgen deprivation: 2.8% for an agonist and 1.9% for an antagonist. The share with an earlier event in that population is from HERO (14.6% and 13.5%). The shares with diabetes (20%), hypertension (60%), current smoking (15%) and reduced renal function (20%) are assumptions, because HERO reports the risk factors only in groups.
+
+Risk categories: low below 5%, intermediate from 5%, high from 10%. The thresholds are assumptions.
+
 ## Results on synthetic data
 
-Literature configuration, evaluated on 20 000 patients under usual care from `engine/generate.py --seed 2 --scenarios usual_care`. "Regimen only" is a comparison model that gives every patient the published rate of the regimen.
+Literature configuration, evaluated on 20 000 patients under usual care from `engine/generate.py --seed 2 --scenarios usual_care`. "Rate only" is a comparison model that gives every patient the published rate of the regimen or, for candidate 5, of the type of androgen deprivation.
 
-| | Candidate 1 | Regimen only | Candidate 2 | Regimen only |
-|---|---|---|---|---|
-| Patients, events | 20 000, 13 280 | | 4016, 282 | |
-| Observed / expected | 0.93 | 0.96 | 1.02 | 0.97 |
-| AUC | 0.690 | 0.684 | 0.768 | 0.712 |
-| Brier score | 0.204 | 0.203 | 0.061 | 0.062 |
-| Calibration slope | 0.86 | 1.03 | 0.93 | 1.03 |
+| | Candidate 1 | Rate only | Candidate 2 | Rate only | Candidate 5 | Rate only |
+|---|---|---|---|---|---|---|
+| Patients, events | 20 000, 13 079 | | 3994, 274 | | 6667, 430 | |
+| Observed / expected | 0.92 | 0.95 | 1.01 | 0.97 | 1.18 | 1.07 |
+| AUC | 0.702 | 0.698 | 0.783 | 0.713 | 0.738 | 0.546 |
+| Brier score | 0.205 | 0.203 | 0.060 | 0.061 | 0.056 | 0.060 |
+| Calibration slope | 0.92 | 1.09 | 0.98 | 1.00 | 1.07 | 0.96 |
 
-Within single regimens, the AUC of candidate 1 is between 0.51 and 0.61, and the AUC of candidate 2 is 0.60 for trastuzumab deruxtecan.
+Within single regimens, the AUC of candidate 1 is between 0.51 and 0.61, the AUC of candidate 2 is 0.63 for trastuzumab deruxtecan, and the AUC of candidate 5 is between 0.70 and 0.78.
 
 How to read this:
 
-- The engine does not generate outcomes with the models used here. Severe toxicity comes from a latent frailty, type-specific hazards, dose changes and competing events. Age, ECOG and geriatric domains predict it only because they are linked to frailty. Candidate 1 gains almost nothing over the regimen rate, and its risks are spread too widely (calibration slope 0.86). This is a result, not an artefact.
+- The engine does not generate outcomes with the models used here. Severe toxicity comes from a latent frailty, type-specific hazards, dose changes and competing events. Age, ECOG and geriatric domains predict it only because they are linked to frailty. Candidate 1 gains almost nothing over the regimen rate. This is a result, not an artefact.
 - For lung toxicity the engine uses the same published hazard ratios as candidate 2, so the ranking of patients is good by construction.
-- Candidate 1 overestimates the risk for olaparib and lutetium-177–PSMA-617 (predicted 59% and 61%, observed 47% and 47%). The published rates cover the whole treatment period, and with these regimens the engine places a larger share of the events after day 90. The model also raises the risk because these patients are older than the reference patient.
+- For cardiovascular events the engine uses the same hazard ratios from HERO and the same assumed factors as candidate 5, so the ranking is good by construction as well. The engine adds three things the model does not know: frailty, former smoking and cardiovascular disease without an earlier event. The model therefore predicts too few events (observed to expected 1.18), most clearly for the regimens with docetaxel (predicted 4.9%, observed 5.3% to 7.5%).
+- Candidate 1 overestimates the risk for olaparib and lutetium-177–PSMA-617 (predicted 60% and 61%, observed 41% and 47%). The published rates cover the whole treatment period, and with these regimens the engine places a larger share of the events after day 90. The model also raises the risk because these patients are older than the reference patient.
 
-Fitted on 50 000 patients from seed 1, `fit.py` gives odds ratios of 1.16 for age, 1.37 for ECOG 2 and 1.09 per geriatric domain, and hazard ratios near the published ones, for example 2.11 for moderate or severe renal decrease. On the 20 000 test patients the fitted configuration reaches an observed to expected ratio of 1.00 and 1.09 and an AUC of 0.702 and 0.769.
+Fitted on 50 000 patients from seed 1, `fit.py` gives:
+
+- Candidate 1: odds ratios of 1.17 for age, 1.34 for ECOG 2 and 1.08 per geriatric domain.
+- Candidate 2: hazard ratios close to or below the published ones, for example 2.06 for low oxygen saturation (published 2.14) and 1.86 for moderate or severe renal decrease (published 2.73).
+- Candidate 5: a hazard ratio of 4.32 for an earlier event under an agonist and 0.92 under an antagonist (95% confidence interval 0.60 to 1.40), and 1.33 for age, 1.47 for diabetes, 1.39 for hypertension, 1.48 for current smoking and 1.42 for reduced renal function.
+
+On the 20 000 test patients the fitted configuration reaches an observed to expected ratio of 0.99, 1.02 and 0.99 and an AUC of 0.715, 0.781 and 0.736.
 
 The models describe the risk without an intervention. `data.load` therefore reads the outcomes of usual care unless another scenario is named.
 
@@ -163,4 +198,8 @@ The models describe the risk without an intervention. `data.load` therefore read
 - The models use only part of the baseline record. Fields such as bilirubin, blood values, earlier therapy lines and starting dose are not used yet.
 - Candidate 2 gives the risk within 730 days. The engine follows patients for up to ten years, so a few events fall outside the window.
 - No lung toxicity risk for checkpoint inhibitors yet, because the references give a rate but no risk model.
+- Candidate 5 rests on one trial. The two groups with an earlier event had 45 and 84 men, so the effect of an earlier event is uncertain.
+- HERO counted death from any cause as an event. The rates of candidate 5 are therefore an upper limit for cardiovascular events alone.
+- HERO treated men with androgen deprivation alone. The model applies its rates to men who also get docetaxel, abiraterone, darolutamide, olaparib or lutetium-177–PSMA-617.
+- The effects of age, diabetes, hypertension, smoking and renal function in candidate 5 are assumptions. Lipids, blood pressure as a number, LVEF, troponin and natriuretic peptides are not used.
 - The risk categories are assumptions and are not validated.

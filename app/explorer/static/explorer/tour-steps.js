@@ -122,7 +122,7 @@ export const STEPS = [
     target: "form.form fieldset",
     changes: true,
     text: [
-      "The engine simulates the same patients under several scenarios: usual care, a risk-adapted start of therapy, weekly symptom monitoring, home monitoring for lung toxicity, all three combined, and perfect detection as an upper limit.",
+      "The engine simulates the same patients under several scenarios: usual care, a risk-adapted start of therapy, weekly symptom monitoring, home monitoring for lung toxicity, home monitoring for cardiovascular events, all of them combined, and perfect detection as an upper limit.",
       "Every patient has fixed random numbers. A patient therefore differs between two scenarios only from the point where an intervention acts. This makes the scenarios comparable patient by patient.",
     ],
   },
@@ -208,8 +208,9 @@ export const STEPS = [
     url: "/",
     target: 'nav[aria-label="Risk model of the charts"]',
     text: [
-      "Two risk models exist. The first estimates the risk of any severe side effect (grade 3 to 5) within 90 days. It starts from the published rate of the regimen and shifts it by age, performance status and impaired geriatric domains.",
+      "Three risk models exist. The first estimates the risk of any severe side effect (grade 3 to 5) within 90 days. It starts from the published rate of the regimen and shifts it by age, performance status and impaired geriatric domains.",
       "The second estimates the risk of lung toxicity under trastuzumab deruxtecan, with six published risk factors such as low oxygen saturation and reduced renal function.",
+      "The third estimates the risk of a heart attack, a stroke or cardiovascular death in the first year for men with prostate cancer under androgen deprivation.",
     ],
   },
   {
@@ -268,6 +269,19 @@ export const STEPS = [
     url: "/?model=ild",
     target: 'tox-chart[chart^="vs-"]',
     text: ["Each point is a patient for whom both models give a risk: is a patient at high risk for one outcome also at high risk for the other?"],
+    do: "Click “Cardiovascular events”.",
+    act: (t) => t.click('nav[aria-label="Risk model of the charts"] a[href*="model=cv"]'),
+    until: (t) => t.has("model=cv"),
+  },
+  {
+    title: "Cardiovascular events",
+    url: "/?model=cv",
+    target: ".statusbar.top",
+    text: [
+      "The third model covers the men with prostate cancer, who all get androgen deprivation. Its outcome is a heart attack, a stroke or cardiovascular death within the first year.",
+      "The rates and the effect of an earlier event come from the HERO trial: under a GnRH agonist an earlier event raises the risk more than fourfold, under an antagonist hardly at all. The effects of age, diabetes, hypertension, smoking and renal function are assumptions.",
+      "The engine adds factors the model does not know, such as frailty. The model therefore ranks patients well but predicts somewhat too few events.",
+    ],
     do: "Go back to the first risk model.",
     act: (t) => t.click('nav[aria-label="Risk model of the charts"] a[href*="model=severe90"]'),
     until: (t) => t.has("model=severe90"),
@@ -389,7 +403,7 @@ export const STEPS = [
     target: 'tox-chart[chart="patient-dose"]',
     text: [
       "For the selected patient: the dose level, neutrophils, haemoglobin, platelets, oxygen saturation and four reported symptoms, for each week on therapy and shortly after.",
-      "Vertical lines mark adverse events, alerts and the end of therapy. The values carry signals: blood counts fall with the dose, oxygen saturation falls from the true start of a lung toxicity, before it is recognised.",
+      "Vertical lines mark adverse events, alerts and the end of therapy. The values carry signals: blood counts fall with the dose, oxygen saturation falls from the true start of a lung toxicity, before it is recognised, and blood pressure and chest pain rise in the warning phase of a cardiovascular event.",
     ],
   },
   {
@@ -415,7 +429,7 @@ export const STEPS = [
     url: "/?view=time",
     target: "#scenario-select",
     text: [
-      "The same patients were simulated with interventions. “Combined” has a risk-adapted start of therapy for patients flagged as high risk, weekly symptom reports with alerts, and home monitoring for lung toxicity.",
+      "The same patients were simulated with interventions. “Combined” has a risk-adapted start of therapy for patients flagged as high risk, weekly symptom reports with alerts, and home monitoring for lung toxicity and for cardiovascular events.",
     ],
     do: "Choose the scenario “Combined”.",
     act: (t) => t.fill("#scenario-select", "combined"),
@@ -462,7 +476,7 @@ export const STEPS = [
     url: "/?view=interventions&scenario=combined",
     target: 'tox-chart[chart="iv-lead"]',
     text: [
-      "For the events that monitoring recognised: how many days earlier than usual care, and at which grade instead of the grade they would have reached. Most events worsen within days, so a weekly report often comes too late. Lung toxicity develops over weeks, so monitoring gains more there.",
+      "For the events that monitoring recognised: how many days earlier than usual care, and at which grade instead of the grade they would have reached. Most events worsen within days, so a weekly report often comes too late. Lung toxicity develops over weeks, so monitoring gains more there. Of the cardiovascular events only those with a warning phase can be caught; the others come without notice, also with perfect detection.",
     ],
   },
   {
@@ -725,7 +739,7 @@ export const STEPS = [
     target: ".docnav",
     text: [
       "The report collects what trials and guidelines say about side effects of therapy in the three tumour types, and derives ten candidates for risk models. The app implements the first two.",
-      "The rates of the regimens in the engine and the risk factors of lung toxicity come from these sources. Effect sizes of the interventions, costs and quality-of-life weights are assumptions.",
+      "The rates of the regimens in the engine, the risk factors of lung toxicity and the rates of cardiovascular events come from these sources. Effect sizes of the interventions, costs and quality-of-life weights are assumptions.",
     ],
   },
   {

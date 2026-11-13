@@ -132,6 +132,29 @@ class EngineTest(unittest.TestCase):
         self.assertAlmostEqual(first_year, 0.105, delta=0.04)
         self.assertEqual(self.rate("ild", lambda p: p["regimen"] == "nalirifox"), 0)
 
+    def test_cardiovascular_events_follow_hero(self):
+        # Shore et al. (2020): 6.2% in 48 weeks under a GnRH agonist, far more after an earlier event.
+        def first_year(test):
+            ids = [i for i, p in self.baseline.items() if p["adt_type"] is not None and test(p)]
+            hits = sum(self.outcome[USUAL][i]["cv_event"] and self.outcome[USUAL][i]["cv_event_day"] <= 336
+                       for i in ids)
+            return hits / len(ids)
+        agonist = lambda p: p["adt_type"] == "gnrh_agonist"
+        self.assertAlmostEqual(first_year(agonist), 0.062, delta=0.03)
+        self.assertGreater(first_year(lambda p: agonist(p) and p["prior_cardiovascular_event"]),
+                           2 * first_year(lambda p: agonist(p) and not p["prior_cardiovascular_event"]))
+        self.assertEqual(self.rate("cv_event", lambda p: p["tumour_type"] != "prostate"), 0)
+
+    def test_cardiovascular_history_of_the_patients(self):
+        men = [p for p in self.data["baseline"] if p["tumour_type"] == "prostate"]
+        share = lambda test: sum(test(p) for p in men) / len(men)
+        self.assertAlmostEqual(share(lambda p: p["prior_cardiovascular_event"]), 0.139, delta=0.04)
+        self.assertTrue(0.05 < share(lambda p: p["adt_type"] == "gnrh_antagonist") < 0.35)
+        for p in self.data["baseline"]:
+            self.assertEqual(p["adt_type"] is not None, p["tumour_type"] == "prostate")
+            if p["prior_cardiovascular_event"]:
+                self.assertTrue(p["cardiovascular_disease"])
+
     def test_lung_toxicity_is_often_recognised_late(self):
         gaps = [o["ild_diagnosis_day"] - o["ild_onset_day"] for o in self.outcome[USUAL].values()
                 if o["ild_diagnosis_day"] is not None]
@@ -170,6 +193,14 @@ class EngineTest(unittest.TestCase):
                 self.assertEqual(o["severe_toxicity_90d"], bool(days))
                 self.assertEqual(o["severe_toxicity_day"], min(days) if days else None)
                 self.assertEqual(o["ild"], o["ild_onset_day"] is not None)
+                heart = [e for e in events if e["event_type"] == hazards.CV]
+                self.assertLessEqual(len(heart), 1)
+                self.assertEqual(o["cv_event"], any(e["grade"] >= 3 for e in heart))
+                self.assertEqual(o["cv_event"], o["cv_event_day"] is not None)
+                self.assertEqual(o["cv_event_1y"], o["cv_event"] and o["cv_event_day"] <= 364)
+                self.assertEqual(o["cv_grade"], heart[0]["grade"] if heart else None)
+                if heart:
+                    self.assertEqual(o["cv_onset_day"], heart[0]["onset_day"])
                 self.assertEqual(o["treatment_end_reason"] == "ongoing", o["treatment_end_day"] is None)
                 self.assertEqual(o["hospital_days"], sum(e["hospital_days"] for e in events))
                 self.assertEqual(o["alerts"], len(alerts))
@@ -217,6 +248,23 @@ class EngineTest(unittest.TestCase):
                 if o["ild_onset_day"] + 14 <= r["day"] <= o["ild_diagnosis_day"] and r["spo2_percent"] is not None:
                     changes.append(r["spo2_percent"] - self.baseline[pid]["spo2_percent"])
         self.assertLess(sum(changes) / len(changes), -1.5)
+
+    def test_blood_pressure_and_chest_pain_rise_in_the_warning_phase(self):
+        pressure, pain, quiet = [], [], []
+        for pid, o in self.outcome[USUAL].items():
+            rows = self.observations[USUAL][pid]
+            if self.baseline[pid]["adt_type"] is not None and o["cv_onset_day"] is None:
+                quiet += [r["pro_chest_pain"] for r in rows[1:] if r["pro_chest_pain"] is not None]
+            if not o["cv_event"] or o["cv_event_day"] - o["cv_onset_day"] < 7:
+                continue
+            for r in rows:
+                if o["cv_onset_day"] <= r["day"] + 6 and r["day"] <= o["cv_event_day"]:
+                    if r["systolic_bp_mmhg"] is not None:
+                        pressure.append(r["systolic_bp_mmhg"] - self.baseline[pid]["systolic_bp_mmhg"])
+                    if r["pro_chest_pain"] is not None:
+                        pain.append(r["pro_chest_pain"])
+        self.assertGreater(sum(pressure) / len(pressure), 8)
+        self.assertGreater(sum(pain) / len(pain), sum(quiet) / len(quiet) + 1)
 
     # Scenarios ----------------------------------------------------------------------
 
@@ -271,6 +319,32 @@ class EngineTest(unittest.TestCase):
                        if e["event_type"] == hazards.ILD)
         self.assertLess(severe("lung_monitoring"), severe(USUAL))
 
+    def test_cardiovascular_monitoring_is_limited_to_androgen_deprivation(self):
+        s = "cardiovascular_monitoring"
+        for pid, o in self.outcome[s].items():
+            if o["participating"]:
+                self.assertEqual(self.baseline[pid]["tumour_type"], "prostate")
+        sources = {a["source"] for alerts in self.alerts[s].values() for a in alerts}
+        self.assertEqual(sources, {"cardiovascular_monitoring"})
+        seen = {a["event_type"] for alerts in self.alerts[s].values() for a in alerts if a["true_alert"]}
+        self.assertEqual(seen, {hazards.CV, "hypertension"})
+
+    def test_cardiovascular_monitoring_prevents_events_with_a_warning_phase(self):
+        s = "cardiovascular_monitoring"
+        self.assertLess(self.total("cv_event", s), self.total("cv_event", USUAL))
+        for pid, o in self.outcome[s].items():
+            usual = self.outcome[USUAL][pid]
+            if usual["cv_event"] and not o["cv_event"] and o["cv_grade"] is not None:
+                # Averted: the warning phase was treated before the major event.
+                self.assertLess(o["cv_grade"], 3)
+                self.assertGreater(usual["cv_event_day"], usual["cv_onset_day"])
+        # Sudden events stay, also with perfect detection.
+        sudden = [i for i, o in self.outcome[USUAL].items()
+                  if o["cv_event"] and o["cv_event_day"] == o["cv_onset_day"]]
+        self.assertTrue(sudden)
+        self.assertGreater(self.total("cv_event", "perfect_detection"), 0)
+        self.assertLess(self.total("cv_event", "perfect_detection"), self.total("cv_event", s))
+
     def test_risk_adapted_start_flags_the_given_share_and_lowers_toxicity(self):
         s = "risk_adapted_start"
         flagged = [i for i, o in self.outcome[s].items() if o["high_risk_flag"]]
@@ -296,9 +370,13 @@ class EngineTest(unittest.TestCase):
     def test_perfect_detection_is_the_upper_limit(self):
         s = "perfect_detection"
         self.assertTrue(all(o["participating"] for o in self.outcome[s].values()))
-        self.assertEqual(self.total("death_from_toxicity", s), 0)
+        # Only a cardiovascular event without a warning phase can still be fatal.
+        fatal = [e for events in self.events[s].values() for e in events if e["grade"] == 5]
+        self.assertTrue(all(e["event_type"] == hazards.CV and e["onset_day"] == e["usual_care_day"] for e in fatal))
+        self.assertLess(self.total("death_from_toxicity", s), self.total("death_from_toxicity", "combined"))
         self.assertEqual(self.total("false_alerts", s), 0)
-        self.assertEqual(sum(e["grade"] >= 3 for ev in self.events[s].values() for e in ev), 0)
+        severe = [e for ev in self.events[s].values() for e in ev if e["grade"] >= 3]
+        self.assertTrue(all(e["event_type"] == hazards.CV for e in severe))
         self.assertGreaterEqual(self.total("qaly", s), self.total("qaly", "combined"))
 
 

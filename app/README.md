@@ -95,8 +95,8 @@ Four views share the scenario, the filters and the selected patient:
 |---|---|
 | Risk | Predicted risk against the observed outcome for the chosen risk model |
 | Patient characteristics | Observed rate and mean predicted risk per group of every baseline field |
-| Course over time | For the cohort: first severe adverse event, share on therapy and survival over time, for the selected scenario and the comparison. For a selected patient: dose, blood values, oxygen saturation and reported symptoms per week under both scenarios, with the adverse events, alerts and the end of therapy marked, and a table of the adverse events under each scenario. |
-| Interventions | All scenarios side by side for the selected patients: a table of key numbers, including costs and quality-adjusted life years against usual care, bar charts, lung toxicity by grade, and for a scenario with monitoring the days gained and the grades of the events recognised early. |
+| Course over time | For the cohort: first severe adverse event, share on therapy and survival over time, for the selected scenario and the comparison. For a selected patient: dose, blood values, oxygen saturation, blood pressure and reported symptoms per week under both scenarios, with the adverse events, alerts and the end of therapy marked, and a table of the adverse events under each scenario. |
+| Interventions | All scenarios side by side for the selected patients: a table of key numbers, including costs and quality-adjusted life years against usual care, bar charts, lung toxicity and cardiovascular events by grade, and for a scenario with monitoring the days gained and the grades of the events recognised early. |
 
 ### Filters
 
@@ -147,7 +147,7 @@ The database is SQLite in one file, with four tables:
 | Course | One patient in one scenario: outcome, adverse events, alerts, and the weekly observations as one list per field |
 | Setting | The changed values of one parameter file |
 
-Records are stored as JSON in the layout of the schema, so the database needs no change when the schema grows. The outcome is kept apart from the bulky observations, so that cohort views read only what they need. 1500 patients under six scenarios take about 40 MB.
+Records are stored as JSON in the layout of the schema, so the database needs no change when the schema grows. The outcome is kept apart from the bulky observations, so that cohort views read only what they need. 1500 patients under seven scenarios take about 65 MB.
 
 SQLite fits because there is one server process, the data are written once per data set and then only read, and one file in a volume is easy to keep and to back up. Write-ahead logging lets pages be read while a data set is stored and keeps disk writes low. A database server would be the choice for several server processes or many users writing at the same time; Django makes that change a matter of settings.
 

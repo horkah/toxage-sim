@@ -33,6 +33,7 @@ FACTOR_LABELS = {
     "ecog_2_or_higher": "ECOG 2 or higher",
     "ga_impaired_domains": "Impaired geriatric domains",
     **{name: label[0].upper() + label[1:] for name, label in calc.ILD_LABELS.items()},
+    **{name: label[0].upper() + label[1:] for name, label in calc.CV_LABELS.items()},
 }
 
 
@@ -142,7 +143,40 @@ class LungToxicityModel(RiskModel):
         return _factors([(name, applied.get(name, 1.0)) for name in calc.ILD_FACTORS])
 
 
-MODELS = [SevereToxicityModel, LungToxicityModel]
+class CardiovascularModel(RiskModel):
+    id = "cv"
+    name = "Cardiovascular events"
+    outcome = "cv_event_1y"
+    onset = "cv_event_day"
+    ratio_kind = "hazard ratio"
+    candidate = 5
+    source = ("rates and the effect of an earlier event from HERO (Shore et al., 2020); "
+              "effects of age, diabetes, hypertension, smoking and renal function assumed")
+
+    def __init__(self, cfg=None):
+        super().__init__(cfg)
+        self.window_days = self.cfg["cardiovascular"]["window_days"]
+        self._r0 = {a: calc.cv_baseline_risk(a, self.cfg) for a in self.cfg["cardiovascular"]["adt_rates"]}
+
+    def applies(self, patient):
+        return calc.cv_applicable(patient, self.cfg)
+
+    def reference_risk(self, patient):
+        return self._r0.get(patient.get("adt_type"))
+
+    def risk(self, patient):
+        if not self.applies(patient):
+            return None
+        return calc.cv_risk(patient, self.cfg, self._r0[patient["adt_type"]])
+
+    def factors(self, patient):
+        if not self.applies(patient):
+            return []
+        applied = {name: ratio for name, _, ratio in calc.cv_terms(patient, self.cfg)}
+        return _factors([(name, applied.get(name, 1.0)) for name in calc.CV_LABELS])
+
+
+MODELS = [SevereToxicityModel, LungToxicityModel, CardiovascularModel]
 
 
 def load(cfg=None):

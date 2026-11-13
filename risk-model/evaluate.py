@@ -2,8 +2,9 @@
 
 Usage: python3 risk-model/evaluate.py --data engine/output [--config FILE]
 
-Prints discrimination and calibration for both models, next to a comparison
-model that knows only the regimen rate.
+Prints discrimination and calibration for all models, next to a comparison
+model that knows only the published rate of the regimen or, for
+cardiovascular events, of the type of androgen deprivation.
 """
 import argparse
 import sys
@@ -44,6 +45,17 @@ def evaluate(baseline, outcomes, cfg=None):
             "groups": metrics.calibration_groups(risk, y),
             "by_regimen": _by_regimen([p["regimen"] for p, _ in pairs], risk, y),
         }
+    pairs = [(p, s) for p, s in zip(baseline, scores) if s["cv_applicable"]]
+    if pairs:
+        risk = [s["cv_risk"] for _, s in pairs]
+        ref = [s["cv_reference_rate"] for _, s in pairs]
+        y = [outcomes[p["patient_id"]]["cv_event_1y"] for p, _ in pairs]
+        result["cardiovascular"] = {
+            "model": metrics.summary(risk, y),
+            "regimen_only": metrics.summary(ref, y),
+            "groups": metrics.calibration_groups(risk, y),
+            "by_regimen": _by_regimen([p["regimen"] for p, _ in pairs], risk, y),
+        }
     return result
 
 
@@ -63,7 +75,7 @@ def report(result):
     lines = []
     for name, r in result.items():
         lines.append(f"\n{name}: {r['model']['n']} patients, {r['model']['events']} events")
-        lines.append(f"  {'':<22}{'model':>10}{'regimen only':>14}")
+        lines.append(f"  {'':<22}{'model':>10}{'rate only':>14}")
         for key, label, pattern in (
             ("observed_rate", "observed rate", ".3f"),
             ("mean_risk", "mean predicted risk", ".3f"),

@@ -25,8 +25,12 @@ PATIENT = {
     "patient_id": "T1", "tumour_type": "breast", "regimen": "trastuzumab_deruxtecan",
     "age_years": 65, "sex": "female", "ecog": 1, "ga_impaired_domains": 0,
     "renal_function": "normal", "spo2_percent": 98, "lung_comorbidity": False,
-    "years_since_diagnosis": 1.0,
+    "years_since_diagnosis": 1.0, "adt_type": None, "prior_cardiovascular_event": False,
+    "cardiovascular_disease": False, "arterial_hypertension": False, "diabetes": False,
+    "smoking_status": "never", "systolic_bp_mmhg": 125,
 }
+MAN = dict(PATIENT, tumour_type="prostate", regimen="olaparib", sex="male", age_years=71,
+           adt_type="gnrh_agonist")
 
 
 class ModelTest(unittest.TestCase):
@@ -87,8 +91,67 @@ class ModelTest(unittest.TestCase):
         for key in ("ild_risk", "ild_grade2plus_risk", "ild_regimen_rate", "ild_category"):
             self.assertIsNone(record[key])
 
+    def test_cv_mean_risk_in_reference_population_equals_rate(self):
+        m = self.cfg["cardiovascular"]
+        ref = m["reference_population"]
+        for adt, entry in m["adt_rates"].items():
+            r0 = models.cv_baseline_risk(adt, self.cfg)
+            names = list(models.CV_FACTORS)
+            mean = 0.0
+            for bits in range(2 ** (len(names) + 1)):
+                on = [bool(bits >> i & 1) for i in range(len(names) + 1)]
+                share = ref["prior_cardiovascular_event"][adt] if on[0] else 1 - ref["prior_cardiovascular_event"][adt]
+                ratio = m["prior_event_hazard_ratios"][adt]["value"] if on[0] else 1.0
+                for flag, name in zip(on[1:], names):
+                    share *= ref[name] if flag else 1 - ref[name]
+                    ratio *= m["hazard_ratios"][name]["value"] if flag else 1.0
+                mean += share * (1 - (1 - r0) ** ratio)
+            target = models.cv_reference_rate(adt, self.cfg)
+            self.assertAlmostEqual(mean, target, places=6)
+            # The published rate holds for 48 weeks, the model for 52.
+            self.assertGreater(target, entry["rate"])
+            self.assertLess(target, entry["rate"] * 1.1)
+            self.assertLess(r0, entry["rate"])
+
+    def test_cv_man_without_factors_has_baseline_risk(self):
+        r0 = models.cv_baseline_risk("gnrh_agonist", self.cfg)
+        self.assertEqual([t[0] for t in models.cv_terms(MAN, self.cfg)], ["cv_age"])
+        self.assertAlmostEqual(models.cv_risk(MAN, self.cfg), r0, places=12)
+
+    def test_cv_risk_rises_with_each_factor(self):
+        base = models.cv_risk(MAN, self.cfg)
+        for change in ({"age_years": 80}, {"diabetes": True}, {"arterial_hypertension": True},
+                       {"smoking_status": "current"}, {"renal_function": "moderate_severe_decrease"},
+                       {"prior_cardiovascular_event": True}):
+            self.assertGreater(models.cv_risk(dict(MAN, **change), self.cfg), base, change)
+        self.assertEqual(models.cv_risk(dict(MAN, smoking_status="former"), self.cfg), base)
+
+    def test_cv_earlier_event_counts_more_under_an_agonist(self):
+        risk = lambda **c: models.cv_risk(dict(MAN, **c), self.cfg)
+        self.assertLess(risk(adt_type="gnrh_antagonist"), risk())
+        agonist = risk(prior_cardiovascular_event=True) / risk()
+        antagonist = (risk(adt_type="gnrh_antagonist", prior_cardiovascular_event=True)
+                      / risk(adt_type="gnrh_antagonist"))
+        self.assertGreater(agonist, 3)
+        self.assertLess(antagonist, 1.5)
+        r0 = models.cv_baseline_risk("gnrh_agonist", self.cfg)
+        self.assertAlmostEqual(risk(prior_cardiovascular_event=True, diabetes=True),
+                               1 - (1 - r0) ** (4.57 * 1.5), places=12)
+
+    def test_cv_not_applicable(self):
+        record = self.model.score(PATIENT)
+        self.assertFalse(record["cv_applicable"])
+        for key in ("cv_risk", "cv_reference_rate", "cv_category"):
+            self.assertIsNone(record[key])
+        self.assertIsNone(models.cv_risk(PATIENT, self.cfg))
+        self.assertIsNone(self.model.explain(PATIENT)["cardiovascular"])
+
     def test_score_follows_schema(self):
         self.assertEqual(toxage_schema.errors("risk_score", self.model.score(PATIENT)), [])
+        record = self.model.score(dict(MAN, prior_cardiovascular_event=True))
+        self.assertEqual(toxage_schema.errors("risk_score", record), [])
+        self.assertEqual(record["cv_category"], "high")
+        self.assertEqual(self.model.score(MAN)["cv_category"], "low")
 
     def test_categories(self):
         t = {"intermediate_from": 0.05, "high_from": 0.15}
@@ -110,6 +173,11 @@ class ModelTest(unittest.TestCase):
         ratio = math.prod(f["hazard_ratio"] for f in c2["factors"])
         self.assertAlmostEqual(1 - (1 - c2["start"]["risk"]) ** ratio, record["ild_risk"], places=12)
         self.assertEqual(len(c2["factors"]), 3)
+        man = dict(MAN, age_years=78, prior_cardiovascular_event=True, diabetes=True)
+        c5 = self.model.explain(man)["cardiovascular"]
+        ratio = math.prod(f["hazard_ratio"] for f in c5["factors"])
+        self.assertAlmostEqual(1 - (1 - c5["start"]["risk"]) ** ratio, self.model.score(man)["cv_risk"], places=12)
+        self.assertEqual(len(c5["factors"]), 3)
 
 
 class GlmAndMetricsTest(unittest.TestCase):
@@ -169,8 +237,14 @@ class PipelineTest(unittest.TestCase):
 
     def test_literature_model_on_engine_data(self):
         result = evaluate.evaluate(self.baseline, self.outcomes)
-        for name in ("severe_toxicity_90d", "ild"):
+        for name in ("severe_toxicity_90d", "ild", "cardiovascular"):
             self.assertGreater(result[name]["model"]["auc"], result[name]["regimen_only"]["auc"])
+        self.assertGreater(result["cardiovascular"]["model"]["auc"], 0.65)
+        # The engine adds frailty, former smoking and cardiovascular disease
+        # without an event, which the model does not know.
+        ratio = result["cardiovascular"]["model"]["observed_to_expected"]
+        self.assertGreater(ratio, 0.9)
+        self.assertLess(ratio, 1.6)
         self.assertAlmostEqual(
             result["severe_toxicity_90d"]["model"]["observed_to_expected"], 1.0, delta=0.1)
         # Many patients stop therapy before day 730, so the observed rate can
@@ -190,13 +264,22 @@ class PipelineTest(unittest.TestCase):
             low, high = entry["ci95"]
             se = (math.log(high) - math.log(low)) / (2 * 1.96)
             self.assertLess(abs(math.log(entry["value"]) - math.log(engine_hr[name])), 3.5 * se, name)
+        # The engine uses the hazard ratios of HERO for the earlier event.
+        engine_cv = engine_params["hazards"]["cardiovascular"]
+        entry = cfg["cardiovascular"]["prior_event_hazard_ratios"]["gnrh_agonist"]
+        low, high = entry["ci95"]
+        se = (math.log(high) - math.log(low)) / (2 * 1.96)
+        truth = engine_cv["hazard_ratios"]["prior_event_with_agonist"]
+        self.assertLess(abs(math.log(entry["value"]) - math.log(truth)), 3.5 * se)
+        for name in ("per_10_years_of_age", "diabetes", "arterial_hypertension", "current_smoker"):
+            self.assertGreater(cfg["cardiovascular"]["hazard_ratios"][name]["value"], 1.0, name)
         # The fitted configuration works in place of the literature one and
         # describes the data it was fitted on at least as well.
         record = models.Scorer(cfg).score(self.baseline[0])
         self.assertEqual(toxage_schema.errors("risk_score", record), [])
         before = evaluate.evaluate(self.baseline, self.outcomes)
         after = evaluate.evaluate(self.baseline, self.outcomes, cfg)
-        for name in ("severe_toxicity_90d", "ild"):
+        for name in ("severe_toxicity_90d", "ild", "cardiovascular"):
             self.assertLessEqual(after[name]["model"]["brier"], before[name]["model"]["brier"] + 1e-9)
 
 

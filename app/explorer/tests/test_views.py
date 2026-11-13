@@ -115,6 +115,9 @@ class ExplorerTest(CohortTestCase):
 
     def test_model_choice(self):
         self.assertEqual(self.client.get("/?model=ild").context["focus"].id, "ild")
+        heart = self.client.get("/?model=cv")
+        self.assertEqual(heart.context["focus"].id, "cv")
+        self.assertContains(heart, "Cardiovascular events")
         self.assertEqual(self.client.get("/?model=none").context["focus"].id, "severe90")
 
     def test_links_keep_the_state(self):
@@ -165,7 +168,12 @@ class ExplorerTest(CohortTestCase):
         self.assertContains(response, "Cost per QALY gained")
         self.assertContains(response, "Early recognition: Lung monitoring")
         table = response.context["sections"][0]["table"]
-        self.assertEqual(len(table), 6)
+        self.assertEqual(len(table), 7)
+        self.assertContains(response, "<th>Cardiovascular events</th>")
+        heart = self.client.get("/?view=interventions&scenario=cardiovascular_monitoring&tumour_type=prostate")
+        self.assertContains(heart, "Early recognition: Cardiovascular monitoring")
+        self.assertIn("iv-heart", heart.context["chart_data"])
+        self.assertIn("iv-lung", heart.context["chart_data"])
         self.assertEqual(table[0]["n"], response.context["selection"])
         self.assertNotContains(self.client.get("/?view=interventions"), "Early recognition:")
 

@@ -44,6 +44,33 @@ def _regimen(rng, subgroup, frailty, age, bilirubin, lung_problem, params):
     return _choice(rng, c[subgroup])
 
 
+def _cardiovascular(rng, tumour, age, diabetes, cvd, params):
+    """Cardiovascular history and risk factors, and the type of androgen
+    deprivation for patients with prostate cancer."""
+    p = params["population"]
+    prior = cvd and rng.random() < p["prior_cardiovascular_event"]["probability_with_cardiovascular_disease"]
+    h = p["arterial_hypertension"]
+    hypertension = rng.random() < _sigmoid(
+        h["intercept"] + h["per_year_above_65"] * (age - 65) + h["diabetes_shift"] * diabetes
+        + h["cardiovascular_disease_shift"] * cvd
+    )
+    b = p["systolic_bp_mmhg"]
+    pressure = b["mean"] + b["hypertension_shift"] * hypertension + b["per_year_above_65"] * (age - 65) + rng.gauss(0, b["sd"])
+    smoking = _choice(rng, p["smoking_status"].get(tumour, p["smoking_status"]["default"]))
+    adt = None
+    if tumour == "prostate":
+        a = params["treatment_choice"]["adt_antagonist"]
+        chance = a["probability_with_prior_cardiovascular_event"] if prior else a["probability"]
+        adt = "gnrh_antagonist" if rng.random() < chance else "gnrh_agonist"
+    return {
+        "adt_type": adt,
+        "prior_cardiovascular_event": prior,
+        "arterial_hypertension": hypertension,
+        "systolic_bp_mmhg": round(_clip(pressure, b["minimum"], b["maximum"])),
+        "smoking_status": smoking,
+    }
+
+
 def draw_patient(rng, index, tumour, regimens, params):
     """Return (baseline record, latent values) of one patient."""
     p = params["population"]
@@ -125,6 +152,7 @@ def draw_patient(rng, index, tumour, regimens, params):
     platelets = max(pl["minimum"], _lognormal(rng, pl["median"], pl["sigma"]) * (pl["pretreated_factor"] if pretreated else 1))
 
     ysd = p["years_since_diagnosis"][subgroup]
+    years_since_diagnosis = round(_lognormal(rng, ysd["median"], ysd["sigma"]), 1)
     regimen = _regimen(rng, subgroup, frailty, age, bilirubin, lung or spo2 < 95, params)
 
     sd = params["treatment_choice"]["starting_dose_reduction"]
@@ -160,8 +188,9 @@ def draw_patient(rng, index, tumour, regimens, params):
         "lung_comorbidity": lung,
         "diabetes": diabetes,
         "cardiovascular_disease": cvd,
-        "years_since_diagnosis": round(_lognormal(rng, ysd["median"], ysd["sigma"]), 1),
+        "years_since_diagnosis": years_since_diagnosis,
     }
+    baseline.update(_cardiovascular(rng, tumour, age, diabetes, cvd, params))
     return baseline, {"frailty": frailty}
 
 

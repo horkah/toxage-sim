@@ -3,7 +3,7 @@
   "$id": "toxage-sim/outcome",
   "title": "Outcome record",
   "description": "Summary of the course of one patient in one scenario, derived from the event, alert and observation records. One record per scenario and patient. Days count from therapy start (day 1).",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -18,6 +18,11 @@
     "ild_onset_day",
     "ild_diagnosis_day",
     "ild_grade",
+    "cv_event",
+    "cv_event_1y",
+    "cv_onset_day",
+    "cv_event_day",
+    "cv_grade",
     "treatment_end_day",
     "treatment_end_reason",
     "death_day",
@@ -109,6 +114,46 @@
       "minimum": 1,
       "maximum": 5,
       "description": "Highest CTCAE grade of the interstitial lung disease or pneumonitis. Null if there was none."
+    },
+    "cv_event": {
+      "title": "Cardiovascular event",
+      "type": "boolean",
+      "description": "Major adverse cardiovascular event under androgen deprivation during follow-up: myocardial infarction, stroke or cardiovascular death, i.e. a cardiovascular event of grade 3 to 5."
+    },
+    "cv_event_1y": {
+      "title": "Cardiovascular event in the first year",
+      "type": "boolean",
+      "description": "Major adverse cardiovascular event within 364 days (52 weeks) of therapy start."
+    },
+    "cv_onset_day": {
+      "title": "Day the cardiovascular event began",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "unit": "days",
+      "description": "Day on which the event or its warning phase started. Null if there was none. Set also when the warning phase was treated in time and no major event followed."
+    },
+    "cv_event_day": {
+      "title": "Day of the cardiovascular event",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "unit": "days",
+      "description": "Day of the major cardiovascular event. Null if there was none."
+    },
+    "cv_grade": {
+      "title": "Grade of the cardiovascular event",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "maximum": 5,
+      "description": "CTCAE grade at which the cardiovascular event was recognised. Grades 1 and 2 are a warning phase treated in time. Null if there was none."
     },
     "treatment_end_day": {
       "title": "Day of therapy end",

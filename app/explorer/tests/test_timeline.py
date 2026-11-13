@@ -68,7 +68,10 @@ class TimelineTest(CohortTestCase):
         self.assertLess(combined["severe_events"], usual["severe_events"])
         self.assertGreater(combined["early"], 0)
         self.assertAlmostEqual(combined["d_qaly"], combined["qaly"] - usual["qaly"])
-        self.assertEqual(perfect["severe_events"], 0)
+        # With perfect detection only cardiovascular events without a warning phase remain.
+        self.assertLessEqual(perfect["severe_events"], perfect["cv_events"] / perfect["n"] + 1e-9)
+        self.assertLessEqual(perfect["cv_events"], combined["cv_events"])
+        self.assertEqual(usual["cv_events"], sum(r["cv_event"] for r in self.rows_of("usual_care")))
         self.assertEqual(perfect["participating"], 1)
         self.assertEqual(combined["cost"], combined["cost_care"] + combined["cost_intervention"])
 
@@ -99,11 +102,22 @@ class TimelineTest(CohortTestCase):
         self.assertLess(mean(after), mean(before))
         self.assertTrue(timeline.lead_time(self.events_of("usual_care"), self.ids)["empty"])
 
-    def test_lung_grades(self):
-        spec = timeline.lung_grades(self.dataset.scenarios, self.events_of, self.ids, "usual_care")
-        if not spec.get("empty"):
-            self.assertEqual([s["cls"] for s in spec["series"]], ["g1", "g2", "g3", "g5"])
-            self.assertEqual(spec["highlight"], 0)
+    def test_event_grades(self):
+        for cid, kind, title in timeline.GRADED_EVENTS:
+            spec = timeline.event_grades(self.dataset.scenarios, self.events_of, self.ids, "usual_care", kind, title)
+            self.assertEqual(spec["title"], title)
+            if not spec.get("empty"):
+                self.assertEqual([s["cls"] for s in spec["series"]], ["g1", "g2", "g3", "g5"])
+                self.assertEqual(spec["highlight"], 0)
+
+    def test_cardiovascular_events_by_grade(self):
+        spec = timeline.event_grades(self.dataset.scenarios, self.events_of, self.ids, "usual_care",
+                                     timeline.CV, "Cardiovascular events by grade")
+        low, _, high, fatal = (s["values"] for s in spec["series"])
+        usual = [s["scenario_id"] for s in self.dataset.scenarios].index("usual_care")
+        self.assertEqual(low[usual], 0)      # usual care sees no warning phase
+        self.assertEqual(high[usual] + fatal[usual], sum(r["cv_event"] for r in self.rows_of("usual_care")))
+        self.assertEqual(timeline.event_name(timeline.CV), "cardiovascular event")
 
     def test_patient_charts(self):
         pid = next(p for p, found in self.events_of("combined").items() if found)
@@ -112,13 +126,15 @@ class TimelineTest(CohortTestCase):
                    for name, s in (("Combined", "combined"), ("Usual care", "usual_care"))]
         specs = dict(timeline.patient_charts(courses, patient))
         self.assertEqual(set(specs), {"patient-dose", "patient-neutrophils", "patient-haemoglobin",
-                                      "patient-platelets", "patient-spo2", "patient-symptoms"})
+                                      "patient-platelets", "patient-spo2", "patient-pressure",
+                                      "patient-symptoms"})
+        self.assertIn("chest pain", [s["name"] for s in specs["patient-symptoms"]["series"]])
         dose = specs["patient-dose"]
         self.assertEqual(len(dose["series"]), 2)
         self.assertTrue(dose["series"][0]["step"])
         self.assertEqual(dose["series"][0]["points"][0][0], 0)
         self.assertTrue(any(m["cls"] == "ev" for m in dose["markers"]))
-        self.assertEqual(len(specs["patient-symptoms"]["series"]), 4)
+        self.assertEqual(len(specs["patient-symptoms"]["series"]), 5)
         json.dumps(specs, allow_nan=False)
         rows = timeline.event_rows(courses[0][1])
         self.assertEqual([r["day"] for r in rows], sorted(r["day"] for r in rows))

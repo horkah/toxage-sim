@@ -11,7 +11,7 @@ intervention changes something.
 """
 import math
 
-from hazards import ILD
+from hazards import CV, ILD, OWN_FACTORS
 import interventions
 
 
@@ -50,7 +50,7 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
     death_day, toxic_death = None, False
     lost = dropped = False
     events, alerts, states, pending = [], [], [], []
-    ild = None
+    ild = cv = None
     last_day = 0
     report_weeks = {s: 0 for s in sources}
     report_weekday = int(draws.u("report_weekday") * 7)
@@ -123,6 +123,8 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
         })
         if kind == ILD:
             ild.update(diagnosis_day=day, grade=grade, recognised=True)
+        if kind == CV:
+            cv.update(diagnosis_day=day, grade=grade, recognised=True)
         if grade == 5:
             death_day, toxic_death = day, True
             stop(day, "toxicity", week)
@@ -186,8 +188,9 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
         if status == "on_treatment" and death_day is None:
             effect = dose ** gamma
             for kind, coefficient, weights in hazard_rows:
-                h = coefficient * weights[week] * effect
-                if h <= 0 or (kind == ILD and ild) or any(e["event_type"] == kind for e in pending):
+                h = coefficient * weights[week] * (1.0 if kind == CV else effect)
+                if h <= 0 or (kind == ILD and ild) or (kind == CV and cv) or (
+                        any(e["event_type"] == kind for e in pending)):
                     continue
                 if draws.u(f"start:{kind}", week) >= 1 - math.exp(-h):
                     continue
@@ -200,6 +203,14 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
                     else:
                         delay = int(draws.u("ild_delay", week) * (d["maximum_days_if_prompt"] + 1))
                     ild = {"onset_day": onset, "diagnosis_day": None, "grade": grade, "recognised": False}
+                elif kind == CV:
+                    grade = int(draws.pick("grade:cv", hz["grade_probabilities"][CV], week))
+                    w = hz["cardiovascular"]["warning_phase"]
+                    delay = 0
+                    if draws.u("cv_warned", week) < w["probability"]:
+                        delay = max(1, round(math.exp(
+                            math.log(w["median_days"]) + w["sigma"] * draws.normal("cv_warning", week))))
+                    cv = {"onset_day": onset, "diagnosis_day": None, "grade": grade, "recognised": False}
                 else:
                     grades = hz["grade_probabilities"].get(kind, hz["grade_probabilities"]["default"])
                     grade = int(draws.pick(f"grade:{kind}", grades, week))
@@ -207,7 +218,9 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
                 episode = {"event_type": kind, "grade": grade, "onset_day": onset,
                            "routine_day": onset + delay, "week": week, "stage": 1}
                 seen_by = [s for s in sources if interventions.sensitivity(s, kind, 1, iv, True) > 0]
-                if perfect and seen_by:
+                # An event without a warning phase cannot be seen in advance.
+                sudden = kind == CV and delay == 0
+                if perfect and seen_by and not sudden:
                     alerts.append({"scenario_id": plan["scenario_id"], "patient_id": pid, "day": onset,
                                    "source": seen_by[0], "true_alert": True, "event_type": kind,
                                    "attended": True, "acted": True})
@@ -239,7 +252,7 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
                 stop(first_day + 6, "progression", week)
 
     follow_up = death_day if death_day is not None else 7 * weeks
-    return {"states": states, "events": events, "alerts": alerts, "ild": ild, "end_day": end_day,
+    return {"states": states, "events": events, "alerts": alerts, "ild": ild, "cv": cv, "end_day": end_day,
             "end_reason": end_reason, "death_day": death_day, "toxic_death": toxic_death,
             "follow_up_days": follow_up, "report_weeks": report_weeks, "plan": plan}
 
@@ -251,7 +264,8 @@ def outcome(latent, course, iv):
     events, alerts = course["events"], course["alerts"]
     follow_up = course["follow_up_days"]
     severe = [e["day"] for e in events if e["grade"] >= 3 and e["day"] <= 90]
-    ild = course["ild"]
+    ild, cv = course["ild"], course["cv"]
+    major = bool(cv and cv["recognised"] and cv["grade"] >= 3)
 
     costs, cons = iv["costs"], iv["consequences"]
     hospital_days = sum(e["hospital_days"] for e in events)
@@ -277,8 +291,8 @@ def outcome(latent, course, iv):
     quality_days = follow_up * base - on_therapy * q["on_therapy_decrement"]
     for e in events:
         days = cons["event_days"][str(e["grade"])]
-        if e["event_type"] == ILD:
-            days *= cons["event_days"]["interstitial_lung_disease_factor"]
+        if e["event_type"] in OWN_FACTORS:
+            days *= cons["event_days"][f"{e['event_type']}_factor"]
         end = follow_up if e["grade"] == 5 else min(follow_up, e["day"] + days)
         quality_days -= q["event_decrement"][str(e["grade"])] * max(0, end - e["onset_day"])
 
@@ -294,6 +308,11 @@ def outcome(latent, course, iv):
         "ild_onset_day": ild["onset_day"] if ild else None,
         "ild_diagnosis_day": ild["diagnosis_day"] if ild else None,
         "ild_grade": ild["grade"] if ild else None,
+        "cv_event": major,
+        "cv_event_1y": major and cv["diagnosis_day"] <= 364,
+        "cv_onset_day": cv["onset_day"] if cv else None,
+        "cv_event_day": cv["diagnosis_day"] if major else None,
+        "cv_grade": cv["grade"] if cv and cv["recognised"] else None,
         "treatment_end_day": course["end_day"],
         "treatment_end_reason": course["end_reason"],
         "death_day": course["death_day"],
