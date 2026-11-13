@@ -4,6 +4,8 @@ Technical and organisational details that go beyond the public [README](../READM
 
 ## Working rules
 
+- Tasks on the command line are recipes of the `justfile` in the repository root; `just` lists them. A new recurring command becomes a recipe there.
+- The Python environment is managed by uv. `pyproject.toml` names the packages, `uv.lock` pins them, and the Docker image installs from the same lock file. Engine, risk models and schema need only the standard library; the packages are for the app.
 - Work happens on `main`. Every change is committed and pushed unless a prompt says otherwise.
 - Every prompt is logged in [prompting.log](prompting.log) with date-time, selected model, attachments and the prompt text. Nothing else goes into the log.
 - [initial-prompt.txt](initial-prompt.txt) is the start prompt of the project.
@@ -89,7 +91,7 @@ The copyrighted PDFs must not be in the repository when it becomes public. Befor
 
 ## App
 
-- The app needs Django, and gunicorn in the container (`app/requirements.txt`). Pages are Django templates, charts are drawn by a web component in plain JavaScript.
+- The app needs Django, and gunicorn in the container (`pyproject.toml`). Pages are Django templates, charts are drawn by a web component in plain JavaScript.
 - `Dockerfile` and `docker-compose.yml` are in the repository root, because the image needs engine, risk model, schema and documents next to the app. The image was written and its start command tested outside a container; the image build itself has not been run yet.
 - The server must run as one process. Data sets are generated in a thread of that process, and the rows of a scenario are kept in its memory.
 - Model parameters: the JSON files of the repository are the defaults. The app stores only changed values, per file, in the table Setting. `params.engine_config()` gives the engine its configuration; the engine itself never reads the database.

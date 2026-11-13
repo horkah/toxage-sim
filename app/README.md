@@ -2,7 +2,7 @@
 
 Web app to inspect the synthetic data and the risk scores: for the whole cohort, for a filtered part of it, and for one patient compared with the others.
 
-It is built with Django and nothing else; gunicorn serves it in the container. The pages are Django templates, the charts are drawn as SVG by a small web component in plain JavaScript. Besides the explorer the app manages the data sets and the model parameters and shows the schema and the documents of the project.
+It is built with Django and nothing else; gunicorn serves it in the container. The packages are named in `pyproject.toml` in the repository root and pinned in `uv.lock`. The pages are Django templates, the charts are drawn as SVG by a small web component in plain JavaScript. Besides the explorer the app manages the data sets and the model parameters and shows the schema and the documents of the project.
 
 ## Run with Docker
 
@@ -28,26 +28,31 @@ The app has no login. Everyone who reaches it can generate and delete data and c
 ## Run for development
 
 ```bash
-pip install -r app/requirements.txt
-cd app
-python3 manage.py migrate
-python3 manage.py runserver
+just setup
 ```
-
-Then open http://localhost:8000. Data sets are generated on the page "Data" or from the command line:
 
 ```bash
-python3 manage.py load_cohort --n 1500 --seed 1
+just serve
 ```
+
+Then open http://localhost:8000. `just setup` creates the Python environment with uv, `just serve` updates the database and starts the development server. Data sets are generated on the page "Data" or from the command line:
+
+```bash
+just load 1500 1
+```
+
+Without just, the same commands are `uv sync`, `uv run python app/manage.py migrate`, `uv run python app/manage.py runserver` and `uv run python app/manage.py load_cohort --n 1500 --seed 1`.
 
 `load_cohort` replaces the stored data sets unless `--keep` is given; `--scenarios` limits the scenarios. The database is the file `app/db.sqlite3`, which is not under version control. After a change of the storage model in development, delete this file and run `migrate` again.
 
 ## Tests
 
 ```bash
-cd app
-python3 manage.py test explorer
-node --test "explorer/tests/*.test.mjs"
+just test-app
+```
+
+```bash
+just test-js
 ```
 
 The first command tests the Python code, the second the chart helpers in JavaScript. Node.js is only needed for the second.
