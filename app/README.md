@@ -55,7 +55,7 @@ just test-app
 just test-js
 ```
 
-The first command tests the Python code, the second the helpers of the page script, the charts and the tours in JavaScript. Node.js is only needed for the second.
+The first command tests the Python code, the second the helpers of the page script, the charts and the tours in JavaScript. Node.js (version 18 or newer) is only needed for the second.
 
 ## Version
 

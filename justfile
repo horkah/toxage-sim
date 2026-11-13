@@ -38,8 +38,9 @@ test-app:
     cd app && uv run python manage.py test explorer
 
 # Tests of the chart helpers of the app (needs Node.js)
+# The shell expands the file pattern: node --test reads patterns itself only from Node.js 21 on.
 test-js:
-    cd app && node --test "explorer/tests/*.test.mjs"
+    cd app && node --test explorer/tests/*.test.mjs
 
 # --- Engine ----------------------------------------------------------------
 
