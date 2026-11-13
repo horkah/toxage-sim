@@ -1,6 +1,6 @@
 # Possible extensions
 
-Open ideas for the risk models of candidates 1 and 2. Each item says what it needs: a change in the [schema](../schema/), the [engine](../engine/), the literature in [background/](../background/), or only the risk model. Items leave this list when they are done.
+Open ideas for the risk models of candidates 1, 2 and 5. Each item says what it needs: a change in the [schema](../schema/), the [engine](../engine/), the literature in [background/](../background/), or only the risk model. Items leave this list when they are done.
 
 ## Candidate 1: any severe toxicity in 90 days
 
@@ -30,7 +30,20 @@ Open ideas for the risk models of candidates 1 and 2. Each item says what it nee
 | 2.7 | Correlated risk factors in the reference population (for example age and renal function) instead of independence when setting `r0`. | literature or engine |
 | 2.8 | Apply the risk factors only to trastuzumab deruxtecan and use a plain rate for single-agent chemotherapy, unless evidence supports transfer. | risk model |
 
-## Both models
+## Candidate 5: cardiovascular events
+
+| # | Extension | Needs |
+|---|---|---|
+| 5.1 | **Detection model.** The observation table holds weekly systolic blood pressure and reported chest pain, and the outcome table the start of the warning phase and the day of the event. The model would flag a likely warning phase. Half of the events in the engine have none, which limits what detection can reach. | risk model |
+| 5.2 | Replace the assumed hazard ratios for age, diabetes, hypertension, smoking and renal function by published estimates, for example from SCORE2 and SCORE2-OP, which the ESC guideline recommends for these patients (Lyon et al., 2022). The SCORE2 publications are not yet in `references.md`. | literature |
+| 5.3 | A second source for the rates and the effect of the type of androgen deprivation. The ESC guideline notes that PRONOUNCE found no difference between an antagonist and an agonist. | literature |
+| 5.4 | Systolic blood pressure as a number, which is in the baseline record, and lipids, LVEF, troponin and natriuretic peptides, which are not. | risk model; schema and engine for the others |
+| 5.5 | Cardiovascular disease without an earlier event and former smoking, which the engine uses and the model does not. | risk model |
+| 5.6 | Separate risks for myocardial infarction, stroke and cardiovascular death, and risk beyond the first year. | literature, schema, engine |
+| 5.7 | The other parts of candidate 5 in the report: cardiac dysfunction under HER2-targeted therapy, QT prolongation with ribociclib, ischaemia with fluoropyrimidines, myocarditis with checkpoint inhibitors, severe hypertension with abiraterone. | literature, schema, engine |
+| 5.8 | Show for a man at high risk on an agonist what his risk would be on an antagonist. | risk model, app |
+
+## All models
 
 | # | Extension | Needs |
 |---|---|---|

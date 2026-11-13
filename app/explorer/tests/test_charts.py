@@ -188,6 +188,21 @@ class ChartTest(CohortTestCase):
         self.assertFalse(info["applies"])
         self.assertIsNone(info["reference"])
 
+    def test_cardiovascular_model(self):
+        self.assertEqual(len(self.cv_rows), sum(r["tumour_type"] == "prostate" for r in self.rows))
+        s = charts.summary(self.rows, self.cv)
+        self.assertEqual(s["n"], len(self.cv_rows))
+        self.assertEqual(s["events"], sum(r["cv_event_1y"] for r in self.cv_rows))
+        patient = next(r for r in self.cv_rows if r["prior_cardiovascular_event"])
+        found = {r["model"].id: r for r in charts.patient_risks(patient, self.rows, self.models)}
+        self.assertTrue(found["cv"]["applies"])
+        self.assertFalse(found["ild"]["applies"])
+        self.assertGreater(found["cv"]["risk"], found["cv"]["reference"])
+        self.assertIn("Earlier myocardial infarction or stroke", [f["label"] for f in found["cv"]["factors"]])
+        self.assertTrue(charts.build(self.rows, patient, self.cv, self.models))
+        outsider = next(r for r in self.rows if r["risk_cv"] is None)
+        self.assertIsNone(charts.risk_histogram(self.rows, self.cv, outsider)["highlight"])
+
     def test_build(self):
         sections = charts.build(self.rows, None, self.severe, self.models)
         self.assertEqual(len(sections), 3)

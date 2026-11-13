@@ -3,7 +3,7 @@
   "$id": "toxage-sim/baseline",
   "title": "Baseline record",
   "description": "One patient at the start of a systemic therapy line, as planned in usual care. One record per patient, shared by all scenarios. A scenario can adapt the starting dose and the G-CSF prophylaxis; the observation records show what was given.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,6 +14,7 @@
     "prior_therapy_lines",
     "starting_dose_level",
     "gcsf_prophylaxis",
+    "adt_type",
     "age_years",
     "sex",
     "ecog",
@@ -30,6 +31,10 @@
     "lung_comorbidity",
     "diabetes",
     "cardiovascular_disease",
+    "prior_cardiovascular_event",
+    "arterial_hypertension",
+    "systolic_bp_mmhg",
+    "smoking_status",
     "years_since_diagnosis"
   ],
   "properties": {
@@ -94,6 +99,19 @@
       "title": "G-CSF prophylaxis",
       "type": "boolean",
       "description": "G-CSF is given with each chemotherapy cycle to prevent neutropenia."
+    },
+    "adt_type": {
+      "title": "Androgen deprivation",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "gnrh_agonist",
+        "gnrh_antagonist",
+        null
+      ],
+      "description": "Type of the androgen deprivation therapy that runs alongside the regimen. Null for patients without prostate cancer."
     },
     "age_years": {
       "title": "Age",
@@ -211,7 +229,35 @@
     "cardiovascular_disease": {
       "title": "Cardiovascular disease",
       "type": "boolean",
-      "description": "Earlier cardiovascular event or established cardiovascular disease."
+      "description": "Established cardiovascular disease, with or without an earlier major cardiovascular event."
+    },
+    "prior_cardiovascular_event": {
+      "title": "Earlier cardiovascular event",
+      "type": "boolean",
+      "description": "Earlier myocardial infarction or stroke. Implies cardiovascular disease."
+    },
+    "arterial_hypertension": {
+      "title": "Arterial hypertension",
+      "type": "boolean",
+      "description": "Known arterial hypertension, treated or untreated."
+    },
+    "systolic_bp_mmhg": {
+      "title": "Systolic blood pressure",
+      "type": "integer",
+      "minimum": 70,
+      "maximum": 250,
+      "unit": "mmHg",
+      "description": "Systolic blood pressure at rest."
+    },
+    "smoking_status": {
+      "title": "Smoking",
+      "type": "string",
+      "enum": [
+        "never",
+        "former",
+        "current"
+      ],
+      "description": "Tobacco smoking."
     },
     "years_since_diagnosis": {
       "title": "Years since diagnosis",

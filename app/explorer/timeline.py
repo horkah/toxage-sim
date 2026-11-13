@@ -9,10 +9,13 @@ from bisect import bisect_right
 from .charts import _empty, _r, mean, nice_max, rate
 
 ILD = "interstitial_lung_disease"
+CV = "cardiovascular_event"
 CLASSES = ("sa", "sb")
 LEAD_BINS = [(0, 6), (7, 13), (14, 27), (28, 55), (56, None)]
 GRADE_GROUPS = [("grade 1", "g1", (1,)), ("grade 2", "g2", (2,)), ("grade 3–4", "g3", (3, 4)), ("grade 5", "g5", (5,))]
-EVENT_NAMES = {ILD: "lung toxicity"}
+EVENT_NAMES = {ILD: "lung toxicity", CV: "cardiovascular event"}
+# Events with a monitoring component of their own, shown by grade per scenario: (chart id, type, title).
+GRADED_EVENTS = [("iv-lung", ILD, "Lung toxicity by grade"), ("iv-heart", CV, "Cardiovascular events by grade")]
 
 
 def event_name(kind):
@@ -108,6 +111,7 @@ def scenario_table(scenarios, rows_of, events_of, ids, usual_care="usual_care"):
             "severe_90d": rate(rows, "severe_toxicity_90d"),
             "severe_events": sum(e["grade"] >= 3 for e in events) / n,
             "early": sum(e["detected_by"] == "monitoring" for e in events) / n,
+            "cv_events": sum(r["cv_event"] for r in rows),
             "toxic_deaths": sum(r["death_from_toxicity"] for r in rows),
             "hospital_days": mean(r["hospital_days"] for r in rows),
             "alerts": alerts / n,
@@ -146,13 +150,12 @@ def scenario_bars(table, title, series, label, fmt, selected, stacked=False):
     }
 
 
-def lung_grades(scenarios, events_of, ids, selected):
-    """Number of lung toxicity events per scenario, by grade at recognition."""
-    title = "Lung toxicity by grade"
+def event_grades(scenarios, events_of, ids, selected, kind, title):
+    """Number of events of one type per scenario, by grade at recognition."""
     counts = []
     for s in scenarios:
         grades = [e["grade"] for pid, events in events_of(s["scenario_id"]).items() if pid in ids
-                  for e in events if e["event_type"] == ILD]
+                  for e in events if e["event_type"] == kind]
         counts.append([sum(g in members for g in grades) for _, _, members in GRADE_GROUPS])
     if not any(sum(c) for c in counts):
         return _empty("bars", title)
@@ -242,9 +245,11 @@ PATIENT_CHARTS = [
     ("haemoglobin", "Haemoglobin", "haemoglobin_g_dl", "g/dl", "num", False),
     ("platelets", "Platelets", "platelets_10e9_l", "10⁹/l", "int", False),
     ("spo2", "Oxygen saturation", "spo2_percent", "%", "int", False),
+    ("pressure", "Systolic blood pressure", "systolic_bp_mmhg", "mmHg", "int", False),
 ]
 SYMPTOMS = [("pro_fatigue", "fatigue", "t3"), ("pro_diarrhoea", "diarrhoea", "obs"),
-            ("pro_cough", "cough", "t1"), ("pro_dyspnoea", "shortness of breath", "pred")]
+            ("pro_cough", "cough", "t1"), ("pro_dyspnoea", "shortness of breath", "pred"),
+            ("pro_chest_pain", "chest pain", "t2")]
 
 
 def _points(observations, field):

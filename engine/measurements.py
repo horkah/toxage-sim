@@ -7,7 +7,7 @@ week, so it is the same in every scenario."""
 import math
 import random
 
-from hazards import ILD
+from hazards import CV
 
 LAB_EVENTS = ("neutropenia", "febrile_neutropenia", "anaemia", "thrombocytopenia")
 
@@ -27,6 +27,21 @@ def _ild_effect(day, ild, rise_per_week, maximum, recovery_per_week):
     return effect
 
 
+def _warning_effect(day, cv, rise_per_week, maximum, recovery_per_week):
+    """Size of the effect of a cardiovascular warning phase on a day: grows
+    from its start until the event is recognised and treated, then falls.
+    Events without a warning phase have no effect in advance."""
+    if not cv or day < cv["onset_day"]:
+        return 0.0
+    peak_day = cv["diagnosis_day"] if cv["diagnosis_day"] is not None else day
+    if peak_day <= cv["onset_day"]:
+        return 0.0
+    effect = min(maximum, rise_per_week * (min(day, peak_day) - cv["onset_day"] + 7) / 7)
+    if day > peak_day:
+        effect = max(0.0, effect - recovery_per_week * (day - peak_day) / 7)
+    return effect
+
+
 def observations(draws, latent, regimen, params, course, mult):
     """Return the observation records of one patient in one scenario."""
     plan = course["plan"]
@@ -34,7 +49,7 @@ def observations(draws, latent, regimen, params, course, mult):
     m = params["measurements"]
     rates = regimen["severe_event_rates"]
     frailty = latent["frailty"]
-    ild = course["ild"]
+    ild, cv = course["ild"], course["cv"]
     by_week = {}
     for e in course["events"]:
         by_week.setdefault((e["day"] - 1) // 7, []).append(e)
@@ -44,7 +59,7 @@ def observations(draws, latent, regimen, params, course, mult):
     sens_a = math.sqrt(mult["anaemia"])
     sens_t = math.sqrt(mult["thrombocytopenia"])
     n_p, h_p, t_p = m["neutrophils"], m["haemoglobin"], m["platelets"]
-    s_p, y_p = m["spo2"], m["symptoms"]
+    s_p, y_p, b_p = m["spo2"], m["symptoms"], m["blood_pressure"]
 
     records = []
     for week, (status, dose, exposure) in enumerate(course["states"]):
@@ -83,8 +98,9 @@ def observations(draws, latent, regimen, params, course, mult):
             base = patient["spo2_percent"] if week == 0 else patient["spo2_percent"] + rng.gauss(0, s_p["noise_sd"])
             spo2 = round(_clip(base - drop, 50, 100))
 
-        fatigue = diarrhoea = cough = dyspnoea = None
-        if rng.random() >= y_p["missing"]:
+        fatigue = diarrhoea = cough = dyspnoea = chest_pain = None
+        reported = rng.random() >= y_p["missing"]
+        if reported:
             noise = lambda: rng.gauss(0, y_p["noise_sd"])
             level = lambda x: round(_clip(x + noise(), 0, 4))
             f = y_p["fatigue"]
@@ -107,11 +123,32 @@ def observations(draws, latent, regimen, params, course, mult):
             dyspnoea = level(b["base"] + b["lung_comorbidity_shift"] * patient["lung_comorbidity"]
                              + b["frailty_slope"] * max(0.0, frailty) + lung)
 
+        # Drawn after all other values of the week, so that those stay as they are.
+        pressure = None
+        if week == 0 or rng.random() >= b_p["missing"]:
+            pressure = patient["systolic_bp_mmhg"]
+            if week > 0:
+                pressure += rng.gauss(0, b_p["noise_sd"])
+            pressure += b_p["rise_per_hypertension_rate"] * rates.get("hypertension", 0.0) * exposure
+            pressure += _warning_effect(day + 6, cv, b_p["warning_rise_per_week"], b_p["warning_maximum"],
+                                        b_p["recovery_per_week"])
+            if "hypertension" in types:
+                pressure = rng.uniform(*b_p["hypertension_event_range"])
+            pressure = round(_clip(pressure, 60, 260))
+        if reported:
+            c = y_p["chest_pain"]
+            value = c["base"] + c["cardiovascular_disease_shift"] * patient["cardiovascular_disease"]
+            value += _warning_effect(day + 6, cv, c["warning_rise_per_week"], c["warning_maximum"],
+                                     c["recovery_per_week"])
+            if CV in types:
+                value = max(value, c["event_level"])
+            chest_pain = round(_clip(value + rng.gauss(0, y_p["noise_sd"]), 0, 4))
+
         records.append({
             "scenario_id": plan["scenario_id"], "patient_id": patient["patient_id"], "week": week, "day": day,
             "treatment_status": status, "dose_level": dose,
             "neutrophils_10e9_l": neutrophils, "haemoglobin_g_dl": haemoglobin, "platelets_10e9_l": platelets,
-            "spo2_percent": spo2, "pro_fatigue": fatigue, "pro_diarrhoea": diarrhoea,
-            "pro_cough": cough, "pro_dyspnoea": dyspnoea,
+            "spo2_percent": spo2, "systolic_bp_mmhg": pressure, "pro_fatigue": fatigue, "pro_diarrhoea": diarrhoea,
+            "pro_cough": cough, "pro_dyspnoea": dyspnoea, "pro_chest_pain": chest_pain,
         })
     return records

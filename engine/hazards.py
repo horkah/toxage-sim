@@ -8,6 +8,10 @@ import math
 from statistics import NormalDist
 
 ILD = "interstitial_lung_disease"
+CV = "cardiovascular_event"
+# Event types with risk factors of their own. The general patient factor, the
+# dose and the supportive measures of a risk-adapted start do not act on them.
+OWN_FACTORS = (ILD, CV)
 
 
 def time_weights(shape, weeks, params):
@@ -24,6 +28,8 @@ def time_weights(shape, weeks, params):
         raw = [(w + 1) * math.exp(-(w + 1) / s["mid"]["peak_weeks"]) for w in range(weeks)]
     elif shape == "cumulative":
         raw = [min(w + 1, s["cumulative"]["plateau_weeks"]) for w in range(weeks)]
+    elif shape == "constant":
+        raw = [1.0] * weeks
     elif shape == "ild":
         o = params["hazards"]["ild"]["onset_days"]
         dist = NormalDist(math.log(o["median"]), o["sigma"])
@@ -42,6 +48,10 @@ def target_probabilities(regimen, params):
     severe toxicity, if they were independent.
     """
     targets = dict(regimen["severe_event_rates"])
+    if regimen["cardiovascular_event_rate"] is not None:
+        # The published rate holds for the weeks of the trial.
+        share = params["simulation"]["calibration_weeks"] / params["hazards"]["cardiovascular"]["rate_window_weeks"]
+        targets[CV] = 1 - (1 - regimen["cardiovascular_event_rate"]) ** share
     none = 1.0
     for p in targets.values():
         none *= 1 - p
@@ -97,7 +107,40 @@ def multipliers(patient, latent, params):
     if patient["spo2_percent"] < 95:
         ild *= hr["spo2_below_95"]
     result[ILD] = ild
+    result[CV] = cardiovascular_multiplier(patient, latent, params)
     return result
+
+
+def cardiovascular_multiplier(patient, latent, params):
+    """Hazard multiplier for a major cardiovascular event under androgen
+    deprivation, relative to a man of the reference age on a GnRH agonist
+    without risk factors. 1 for patients without androgen deprivation, who
+    have no such hazard."""
+    if patient["adt_type"] is None:
+        return 1.0
+    c = params["hazards"]["cardiovascular"]
+    hr, other = c["hazard_ratios"], c["other_hazard_ratios"]
+    value = 1.0
+    if patient["adt_type"] == "gnrh_antagonist":
+        value *= hr["antagonist"]
+        if patient["prior_cardiovascular_event"]:
+            value *= hr["prior_event_with_antagonist"]
+    elif patient["prior_cardiovascular_event"]:
+        value *= hr["prior_event_with_agonist"]
+    if patient["cardiovascular_disease"] and not patient["prior_cardiovascular_event"]:
+        value *= other["cardiovascular_disease_without_event"]
+    value *= other["per_10_years_of_age"] ** ((patient["age_years"] - other["reference_age"]) / 10)
+    if patient["diabetes"]:
+        value *= other["diabetes"]
+    if patient["arterial_hypertension"]:
+        value *= other["arterial_hypertension"]
+    if patient["smoking_status"] == "current":
+        value *= other["current_smoker"]
+    elif patient["smoking_status"] == "former":
+        value *= other["former_smoker"]
+    if patient["renal_function"] == "moderate_severe_decrease":
+        value *= other["renal_moderate_severe_decrease"]
+    return value * math.exp(other["frailty_log_hazard_ratio"] * latent["frailty"])
 
 
 class HazardTable:
@@ -109,7 +152,7 @@ class HazardTable:
         self.params = params
         self.calibration = calibration or {}
         types = params["hazards"]["event_types"]
-        shapes = {s: time_weights(s, self.weeks, params) for s in ("early", "mid", "cumulative", "ild")}
+        shapes = {s: time_weights(s, self.weeks, params) for s in ("early", "mid", "cumulative", "constant", "ild")}
         self.targets = {name: target_probabilities(r, params) for name, r in regimens.items()}
         self.rows = {}
         for name, regimen in regimens.items():
@@ -137,17 +180,18 @@ class HazardTable:
 
     def for_patient(self, patient, latent, general_factor=1.0):
         """Return [(event type, hazard coefficient, weekly weights)] and the
-        multipliers. general_factor scales all hazards except lung toxicity."""
+        multipliers. general_factor scales the hazards of all event types
+        without risk factors of their own."""
         mult = multipliers(patient, latent, self.params)
         if general_factor != 1.0:
-            mult = {t: m if t == ILD else m * general_factor for t, m in mult.items()}
+            mult = {t: m if t in OWN_FACTORS else m * general_factor for t, m in mult.items()}
         rows = [(t, h * mult[t], w) for t, h, w in self.rows[patient["regimen"]]]
         return rows, mult
 
 
 def general_multiplier(patient, latent, params):
     """Patient-related factor that applies to all event types except lung
-    toxicity: frailty, age and bilirubin."""
+    toxicity and cardiovascular events: frailty, age and bilirubin."""
     g = params["hazards"]["general"]
     value = math.exp(g["frailty_log_hazard_ratio"] * latent["frailty"])
     value *= g["hazard_ratio_per_10_years_of_age"] ** ((patient["age_years"] - g["reference_age"]) / 10)

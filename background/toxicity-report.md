@@ -458,12 +458,12 @@ The candidates need these groups of variables:
 
 ### Where to start
 
-Candidate 1 as the baseline model and candidate 2 as the detection model are the best first pair.
+Candidate 1 as the baseline model and candidate 2 as the detection model are the best first pair. Candidate 5 for prostate cancer under androgen deprivation is the third.
 
 - Candidate 1 applies to all three patient groups, has the largest set of reference rates, and has a randomised trial showing that acting on the risk reduces toxicity.
 - Candidate 2 has the best described risk factors, a clear time window, simple signals that can be measured at home, and a measured delay in current care.
 
-Candidate 5 in prostate cancer under androgen deprivation is the strongest third option, because the guideline names the missing risk tool itself.
+- Candidate 5 in prostate cancer under androgen deprivation fills a gap that the guideline names itself: no risk tool exists. HERO gives the event rates by type of androgen deprivation and by earlier cardiovascular events.
 
 ## 9. Topics not covered by the current references
 

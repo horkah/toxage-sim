@@ -143,6 +143,7 @@ def scenario_summary(data):
             "participating": mean("participating"),
             "severe_90d": mean("severe_toxicity_90d"),
             "severe_events": sum(e["grade"] >= 3 for e in events) / n,
+            "cv_events": sum(o["cv_event"] for o in outcomes),
             "toxic_deaths": sum(o["death_from_toxicity"] for o in outcomes),
             "hospital_days": mean("hospital_days"),
             "alerts": mean("alerts"),
@@ -171,6 +172,7 @@ def summary(data, scenario_id=USUAL_CARE):
             "severe_90d": share(lambda i: outcome[i]["severe_toxicity_90d"]),
             "severe_any": share(lambda i: any(e["grade"] >= 3 for e in events.get(i, []))),
             "ild": share(lambda i: outcome[i]["ild"]),
+            "cv_event": share(lambda i: outcome[i]["cv_event"]),
             "dose_reduced": share(lambda i: any(e["action"] == "dose_reduction" for e in events.get(i, []))),
             "stopped_for_toxicity": share(lambda i: outcome[i]["treatment_end_reason"] == "toxicity"),
             "died": share(lambda i: outcome[i]["death_day"] is not None),
@@ -181,18 +183,18 @@ def summary(data, scenario_id=USUAL_CARE):
 def print_summary(data):
     if any(s["scenario_id"] == USUAL_CARE for s in data["scenario"]):
         print("\nUsual care, by regimen")
-        print(f"{'regimen':<28}{'n':>6}{'severe':>8}{'severe':>8}{'lung':>7}{'dose':>9}{'stopped':>9}{'died':>7}")
-        print(f"{'':<28}{'':>6}{'90 d':>8}{'any':>8}{'tox':>7}{'reduced':>9}{'for tox':>9}{'':>7}")
+        print(f"{'regimen':<28}{'n':>6}{'severe':>8}{'severe':>8}{'lung':>7}{'heart':>8}{'dose':>9}{'stopped':>9}{'died':>7}")
+        print(f"{'':<28}{'':>6}{'90 d':>8}{'any':>8}{'tox':>7}{'event':>8}{'reduced':>9}{'for tox':>9}{'':>7}")
         for r in summary(data):
-            print(f"{r['regimen']:<28}{r['n']:>6}{r['severe_90d']:>8.1%}{r['severe_any']:>8.1%}{r['ild']:>7.1%}"
+            print(f"{r['regimen']:<28}{r['n']:>6}{r['severe_90d']:>8.1%}{r['severe_any']:>8.1%}{r['ild']:>7.1%}{r['cv_event']:>8.1%}"
                   f"{r['dose_reduced']:>9.1%}{r['stopped_for_toxicity']:>9.1%}{r['died']:>7.1%}")
     print("\nScenarios, per patient")
-    print(f"{'scenario':<20}{'taking':>8}{'severe':>8}{'severe':>8}{'toxic':>8}{'hospital':>10}{'alerts':>8}"
+    print(f"{'scenario':<27}{'taking':>8}{'severe':>8}{'severe':>8}{'heart':>8}{'toxic':>8}{'hospital':>10}{'alerts':>8}"
           f"{'QALY':>8}{'cost of':>9}{'cost of':>9}")
-    print(f"{'':<20}{'part':>8}{'90 d':>8}{'events':>8}{'deaths':>8}{'days':>10}{'':>8}{'':>8}{'care':>9}{'interv.':>9}")
+    print(f"{'':<27}{'part':>8}{'90 d':>8}{'events':>8}{'events':>8}{'deaths':>8}{'days':>10}{'':>8}{'':>8}{'care':>9}{'interv.':>9}")
     for r in scenario_summary(data):
-        print(f"{r['scenario_id']:<20}{r['participating']:>8.1%}{r['severe_90d']:>8.1%}{r['severe_events']:>8.2f}"
-              f"{r['toxic_deaths']:>8}{r['hospital_days']:>10.2f}{r['alerts']:>8.2f}{r['qaly']:>8.3f}"
+        print(f"{r['scenario_id']:<27}{r['participating']:>8.1%}{r['severe_90d']:>8.1%}{r['severe_events']:>8.2f}"
+              f"{r['cv_events']:>8}{r['toxic_deaths']:>8}{r['hospital_days']:>10.2f}{r['alerts']:>8.2f}{r['qaly']:>8.3f}"
               f"{r['cost_care']:>9.0f}{r['cost_intervention']:>9.0f}")
 
 

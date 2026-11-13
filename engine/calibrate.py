@@ -3,7 +3,9 @@
 The script simulates a large cohort, compares the share of patients with at
 least one event of each type with the target from the literature, and adjusts
 a factor per regimen and event type. The comparison uses patients with ECOG 0
-or 1, who resemble trial patients, under usual care in the first 52 weeks. The factors are written to
+or 1, who resemble trial patients, under usual care in the first 52 weeks.
+Cardiovascular events are compared in the patients on a GnRH agonist, because
+the published rate is that of an agonist. The factors are written to
 config/calibration.json and used by generate.py.
 
 Usage: python3 engine/calibrate.py
@@ -29,6 +31,7 @@ def realised_rates(patients, thresholds, regimens, params, iv, calibration):
     weeks = params["simulation"]["calibration_weeks"]
     counts = {name: {} for name in regimens}
     sizes = {name: 0 for name in regimens}
+    agonists = {name: 0 for name in regimens}
     for _, _, _, result, _ in generate.run(patients, thresholds, generate.USUAL_CARE,
                                            regimens, params, iv, table, weeks):
         patient = result["plan"]["patient"]
@@ -36,12 +39,17 @@ def realised_rates(patients, thresholds, regimens, params, iv, calibration):
             continue
         name = patient["regimen"]
         sizes[name] += 1
+        agonist = patient["adt_type"] == "gnrh_agonist"
+        agonists[name] += agonist
         seen = {e["event_type"] for e in result["events"] if e["event_type"] != hazards.ILD}
         if result["ild"]:
             seen.add(hazards.ILD)
+        if not agonist:
+            seen.discard(hazards.CV)
         for event_type in seen:
             counts[name][event_type] = counts[name].get(event_type, 0) + 1
-    return {name: {t: c / sizes[name] for t, c in counts[name].items()} for name in regimens}, table.targets
+    size = lambda name, t: agonists[name] if t == hazards.CV else sizes[name]
+    return {name: {t: c / size(name, t) for t, c in counts[name].items()} for name in regimens}, table.targets
 
 
 def calibrate(config=None, write=True, progress=None):

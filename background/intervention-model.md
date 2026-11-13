@@ -83,7 +83,7 @@ onset ─► mild ─► moderate ─► severe ─► life-threatening ─► f
 
 The stage times and ceilings are set so that the scenario "usual care" gives the same event rates and grade distributions as the engine gives today. The published values stay the calibration targets.
 
-For lung toxicity the published delay supports this structure directly: onset was set earlier by the adjudication committee for 53% of events, with a median difference of 43 days (Powell et al., 2022). For other event types the length of the early phase is an assumption.
+For lung toxicity the published delay supports this structure directly: onset was set earlier by the adjudication committee for 53% of events, with a median difference of 43 days (Powell et al., 2022). For other event types the length of the early phase is an assumption. Cardiovascular events are a special case: only a part of them has a phase with warning signs, such as unstable angina, a transient ischaemic attack or rising blood pressure. The others come without notice, and no detection can prevent them. The engine assumes a warning phase for half of the events.
 
 ### 3.4 Actions
 
@@ -189,7 +189,8 @@ This makes statements on the level of single patients possible, for example: "In
 | Risk-adapted start | Prediction at therapy start, adapted dose, prophylaxis and supportive measures for flagged patients | Candidate 1 |
 | Symptom monitoring | Weekly reports with alerts for all event types | The intervention of PRO-TECT |
 | Lung monitoring | Oxygen saturation and symptoms at home for patients on trastuzumab deruxtecan, with a detection model | Candidate 2 |
-| Combined | All three | Joint effect |
+| Cardiovascular monitoring | Blood pressure and chest symptoms at home for men under androgen deprivation, with a detection model | Candidate 5 |
+| Combined | All four | Joint effect |
 | Perfect detection | As combined, with full participation and a detector that knows the truth | Upper limit |
 
 Further scenarios come from varying single parameters, for example uptake, sensitivity or false alert rate. This shows which step of the chain limits the benefit.
@@ -221,7 +222,7 @@ Further scenarios come from varying single parameters, for example uptake, sensi
 | | Threshold or share flagged | none |
 | Detection | Sensitivity per stage | none; later from the real risk model |
 | | False alerts per patient-week | PRO-TECT: alerts in 33.9% of surveys under fixed thresholds |
-| Natural course | Time per stage, ceiling grade | Lung toxicity: recognition delay in Powell et al. (2022), grades in Modi et al. (2022) |
+| Natural course | Time per stage, ceiling grade | Lung toxicity: recognition delay in Powell et al. (2022), grades in Modi et al. (2022). Cardiovascular events: share and length of the warning phase are assumptions |
 | Actions at start | Share of flagged patients with reduced dose | GAP70+: 48.7% against 35.0% |
 | | Effect of supportive measures on the hazard | GAP70+: relative risk 0.74 for the whole bundle |
 | Actions after alert | Share of alerts with action | PRO-TECT: 59.1% |
@@ -252,9 +253,9 @@ The engine implements the model with the parameters in `engine/config/interventi
 | Alert fatigue | Not implemented. |
 | Link from dose received to tumour control | Parameter exists, switched off. |
 | Same patients, same chance | Implemented with fixed random numbers per patient, purpose and week. |
-| Scenarios | The six scenarios of section 4.2. |
+| Scenarios | The seven scenarios of section 4.2. |
 
-The check against GAP70+ holds: flagged patients who take part in the risk-adapted start have severe toxicity within 90 days in 55% against 72% in usual care, a relative risk of 0.76.
+The check against GAP70+ holds: flagged patients who take part in the risk-adapted start have severe toxicity within 90 days in 56% against 72% in usual care, a relative risk of 0.78.
 
 Open parts:
 

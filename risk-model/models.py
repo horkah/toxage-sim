@@ -1,9 +1,11 @@
-"""Risk models for candidates 1 and 2.
+"""Risk models for candidates 1, 2 and 5.
 
 Candidate 1: any adverse event of grade 3 to 5 within 90 days (logistic model).
 Candidate 2: interstitial lung disease or pneumonitis (proportional hazards).
+Candidate 5: major cardiovascular events under androgen deprivation
+(proportional hazards, with an effect that depends on the type of therapy).
 
-Both models take one baseline record (schema/baseline.schema.json) and need
+All models take one baseline record (schema/baseline.schema.json) and need
 only the Python standard library.
 """
 import itertools
@@ -161,16 +163,109 @@ def ild_risk(patient, cfg, baseline_risk=None):
     return 1 - (1 - r0) ** ratio
 
 
+# Candidate 5 ----------------------------------------------------------------
+
+# Yes-or-no risk factors of candidate 5 next to the earlier cardiovascular
+# event and age: name in the configuration, test on a patient.
+CV_FACTORS = {
+    "diabetes": lambda p: p["diabetes"],
+    "arterial_hypertension": lambda p: p["arterial_hypertension"],
+    "current_smoker": lambda p: p["smoking_status"] == "current",
+    "renal_moderate_severe_decrease": lambda p: p["renal_function"] == "moderate_severe_decrease",
+}
+
+CV_LABELS = {
+    "prior_cardiovascular_event": "earlier myocardial infarction or stroke",
+    "cv_age": "age",
+    "diabetes": "diabetes",
+    "arterial_hypertension": "arterial hypertension",
+    "current_smoker": "current smoker",
+    "renal_moderate_severe_decrease": "renal function moderately or severely decreased",
+}
+
+ADT_LABELS = {"gnrh_agonist": "GnRH agonist", "gnrh_antagonist": "GnRH antagonist"}
+
+
+def cv_applicable(patient, cfg):
+    return patient.get("adt_type") in cfg["cardiovascular"]["adt_rates"]
+
+
+def cv_terms(patient, cfg):
+    """Return the risk factors of candidate 5 that apply to the patient.
+
+    Each term is (factor, label, hazard ratio). Age is always listed.
+    """
+    m = cfg["cardiovascular"]
+    terms = []
+    if patient["prior_cardiovascular_event"]:
+        adt = patient["adt_type"]
+        terms.append(("prior_cardiovascular_event",
+                      f"{CV_LABELS['prior_cardiovascular_event']}, under a {ADT_LABELS[adt]}",
+                      m["prior_event_hazard_ratios"][adt]["value"]))
+    hr = m["hazard_ratios"]
+    ref_age = m["reference_patient"]["age_years"]
+    age = patient["age_years"]
+    terms.append(("cv_age", f"{age} years (reference {ref_age})",
+                  hr["per_10_years_of_age"]["value"] ** ((age - ref_age) / 10)))
+    terms += [(name, CV_LABELS[name], hr[name]["value"]) for name, test in CV_FACTORS.items() if test(patient)]
+    return terms
+
+
+def cv_reference_rate(adt, cfg):
+    """Published rate of the type of androgen deprivation, brought from the
+    weeks of the trial to the time window of the model."""
+    m = cfg["cardiovascular"]
+    return 1 - (1 - m["adt_rates"][adt]["rate"]) ** (m["window_days"] / m["rate_window_days"])
+
+
+def cv_baseline_risk(adt, cfg):
+    """Risk r0 of a man of the reference age without risk factors on the given
+    type of androgen deprivation.
+
+    A fitted configuration stores r0 directly. Otherwise r0 is chosen so that
+    the mean risk in the reference population equals the published rate.
+    """
+    m = cfg["cardiovascular"]
+    entry = m["adt_rates"][adt]
+    if "baseline_risk" in entry:
+        return entry["baseline_risk"]
+    ref = m["reference_population"]
+    prior = ref["prior_cardiovascular_event"][adt]
+    factors = [(prior, m["prior_event_hazard_ratios"][adt]["value"])]
+    factors += [(ref[name], m["hazard_ratios"][name]["value"]) for name in CV_FACTORS]
+    profiles = []
+    for combo in itertools.product(*[((1 - share, 1.0), (share, ratio)) for share, ratio in factors]):
+        profiles.append((math.prod(s for s, _ in combo), math.prod(r for _, r in combo)))
+    target = cv_reference_rate(adt, cfg)
+    low, high = 0.0, target
+    for _ in range(60):
+        mid = (low + high) / 2
+        mean = sum(share * (1 - (1 - mid) ** ratio) for share, ratio in profiles)
+        low, high = (mid, high) if mean < target else (low, mid)
+    return (low + high) / 2
+
+
+def cv_risk(patient, cfg, baseline_risk=None):
+    """Probability of a major cardiovascular event within the time window, or
+    None if the model does not apply."""
+    if not cv_applicable(patient, cfg):
+        return None
+    r0 = baseline_risk if baseline_risk is not None else cv_baseline_risk(patient["adt_type"], cfg)
+    ratio = math.prod(t[2] for t in cv_terms(patient, cfg))
+    return 1 - (1 - r0) ** ratio
+
+
 # Scores for the app -----------------------------------------------------------
 
 class Scorer:
-    """Both models with one configuration. Writes the scores of a patient as
+    """All models with one configuration. Writes the scores of a patient as
     one record of schema/risk_score. The interface for single models, as the
     app uses it, is in toxage_risk.py."""
 
     def __init__(self, cfg=None):
         self.cfg = cfg or load_config()
         self.ild_r0 = {r: ild_baseline_risk(r, self.cfg) for r in self.cfg["ild"]["regimen_rates"]}
+        self.cv_r0 = {a: cv_baseline_risk(a, self.cfg) for a in self.cfg["cardiovascular"]["adt_rates"]}
 
     def score(self, patient):
         """Return one risk score record."""
@@ -188,7 +283,18 @@ class Scorer:
             "ild_grade2plus_risk": None,
             "ild_regimen_rate": None,
             "ild_category": None,
+            "cv_applicable": cv_applicable(patient, self.cfg),
+            "cv_risk": None,
+            "cv_reference_rate": None,
+            "cv_category": None,
         }
+        if record["cv_applicable"]:
+            risk = cv_risk(patient, self.cfg, self.cv_r0[patient["adt_type"]])
+            record.update(
+                cv_risk=risk,
+                cv_reference_rate=cv_reference_rate(patient["adt_type"], self.cfg),
+                cv_category=category(risk, self.cfg["cardiovascular"]["categories"]),
+            )
         if record["ild_applicable"]:
             risk = ild_risk(patient, self.cfg, self.ild_r0[patient["regimen"]])
             record.update(
@@ -203,7 +309,8 @@ class Scorer:
         """Return the factors behind the scores of one patient, for display.
 
         Candidate 1 lists odds ratios against the reference patient on the same
-        regimen, candidate 2 hazard ratios against a patient without risk factors.
+        regimen, candidates 2 and 5 hazard ratios against a patient without risk
+        factors.
         """
         regimen = patient["regimen"]
         c1 = self.cfg["severe_toxicity_90d"]
@@ -231,6 +338,20 @@ class Scorer:
                 "factors": [
                     {"factor": f, "value": label, "hazard_ratio": r}
                     for f, label, r in ild_terms(patient, self.cfg)
+                ],
+            }
+        out["cardiovascular"] = None
+        if cv_applicable(patient, self.cfg):
+            adt = patient["adt_type"]
+            out["cardiovascular"] = {
+                "start": {
+                    "label": f"man of the reference age without risk factors on a {ADT_LABELS[adt]}",
+                    "risk": self.cv_r0[adt],
+                    "source": self.cfg["cardiovascular"]["adt_rates"][adt].get("source"),
+                },
+                "factors": [
+                    {"factor": f, "value": label, "hazard_ratio": r}
+                    for f, label, r in cv_terms(patient, self.cfg)
                 ],
             }
         return out
