@@ -1,0 +1,37 @@
+# Start with:  docker compose up -d --build
+# Locally the app is also at http://localhost:8000. Data stay in the volume toxage-data.
+services:
+  app:
+    build:
+      context: .
+      # The commit becomes part of the build stamp; the justfile sets it.
+      args:
+        GIT_COMMIT: ${GIT_COMMIT:-}
+    image: toxage-sim
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    volumes:
+      - toxage-data:/data
+    networks:
+      - proxy_net
+    labels:
+      caddy: ${APP_DOMAIN:-localhost}
+      caddy.reverse_proxy: "{{upstreams 8000}}"
+    environment:
+      TOXAGE_ALLOWED_HOSTS: "${TOXAGE_ALLOWED_HOSTS:-localhost,127.0.0.1}"
+      TOXAGE_CSRF_TRUSTED_ORIGINS: "${TOXAGE_CSRF_TRUSTED_ORIGINS:-http://localhost:8000}"
+      TOXAGE_READ_ONLY: "${TOXAGE_READ_ONLY:-0}"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  proxy_net:
+    name: ${DOCKER_NETWORK:-default}
+    external: ${DOCKER_NETWORK_EXTERNAL:-false}
+
+volumes:
+  toxage-data:
