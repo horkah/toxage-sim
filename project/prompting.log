@@ -104,16 +104,6 @@ everything always in main for this repo.
 bitte bereite die app als docker container deployment vor, und überlege ein leichtgewichtiges und doch gut funktionales datenbankschema. ich kann mir sqlite als technologie in dem docker vorstellen, bei dem die daten sauber auf SDD gehalten werden. aber du darfst auch andere begründete verianten wählen, wenn die besser passen. die daten sollen ebenfalls von der app ausgehend generiert, inspiziert und sinnvoll in teilen oder ganz gelöscht werden können. bitte stelle sicher, dass alle aspekte des projekts stets durch geeignete subscreens und menüführungen über die app erreichbar sind, also auch alle modellparameter (sinnvolle defaults sind im repo, aber der user kann davon abweichen und auch wieder zu den defaults zurück diese änderungen so
 
 ================================================================================
-2026-11-12 21:58 (+01:00) | model: claude-fable-5-2 | attachments: none
---------------------------------------------------------------------------------
-der letzte prompt war gedacht, dass du ihn ausführst, nachdem der vorherige abgeschlossen ist.
-
-================================================================================
-2026-11-13 07:50 (+01:00) | model: claude-fable-5-2 | attachments: none
---------------------------------------------------------------------------------
-Resume
-
-================================================================================
 2026-11-13 08:25 (+01:00) | model: claude-fable-5-2 | attachments: none
 --------------------------------------------------------------------------------
 Equip the project with just (justfile covering all relevant tasks on the system console level) and uv (for python environment deployment encapsulation) that should be quick
@@ -124,26 +114,11 @@ Equip the project with just (justfile covering all relevant tasks on the system 
 Now add a tutorial and a demo mode to the app. Demo is Like a tutorial where text hints and explanations are pointing to the features and options, but in auto mode. So the tutorial would guide the user step by step through all the features of the app including simulation and risk model aspects. Yes, I mean all. Can be long , don't worry. In the tutorial mode, the user would click on the buttons and options herself. In the demo mode, a speed parameter can be adjusted, both in relation to how many words in the text hints need how many seconds to read, and in relation to how long a new screen status is shown before the next step with new hint appears. Then after this duration, the step is automatically done (trigger pushed, view selected, parameter adjusted, etc). Just make sure that while datasets are created and parameters adjusted that at the end of the demo, the system is through stepwise deletions of the data and readjustment of parameters, or if you like a full reset to defaults and manual wipe of the database, is exactly in the original state that it was at the beginning of the demo. In the tutorial it is different. The user is in control there, so the system can only hint to reset options and such. Offer the tutorial and demo at app launch after the license agreement and also this new offer can be turned off, and turned on again in the settings, and also be invoked directly anytime in the. Hamburger menu.
 
 ================================================================================
-2026-11-13 12:47 (+01:00) | model: claude-fable-5-2 | attachments: none
---------------------------------------------------------------------------------
-Versuch es noch einmal
-
-================================================================================
-2026-11-13 12:51 (+01:00) | model: claude-fable-5-2 | attachments: none
---------------------------------------------------------------------------------
-Ich habe mein Nutzungslimit erreicht, während du gearbeitet hast, aber es wurde inzwischen zurückgesetzt. Bitte mache dort weiter, wo du aufgehört hast.
-
-================================================================================
 2026-11-13 13:43 (+01:00) | model: claude-fable-5-2 | attachments: none
 --------------------------------------------------------------------------------
 please now add in all parts of the project a third risk category: cardiovascular events. use the best knowledge you have found, make a mid-complexity risk model for it, and add it to data generation, risk models, and app, such that it in no way less implemented than the other two existing risk categories. 
 
 all on main as always, commit push, then close session
-
-================================================================================
-2026-11-13 17:51 (+01:00) | model: claude-fable-5-2 | attachments: none
---------------------------------------------------------------------------------
-Ich habe mein Nutzungslimit erreicht, während du gearbeitet hast, aber es wurde inzwischen zurückgesetzt. Bitte mache dort weiter, wo du aufgehört hast.
 
 ================================================================================
 2026-11-13 18:10 (+01:00) | model: claude-opus-5-5 | attachments: none
