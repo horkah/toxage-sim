@@ -172,3 +172,18 @@ What can you do about it?
 
 
 please fix
+
+================================================================================
+2026-11-14 00:49 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+same error. 
+
+Looks like there’s a problem with this site
+The server at toxage-sim.bitzz.de sent back an error: 405 Method Not Allowed
+What can you do about it?
+
+* Check to make sure you’ve typed the website address correctly.
+* The site could be temporarily unavailable or too busy. Try again in a few moments.
+
+
+it comes in one of the last steps, deleting a scenario was still working fine, but deleting a dataset (just the step after) was failing

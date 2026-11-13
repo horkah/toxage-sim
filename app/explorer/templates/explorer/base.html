@@ -13,10 +13,10 @@
     } catch (e) {}
   </script>
   <link rel="icon" type="image/svg+xml" href="{% static 'explorer/img/logo.svg' %}">
-  <link rel="stylesheet" href="{% static 'explorer/style.css' %}?v={{ app_version }}">
-  <script type="module" src="{% static 'explorer/app.js' %}?v={{ app_version }}"></script>
-  <script type="module" src="{% static 'explorer/charts.js' %}?v={{ app_version }}"></script>
-  {% block tour %}<script type="module" src="{% static 'explorer/tour.js' %}?v={{ app_version }}"></script>{% endblock %}
+  <link rel="stylesheet" href="{% static 'explorer/style.css' %}?v={{ app_version }}-{{ app_build|urlencode:'' }}">
+  <script type="module" src="{% static 'explorer/app.js' %}?v={{ app_version }}-{{ app_build|urlencode:'' }}"></script>
+  <script type="module" src="{% static 'explorer/charts.js' %}?v={{ app_version }}-{{ app_build|urlencode:'' }}"></script>
+  {% block tour %}<script type="module" src="{% static 'explorer/tour.js' %}?v={{ app_version }}-{{ app_build|urlencode:'' }}"></script>{% endblock %}
 </head>
 <body data-read-only="{{ read_only|yesno:'1,0' }}" data-tour-snapshot="{{ tour_snapshot|yesno:'1,0' }}" data-section="{{ section }}">
   <div class="loadbar" aria-hidden="true"></div>

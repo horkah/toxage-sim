@@ -268,6 +268,15 @@ class AboutTest(TestCase):
         self.assertContains(response, "Authors and credits")
         self.assertContains(self.client.get("/schema/"), f"toxage-sim {VERSION} · build {BUILD}")
 
+    def test_every_build_loads_new_scripts(self):
+        from urllib.parse import quote
+        from toxage_app.version import BUILD, VERSION
+        page = self.client.get("/about/")
+        self.assertContains(page, f"explorer/app.js?v={VERSION}-{quote(BUILD, safe='')}")
+        script = self.client.get("/static/explorer/tour-steps.js")
+        self.assertEqual(script["Cache-Control"], "no-cache")     # the browser asks every time
+        self.assertTrue(script.has_header("Last-Modified"))
+
     def test_version_follows_the_environment_and_the_build_file(self):
         import importlib
         import os

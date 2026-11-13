@@ -280,12 +280,25 @@ function hide() {
   delete document.documentElement.dataset.tourAuto;
 }
 
+// Wait until the page has the answer to its running request, at most 60
+// seconds. A deletion is done on the server before its answer arrives (giving
+// back disk space takes a while); moving on earlier would cancel the request.
+async function settled() {
+  const started = Date.now();
+  while (Number(document.documentElement.dataset.requests || 0) > 0 && Date.now() - started < 60000) {
+    await sleep(POLL / 4);
+  }
+}
+
 async function until(step, patient) {
   // Wait for the result of a step. Returns false if the tour moved on meanwhile.
   const mine = run, started = Date.now();
   for (;;) {
     if (mine !== run) return false;
-    if (!step.until || await step.until(api)) return mine === run;
+    if (!step.until || await step.until(api)) {
+      await settled();
+      return mine === run;
+    }
     if (!patient && Date.now() - started > PATIENCE) return true;
     await sleep(POLL);
   }

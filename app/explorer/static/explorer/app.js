@@ -125,6 +125,13 @@ let controller = null;
 let pollTimer = null;
 let shown = null;       // path and query of the page on screen
 let leaving = false;    // the browser is leaving the page
+let running = 0;        // requests of the page script without an answer yet
+
+// The tour waits for data-requests="0" before it moves to another page.
+function count(by) {
+  running = Math.max(0, running + by);
+  document.documentElement.dataset.requests = String(running);
+}
 
 const here = () => location.pathname + location.search;
 
@@ -202,6 +209,7 @@ export async function visit(href, options = {}) {
   if (!options.only) controller?.abort();
   const mine = options.only ? new AbortController() : (controller = new AbortController());
   document.documentElement.classList.add("loading");
+  count(1);
   let response;
   try {
     response = await fetch(url.href, {
@@ -215,6 +223,7 @@ export async function visit(href, options = {}) {
     else if (next === "message") toast("The server could not be reached. Please try again.");
     return;
   } finally {
+    count(-1);
     if (mine === controller || options.only) document.documentElement.classList.remove("loading");
   }
   // A page that answers a form in place says under which address it can be loaded again.
@@ -224,6 +233,13 @@ export async function visit(href, options = {}) {
   const doc = html && new DOMParser().parseFromString(html, "text/html");
   // Leave the in-place mode for pages outside the app's frame, e.g. the disclaimer.
   if (!doc || !doc.getElementById("main") || !doc.getElementById("nav") || !swappable(final, location.origin)) {
+    // An answer to a sent form that is no page of the app, e.g. an error page,
+    // must not be loaded by its address: that would send the form's address as
+    // a GET, which a POST address such as /data/delete/ refuses with 405.
+    if (method !== "GET" && !response.redirected) {
+      toast(`The server answered with an error (${response.status}). Please try again.`);
+      return;
+    }
     location.href = final.href;
     return;
   }
