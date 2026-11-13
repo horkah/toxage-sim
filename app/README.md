@@ -2,23 +2,45 @@
 
 Web app to inspect the synthetic data and the risk scores: for the whole cohort, for a filtered part of it, and for one patient compared with the others.
 
-It is built with Django and nothing else. The pages are Django templates, the charts are drawn as SVG by a small web component in plain JavaScript.
+It is built with Django and nothing else; gunicorn serves it in the container. The pages are Django templates, the charts are drawn as SVG by a small web component in plain JavaScript. Besides the explorer the app manages the data sets and the model parameters and shows the schema and the documents of the project.
 
-## Run
+## Run with Docker
+
+```bash
+docker compose up -d --build
+```
+
+Then open http://localhost:8000, accept the terms, and generate a first data set on the page "Data". The database and the secret key are in the volume `toxage-data`, so they survive a new container.
+
+| Variable | Meaning | Default in the container |
+|---|---|---|
+| `TOXAGE_ALLOWED_HOSTS` | Host names under which the app is reached, separated by commas | `*` |
+| `TOXAGE_CSRF_TRUSTED_ORIGINS` | Addresses with scheme from which forms may be sent; needed behind a proxy with HTTPS | empty |
+| `TOXAGE_READ_ONLY` | `1`: data and parameters can be viewed but not changed | `0` |
+| `TOXAGE_SECRET_KEY` | Secret key; without it one is created once and kept in the data folder | created |
+| `TOXAGE_DATA_DIR` | Folder of the database and the secret key | `/data` |
+| `TOXAGE_DEBUG` | `1` for development | `0` |
+
+The image holds the app, the engine, the risk models, the schema and the documents, without the PDFs of the literature. It runs gunicorn with one worker process and several threads. One process is required: data sets are generated in a thread of the server process, and the rows of a scenario are kept in its memory.
+
+The app has no login. Everyone who reaches it can generate and delete data and change parameters, unless `TOXAGE_READ_ONLY=1` is set. It is a demonstrator for a trusted network.
+
+## Run for development
 
 ```bash
 pip install -r app/requirements.txt
 cd app
 python3 manage.py migrate
-python3 manage.py load_cohort --n 1500 --seed 1
 python3 manage.py runserver
 ```
 
-Then open http://localhost:8000. `load_cohort` generates patients with the [engine](../engine/) under all intervention scenarios, stores them and replaces the data that were stored before. `--scenarios` limits the scenarios. 1500 patients take about 20 seconds and 40 MB. The risks come from the [risk models](../risk-model/) and are computed when a page is shown.
+Then open http://localhost:8000. Data sets are generated on the page "Data" or from the command line:
 
-After a change of the storage model, delete `app/db.sqlite3` and run `migrate` and `load_cohort` again. The database is the file `app/db.sqlite3`, which is not under version control.
+```bash
+python3 manage.py load_cohort --n 1500 --seed 1
+```
 
-Environment variables for a deployment: `TOXAGE_DEBUG=0`, `TOXAGE_SECRET_KEY`, `TOXAGE_ALLOWED_HOSTS` (comma-separated), `TOXAGE_DB` (path of the database file).
+`load_cohort` replaces the stored data sets unless `--keep` is given; `--scenarios` limits the scenarios. The database is the file `app/db.sqlite3`, which is not under version control. After a change of the storage model in development, delete this file and run `migrate` again.
 
 ## Tests
 
@@ -29,6 +51,19 @@ node --test "explorer/tests/*.test.mjs"
 ```
 
 The first command tests the Python code, the second the chart helpers in JavaScript. Node.js is only needed for the second.
+
+## Sections
+
+The bar at the top and the menu lead to every part of the project:
+
+| Section | Content |
+|---|---|
+| Explore | Cohort and single patient: risk, patient characteristics, course over time, interventions |
+| Data | Stored data sets: generate, choose for the explorer, inspect records, download as CSV, delete a scenario, a data set or everything |
+| Parameters | All model parameters of the engine and the risk models, with their defaults and notes; change, save, reset |
+| Schema | Tables and fields of the central data schema |
+| Documents | The documents of the repository: project overview, toxicity report, references, intervention model, the components, internal documentation, prompt log |
+| Disclaimer and licence | Terms of use; in the menu |
 
 ## How it works
 
@@ -76,6 +111,40 @@ The status bar shows the size of the selection and, per risk model, the observed
 
 The charts per characteristic are built from the schema as well, so new fields appear without code changes. Categories come from the allowed values, from small integer ranges, or from round bins; a long tail of large values goes into an open top bin.
 
+### Data sets
+
+A data set is one cohort, simulated under one or several scenarios with the parameters of that moment. Several data sets can be stored side by side. The explorer shows the data set chosen on the page "Data", else the newest.
+
+Generating runs in the background. The page shows the progress and reloads until the data set is ready. If the server restarts meanwhile, the data set is marked as failed and can be deleted. The form offers to calibrate the event rates again first; this is needed after changes of the regimens or the simulation parameters and takes about a minute.
+
+Records can be inspected table by table in the layout of the [schema](../schema/), by scenario and by patient, and downloaded as CSV files that `schema/toxage_schema.py` reads back.
+
+Deleting a scenario removes the courses of all patients in it; the last scenario of a data set stays. Deleting gives the space on disk back at once.
+
+### Parameters
+
+The defaults are the JSON files of the repository: `engine/config/regimens.json`, `parameters.json`, `interventions.json` and `risk-model/config/models.json`. Each value can be changed in the app. Only the changed values are stored, in the database, and they stay until they are reset: one value, one file, or everything. Changed values are marked, and the default is shown next to each.
+
+- Engine parameters apply to data sets generated from then on. A data set keeps the changed values it was made with and shows their number.
+- Risk model parameters apply to the risks in the explorer at once.
+- Texts that explain a value, such as its source, are shown and cannot be changed.
+- A value keeps the type of its default: number, true or false, text, or a list in JSON notation.
+
+### Storage
+
+The database is SQLite in one file, with four tables:
+
+| Table | Content |
+|---|---|
+| Dataset | Name, size, seed, state and progress, scenarios, record counts, and the changed parameters it was made with |
+| Patient | One patient of a data set with the baseline record |
+| Course | One patient in one scenario: outcome, adverse events, alerts, and the weekly observations as one list per field |
+| Setting | The changed values of one parameter file |
+
+Records are stored as JSON in the layout of the schema, so the database needs no change when the schema grows. The outcome is kept apart from the bulky observations, so that cohort views read only what they need. 1500 patients under six scenarios take about 40 MB.
+
+SQLite fits because there is one server process, the data are written once per data set and then only read, and one file in a volume is easy to keep and to back up. Write-ahead logging lets pages be read while a data set is stored and keeps disk writes low. A database server would be the choice for several server processes or many users writing at the same time; Django makes that change a matter of settings.
+
 ### Settings
 
 The menu holds the settings: bright, dark or system theme, and a larger text size. They are stored in the browser (local storage).
@@ -85,8 +154,11 @@ The menu holds the settings: bright, dark or system theme, and a larger text siz
 | File | Content |
 |---|---|
 | `toxage_app/settings.py` | Settings, including the version of the terms |
-| `explorer/models.py` | Data set, patients and one course per patient and scenario; records are stored in the layout of the schema |
-| `explorer/store.py` | Writes generated data into the database |
+| `explorer/models.py` | Data sets, patients, one course per patient and scenario, and the changed parameters |
+| `explorer/store.py` | Generates data sets in the background, stores them, reads records, exports CSV, deletes |
+| `explorer/params.py` | Model parameters: defaults from the repository, changes of the user |
+| `explorer/pages.py` | Pages for data sets, records, parameters, schema and documents |
+| `explorer/docs.py` | The documents of the repository and a small Markdown renderer |
 | `explorer/cohort.py` | Loads the patients, adds the risks of all models, describes the schema fields |
 | `explorer/filters.py` | Filters built from schema and risk models |
 | `explorer/charts.py` | Data of the risk charts and key numbers |
@@ -96,12 +168,15 @@ The menu holds the settings: bright, dark or system theme, and a larger text siz
 | `explorer/static/explorer/charts.js` | Web component `<tox-chart>` that draws the charts |
 | `explorer/static/explorer/app.js` | Settings and filter form |
 | `explorer/static/explorer/style.css` | Layout and colours for bright and dark mode |
-| `explorer/management/commands/load_cohort.py` | Generates and stores a cohort |
+| `explorer/management/commands/load_cohort.py` | Generates and stores a data set from the command line |
+| `../Dockerfile`, `../docker-compose.yml` | Container image and its start |
 | `explorer/tests/` | Tests |
 
 ## Limits
 
-- The app always shows the newest data set. Generating and deleting data needs the command line.
+- The app has no login and no user accounts. Parameters and data sets are shared by all users.
+- One data set is generated at a time, and at most 20 000 patients per data set.
+- The Markdown renderer covers what the documents of the repository use, not all of Markdown.
 - The risk models describe the risk at therapy start without an intervention. In a scenario with an intervention the observed rates are lower than predicted.
 - The charts of the Risk view show time to event within the window of the risk model. The longer course is in the view "Course over time".
 - All patients are loaded and scored on every request. This is fast enough for some ten thousand patients.

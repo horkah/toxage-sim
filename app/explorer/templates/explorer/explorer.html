@@ -16,13 +16,14 @@
 
 {% block menu_about %}
 <h3>Data set</h3>
-<p class="muted">{{ total }} synthetic patients, seed {{ dataset.metadata.seed }},
+<p class="muted">“{{ dataset.name }}”: {{ total }} synthetic patients, seed {{ dataset.metadata.seed }},
   {{ scenarios|length }} scenarios, followed for up to {{ dataset.metadata.weeks }} weeks,
   schema {{ dataset.metadata.schema_version.baseline }}, generated {{ dataset.created|date:"Y-m-d H:i" }} UTC.</p>
 {% endblock %}
 
 {% block status %}
 <div class="statusbar top" role="status">
+  <span><a href="{% url 'data' %}" title="Data sets">{{ dataset.name }}</a></span>
   <span><b>{{ selection }}</b> of {{ total }} patients
     {% if active_count %}· {{ active_count }} filter{{ active_count|pluralize }} active{% endif %}</span>
   {% for s in summaries %}

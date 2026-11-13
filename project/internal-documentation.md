@@ -16,7 +16,7 @@ Technical and organisational details that go beyond the public [README](../READM
 | `schema/` | Central data schema | scenario, baseline, observation, event, alert and outcome table (version 0.3.0), risk_score table (version 0.1.1), Python loader, validator, CSV reader and writer |
 | `engine/` | Synthetic data generator | weekly microsimulation until death or ten years, five subgroups, ten regimens, six intervention scenarios, calibration, tests |
 | `risk-model/` | Toxicity risk model | common interface, baseline models for candidates 1 and 2, fitting, evaluation, tests, list of extensions |
-| `app/` | Inspection app | Django app with disclaimer, cohort and patient view, scenarios, course over time, comparison of interventions, filters and charts built from schema and risk models, tests |
+| `app/` | Inspection app | Django app with disclaimer, explorer (risk, characteristics, course over time, interventions), data sets, parameters, schema and documents; Docker image; tests |
 | `project/` | Project management, internal documentation | prompt log, start prompt, this file |
 
 ## Literature
@@ -89,12 +89,16 @@ The copyrighted PDFs must not be in the repository when it becomes public. Befor
 
 ## App
 
-- The app needs Django and nothing else (`app/requirements.txt`). Pages are Django templates, charts are drawn by a web component in plain JavaScript.
-- `python3 manage.py load_cohort` generates patients with the engine under all scenarios and stores them in `app/db.sqlite3`, which is not under version control. Each patient has one course per scenario with outcome, events, alerts and weekly observations.
+- The app needs Django, and gunicorn in the container (`app/requirements.txt`). Pages are Django templates, charts are drawn by a web component in plain JavaScript.
+- `Dockerfile` and `docker-compose.yml` are in the repository root, because the image needs engine, risk model, schema and documents next to the app. The image was written and its start command tested outside a container; the image build itself has not been run yet.
+- The server must run as one process. Data sets are generated in a thread of that process, and the rows of a scenario are kept in its memory.
+- Model parameters: the JSON files of the repository are the defaults. The app stores only changed values, per file, in the table Setting. `params.engine_config()` gives the engine its configuration; the engine itself never reads the database.
+- A new document for the app is one line in `explorer/docs.py`. A new parameter file is one entry in `explorer/params.py`.
+- Data sets are generated on the page "Data" or with `python3 manage.py load_cohort`. In development the database is `app/db.sqlite3`, in the container `/data/db.sqlite3`; neither is under version control. Each patient has one course per scenario with outcome, events, alerts and weekly observations.
+- The storage model has one initial migration. As long as no installation has to be kept, a change of the models replaces this migration; afterwards changes get migrations of their own.
 - The rows of a scenario are kept in memory after first use. `cohort.clear_cache()` empties this store; `store.generate` calls it.
 - Filters and the charts per patient characteristic are built from the schema, the status bar and risk filters from the registered risk models.
 - Tests run in `app/` with `python3 manage.py test explorer` and `node --test "explorer/tests/*.test.mjs"`.
-- The folders `templates/` and `templatetags/` match the pattern `temp*` in `.gitignore`. Two lines there exempt them. Without these lines git leaves the templates out without a warning.
 
 ## Cloud environment
 
@@ -114,4 +118,6 @@ The literature services work from scripts. The publisher hosts answer scripted r
 - Replace the stand-ins for prediction and detection in the engine by the real risk models.
 - Pick the next extensions of the engine from the list "Ideas for later" in `engine/README.md`.
 - Extend the risk models, see `risk-model/EXTENSIONS.md`. The detection model for lung toxicity (2.1) can now be built on the weekly observations.
+- Build and run the Docker image once and check it on the target host.
+- Decide whether the app needs a login before it is reachable outside a trusted network.
 - Decide on a licence for the repository before it becomes public. The disclaimer of the app holds preliminary terms of use.

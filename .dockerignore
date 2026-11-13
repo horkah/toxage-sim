@@ -1,0 +1,9 @@
+.git
+**/__pycache__
+**/*.pyc
+background/papers
+project/screenshots
+engine/output
+risk-model/output
+app/db.sqlite3*
+app/data

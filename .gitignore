@@ -5,3 +5,5 @@ engine/output/
 risk-model/output/
 __pycache__/
 app/db.sqlite3
+app/db.sqlite3-*
+app/secret_key

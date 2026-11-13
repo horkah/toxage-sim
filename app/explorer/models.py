@@ -1,22 +1,44 @@
-"""Storage of the synthetic data. Records keep the layout of the central
-schema (schema/), so the database needs no change when the schema grows.
+"""Storage of the synthetic data and of the settings of the user.
 
-A data set holds the patients once and, per scenario, one course for every
-patient. A course keeps the outcome apart from the bulky weekly observations,
-so that cohort views read only what they need.
+Records keep the layout of the central schema (schema/), so the database
+needs no change when the schema grows.
+
+  Dataset   one generated cohort with its state and the settings it was made with
+  Patient   one patient of a data set with the baseline record
+  Course    one patient in one scenario: outcome, events, alerts, weekly observations
+  Setting   values of the user that differ from the defaults in the repository
+
+A course keeps the outcome apart from the bulky weekly observations, so that
+cohort views read only what they need. Deleting a data set deletes its
+patients and courses.
 """
 from django.db import models
 
 
 class Dataset(models.Model):
-    """One generated data set. metadata is the metadata of the engine,
-    scenarios the records of the scenario table."""
+    RUNNING, READY, FAILED = "running", "ready", "failed"
+
+    name = models.CharField(max_length=80)
     created = models.DateTimeField(auto_now_add=True)
-    metadata = models.JSONField()
-    scenarios = models.JSONField(default=list)
+    status = models.CharField(max_length=10, default=RUNNING)
+    progress = models.FloatField(default=0)       # 0 to 1 while running
+    message = models.CharField(max_length=300, blank=True)
+    n = models.PositiveIntegerField()
+    seed = models.IntegerField()
+    metadata = models.JSONField(default=dict)     # metadata of the engine
+    scenarios = models.JSONField(default=list)    # records of the scenario table
+    settings = models.JSONField(default=dict)     # values that differed from the defaults
+    calibrated = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-created", "-pk"]
 
     def __str__(self):
-        return f"{self.metadata.get('n')} patients, seed {self.metadata.get('seed')}"
+        return self.name
+
+    @property
+    def ready(self):
+        return self.status == self.READY
 
 
 class Patient(models.Model):
@@ -33,8 +55,8 @@ class Patient(models.Model):
 
 
 class Course(models.Model):
-    """The course of one patient in one scenario. events and alerts are lists
-    of records; observations holds one list per field, in week order."""
+    """events and alerts are lists of records; observations holds one list
+    per field, in week order."""
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="courses")
     scenario_id = models.CharField(max_length=64)
     outcome = models.JSONField()
@@ -45,3 +67,13 @@ class Course(models.Model):
     class Meta:
         constraints = [models.UniqueConstraint(fields=["patient", "scenario_id"], name="course_once_per_scenario")]
         indexes = [models.Index(fields=["scenario_id"])]
+
+
+class Setting(models.Model):
+    """Changed values of one parameter file as {path: value}."""
+    key = models.CharField(max_length=40, primary_key=True)
+    value = models.JSONField(default=dict)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.key

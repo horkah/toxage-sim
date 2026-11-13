@@ -1,0 +1,102 @@
+{% extends "explorer/base.html" %}
+{% load explorer_tags %}
+{% block title %}Data sets · toxage-sim{% endblock %}
+{% block head %}{% if running %}<meta http-equiv="refresh" content="3">{% endif %}{% endblock %}
+{% block content %}
+<div class="page">
+  <h1>Data sets</h1>
+  <p class="muted">A data set is one cohort of synthetic patients, simulated under one or several scenarios with the
+    <a href="{% url 'parameters_start' %}">model parameters</a> of that moment.
+    {% if size_mb is not None %}The database uses {{ size_mb|num:1 }} MB on disk.{% endif %}</p>
+
+  <section class="panel">
+    <h2>Stored data sets</h2>
+    {% for d in datasets %}
+    <article class="dataset{% if d.pk == active.pk %} active{% endif %}">
+      <header>
+        <h3>{{ d.name }}{% if d.pk == active.pk %} <span class="tag">shown in the explorer</span>{% endif %}</h3>
+        <p class="muted">{{ d.n }} patients · seed {{ d.seed }} · {{ d.created|date:"Y-m-d H:i" }} UTC
+          {% if d.ready %}· followed for up to {{ d.metadata.weeks }} weeks
+          · {% if d.changed %}{{ d.changed }} parameter{{ d.changed|pluralize }} changed{% if d.calibrated %}, event rates calibrated again{% endif %}{% else %}default parameters{% endif %}{% endif %}</p>
+      </header>
+      {% if d.status == "running" %}
+      <p><progress value="{{ d.progress }}" max="1"></progress> {{ d.message }} …</p>
+      {% elif d.status == "failed" %}
+      <p class="error">Failed: {{ d.message }}</p>
+      {% else %}
+      <div class="scroll">
+      <table class="numbers">
+        <thead><tr><th>Scenario</th><th>Outcomes</th><th>Observations</th><th>Adverse events</th><th>Alerts</th><th></th></tr></thead>
+        <tbody>
+        {% for sid, title, counts in d.record_counts %}
+        <tr><td>{{ title }}</td><td>{{ d.n }}</td><td>{{ counts.observation|default:"–" }}</td>
+          <td>{{ counts.event|default:"–" }}</td><td>{{ counts.alert|default:"0" }}</td>
+          <td>{% if not read_only and d.record_counts|length > 1 %}
+            <form method="post" action="{% url 'data_delete' %}" class="inline" data-confirm="Delete the scenario “{{ title }}” of this data set?">{% csrf_token %}
+              <input type="hidden" name="dataset" value="{{ d.pk }}"><input type="hidden" name="scenario" value="{{ sid }}">
+              <button type="submit" class="link">delete scenario</button></form>{% endif %}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% endif %}
+      <div class="actions">
+        {% if d.ready %}
+        <form method="post" action="{% url 'data_use' %}" class="inline">{% csrf_token %}
+          <input type="hidden" name="dataset" value="{{ d.pk }}">
+          <button type="submit"{% if d.pk != active.pk %} class="primary"{% endif %}>Explore</button></form>
+        <a class="button" href="{% url 'records' d.pk %}">Inspect records</a>
+        {% endif %}
+        {% if not read_only and d.status != "running" %}
+        <form method="post" action="{% url 'data_delete' %}" class="inline" data-confirm="Delete the data set “{{ d.name }}” with all its scenarios?">{% csrf_token %}
+          <input type="hidden" name="dataset" value="{{ d.pk }}">
+          <button type="submit">Delete data set</button></form>
+        {% endif %}
+      </div>
+    </article>
+    {% empty %}
+    <p>No data set stored.</p>
+    {% endfor %}
+    {% if datasets|length > 1 and not read_only and not running %}
+    <form method="post" action="{% url 'data_delete' %}" data-confirm="Delete all {{ datasets|length }} data sets?">{% csrf_token %}
+      <input type="hidden" name="all" value="yes">
+      <button type="submit">Delete all data sets</button></form>
+    {% endif %}
+  </section>
+
+  {% if not read_only %}
+  <section class="panel">
+    <h2>Generate a data set</h2>
+    <form method="post" action="{% url 'data_generate' %}" class="form">{% csrf_token %}
+      <label>Name <input type="text" name="name" maxlength="80" placeholder="optional"></label>
+      <label>Patients <input type="number" name="n" value="1500" min="3" max="{{ max_patients }}" required>
+        <small>split equally over the three tumour types; 1500 patients under all scenarios take about 20 seconds and 40 MB</small></label>
+      <label>Seed <input type="number" name="seed" value="1" min="0" required>
+        <small>the same seed and parameters give the same patients</small></label>
+      <fieldset>
+        <legend>Scenarios</legend>
+        {% for sid, s in scenarios.items %}
+        <label class="check"><input type="checkbox" name="scenarios" value="{{ sid }}" checked> {{ s.title }}
+          <small>{{ s.description }}</small></label>
+        {% endfor %}
+      </fieldset>
+      <fieldset>
+        <legend>Parameters</legend>
+        {% if changed %}
+        <p>Changed against the defaults:
+          {% for title, n in changed.items %}{{ title }} ({{ n }}){% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+        {% else %}<p>All engine parameters are at their defaults.</p>{% endif %}
+        <label class="check"><input type="checkbox" name="recalibrate" value="yes"{% if needs_calibration %} checked{% endif %}>
+          Calibrate the event rates again before simulating
+          <small>Matches the rates of usual care to the literature with the current parameters. Takes about a minute.
+            Needed after changes of the regimens or of the simulation parameters; without it the stored calibration of the defaults is used.</small></label>
+      </fieldset>
+      <button type="submit" class="primary"{% if running %} disabled{% endif %}>Generate</button>
+      {% if running %}<span class="muted">A data set is being generated.</span>{% endif %}
+    </form>
+  </section>
+  {% else %}
+  <p class="muted">The app runs in read-only mode. Data sets cannot be generated or deleted.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "explorer/base.html" %}
+{% block title %}{{ document.title }} · toxage-sim{% endblock %}
+{% block content %}
+<div class="layout">
+  <aside class="filters docnav">
+    <h2>Documents</h2>
+    {% for group, items in groups %}
+    <h3>{{ group }}</h3>
+    <ul class="plain">
+      {% for d in items %}<li><a href="{% url 'document' d.key %}"{% if d.key == document.key %} class="current"{% endif %}>{{ d.title }}</a></li>{% endfor %}
+    </ul>
+    {% endfor %}
+    {% if headings %}
+    <h3>On this page</h3>
+    <ul class="plain">{% for level, title, anchor in headings %}<li><a href="#{{ anchor }}">{{ title }}</a></li>{% endfor %}</ul>
+    {% endif %}
+  </aside>
+  <article class="panel doc">
+    <p class="muted"><code>{{ document.path }}</code></p>
+    {{ html|safe }}
+  </article>
+</div>
+{% endblock %}
