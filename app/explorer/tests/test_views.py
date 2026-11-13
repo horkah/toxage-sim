@@ -66,7 +66,7 @@ class EmptyExplorerTest(TestCase):
         self.client.cookies[COOKIE] = settings.DISCLAIMER_VERSION
 
     def test_without_data(self):
-        self.assertContains(self.client.get("/"), "No data loaded")
+        self.assertContains(self.client.get("/"), "No data yet")
         self.assertRedirects(self.client.get("/random/"), "/", fetch_redirect_response=False)
 
 

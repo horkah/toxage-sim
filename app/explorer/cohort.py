@@ -9,9 +9,11 @@ from dataclasses import dataclass
 import toxage_risk
 from schema import toxage_schema
 
+from . import params
 from .models import Course, Dataset
 
 USUAL_CARE = "usual_care"
+DATASET_COOKIE = "toxage_dataset"
 _CACHE = {}
 
 
@@ -80,7 +82,24 @@ def clear_cache():
 
 
 def newest():
-    return Dataset.objects.order_by("-created", "-pk").first()
+    """The newest data set that is ready."""
+    return Dataset.objects.filter(status=Dataset.READY).first()
+
+
+def active(request):
+    """The data set that the user works with: the one chosen on the data
+    page (kept in a cookie), else the newest."""
+    chosen = request.GET.get("dataset") or request.COOKIES.get(DATASET_COOKIE)
+    if chosen and str(chosen).isdigit():
+        dataset = Dataset.objects.filter(pk=int(chosen), status=Dataset.READY).first()
+        if dataset:
+            return dataset
+    return newest()
+
+
+def risk_models():
+    """The registered risk models with the parameters of the user."""
+    return toxage_risk.load(params.effective("risk"))
 
 
 def scenario_ids(dataset):
@@ -123,7 +142,7 @@ def current(scenario_id=USUAL_CARE):
     dataset = newest()
     if dataset is None:
         return None
-    models = toxage_risk.load()
+    models = risk_models()
     return dataset, models, rows(dataset, scenario(dataset, scenario_id)["scenario_id"], models)
 
 

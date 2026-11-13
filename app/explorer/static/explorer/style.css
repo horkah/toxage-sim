@@ -239,3 +239,55 @@ table.numbers tr.selected td { background: var(--hl-band); font-weight: 600; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .8rem; color: var(--muted); margin-top: 4px; }
 .legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
 .legend .s-hl { background: none; border: 2px solid var(--hl); border-radius: 50%; }
+
+/* Main navigation and pages next to the explorer. */
+.mainnav { display: flex; gap: 2px; flex-wrap: wrap; margin-right: auto; }
+.brand { margin-right: 12px; }
+.mainnav a { padding: 4px 10px; border-radius: 4px; text-decoration: none; color: var(--text); }
+.mainnav a:hover { background: var(--grid); }
+.mainnav a.active { background: var(--accent); color: var(--surface); }
+.page { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.page.wide { max-width: 1300px; }
+.page > h1, .page > p { margin: 0; }
+.dataset { border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; }
+.dataset.active { border-left: 4px solid var(--accent); }
+.dataset header h3 { margin: 0; }
+.dataset header p { margin: 2px 0 8px; }
+.tag { font-size: .75rem; font-weight: 400; border: 1px solid var(--border); border-radius: 10px; padding: 1px 8px; color: var(--muted); }
+form.inline { display: inline; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+progress { width: 220px; vertical-align: middle; accent-color: var(--accent); }
+.form { display: flex; flex-direction: column; gap: 12px; max-width: 640px; }
+.form label { display: flex; flex-direction: column; gap: 2px; }
+.form label.check { display: block; }
+.form small, .paramtable small { display: block; color: var(--muted); font-size: .82rem; font-weight: 400; }
+.form fieldset { border: 1px solid var(--border); border-radius: 6px; display: flex; flex-direction: column; gap: 6px; }
+.form input[type="text"], .form input[type="number"] { max-width: 260px; }
+.notice { border: 1px solid var(--border); border-left: 4px solid var(--accent); padding: 6px 10px; border-radius: 4px; background: var(--surface); }
+.notice.error { border-left-color: var(--error); }
+.count { font-size: .75rem; background: var(--hl-band); color: var(--text); border-radius: 10px; padding: 1px 7px; }
+.params details { border: 1px solid var(--border); border-radius: 6px; background: var(--surface); padding: 6px 12px; margin-bottom: 8px; }
+.params summary { cursor: pointer; font-weight: 600; text-transform: capitalize; }
+.params .sticky { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 8px 0; }
+.paramtable { border-collapse: collapse; width: 100%; font-size: .9rem; margin: 6px 0; }
+.paramtable th, .paramtable td { text-align: left; padding: 3px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.paramtable tbody th { font-weight: 400; width: 46%; }
+.paramtable thead th { color: var(--muted); font-size: .8rem; }
+.paramtable input, .paramtable select { width: 100%; min-width: 9em; }
+.paramtable td.muted { overflow-wrap: anywhere; max-width: 18em; }
+.paramtable tr.changed th, .paramtable tr.changed td { background: var(--hl-band); }
+table.records td, table.schema td { text-align: left; white-space: nowrap; }
+table.schema td:last-child { white-space: normal; min-width: 22em; }
+ul.plain { list-style: none; padding: 0; margin: 0 0 8px; display: flex; flex-direction: column; gap: 3px; }
+.docnav a.current { font-weight: 700; color: var(--text); }
+.docnav h3 { margin: 10px 0 4px; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.doc { max-width: 980px; line-height: 1.55; }
+.doc h1 { margin-top: 0; }
+.doc h2 { margin-top: 1.6em; padding-top: .4em; border-top: 1px solid var(--border); }
+.doc h3 { margin-top: 1.2em; }
+.doc table { border-collapse: collapse; font-size: .9rem; margin: 8px 0; }
+.doc th, .doc td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; vertical-align: top; }
+.doc th { background: var(--bg); }
+.doc code, code { font-size: .9em; background: var(--grid); padding: 0 3px; border-radius: 3px; }
+.doc pre { white-space: pre-wrap; }
+.doc li { margin: 2px 0; }

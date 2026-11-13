@@ -1,0 +1,26 @@
+{% extends "explorer/base.html" %}
+{% block title %}Data schema · toxage-sim{% endblock %}
+{% block content %}
+<div class="page wide">
+  <h1>Data schema</h1>
+  <p class="muted">The tables and fields that the engine, the risk models and the app share.
+    Background: <a href="{% url 'document' 'schema' %}">Data schema</a> in the documents.</p>
+  <nav class="tabs" aria-label="Tables">{% for t in tables %}<a href="#{{ t.name }}">{{ t.name }}</a>{% endfor %}</nav>
+  {% for t in tables %}
+  <section class="panel" id="{{ t.name }}">
+    <h2>{{ t.name }} <span class="muted">· {{ t.title }} · version {{ t.version }}</span></h2>
+    <p>{{ t.description }}</p>
+    <div class="scroll">
+    <table class="numbers schema">
+      <thead><tr><th>Field</th><th>Title</th><th>Type</th><th>Values</th><th>Unit</th><th>Description</th></tr></thead>
+      <tbody>
+      {% for f in t.fields %}
+      <tr><td><code>{{ f.name }}</code></td><td>{{ f.title }}</td><td>{{ f.type }}</td><td>{{ f.values }}</td><td>{{ f.unit }}</td><td>{{ f.description }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

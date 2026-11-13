@@ -1,0 +1,22 @@
+# Start with:  docker compose up -d --build
+# The app is then at http://localhost:8000. Data stay in the volume toxage-data.
+services:
+  app:
+    build: .
+    image: toxage-sim
+    ports:
+      - "8000:8000"
+    volumes:
+      - toxage-data:/data
+    environment:
+      # Host names under which the app is reached, separated by commas. "*" allows all.
+      TOXAGE_ALLOWED_HOSTS: "*"
+      # Addresses with scheme from which forms may be sent, needed behind a proxy
+      # with HTTPS, for example https://toxage.example.org
+      TOXAGE_CSRF_TRUSTED_ORIGINS: ""
+      # 1: data and parameters can be viewed but not changed.
+      TOXAGE_READ_ONLY: "0"
+    restart: unless-stopped
+
+volumes:
+  toxage-data:

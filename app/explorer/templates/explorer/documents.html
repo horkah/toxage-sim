@@ -1,0 +1,16 @@
+{% extends "explorer/base.html" %}
+{% block title %}Documents · toxage-sim{% endblock %}
+{% block content %}
+<div class="page">
+  <h1>Documents</h1>
+  <p class="muted">The documents of the repository, as they are stored there.</p>
+  {% for group, items in groups %}
+  <section class="panel">
+    <h2>{{ group }}</h2>
+    <ul class="plain">
+      {% for d in items %}<li><a href="{% url 'document' d.key %}">{{ d.title }}</a> <span class="muted"><code>{{ d.path }}</code></span></li>{% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

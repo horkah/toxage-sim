@@ -15,18 +15,37 @@
   <link rel="stylesheet" href="{% static 'explorer/style.css' %}">
   <script type="module" src="{% static 'explorer/app.js' %}"></script>
   <script type="module" src="{% static 'explorer/charts.js' %}"></script>
+  {% block head %}{% endblock %}
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="{% url 'explorer' %}">toxage-sim <span>explorer</span></a>
+    {% block nav %}
+    <nav class="mainnav" aria-label="Sections">
+      <a href="{% url 'explorer' %}"{% if section == "explore" %} class="active"{% endif %}>Explore</a>
+      <a href="{% url 'data' %}"{% if section == "data" %} class="active"{% endif %}>Data</a>
+      <a href="{% url 'parameters_start' %}"{% if section == "parameters" %} class="active"{% endif %}>Parameters</a>
+      <a href="{% url 'schema' %}"{% if section == "schema" %} class="active"{% endif %}>Schema</a>
+      <a href="{% url 'documents' %}"{% if section == "documents" %} class="active"{% endif %}>Documents</a>
+    </nav>
+    {% endblock %}
     {% block tools %}{% endblock %}
     {% block menu %}
     <details class="menu">
       <summary aria-label="Menu"><span class="burger" aria-hidden="true"></span></summary>
       <nav class="menu-panel">
-        <h3>Navigate</h3>
-        <a href="{% url 'explorer' %}">Cohort overview</a>
+        <h3>Explore</h3>
+        <a href="{% url 'explorer' %}">Cohort and risk</a>
+        <a href="{% url 'explorer' %}?view=characteristics">Patient characteristics</a>
+        <a href="{% url 'explorer' %}?view=time">Course over time</a>
+        <a href="{% url 'explorer' %}?view=interventions">Interventions</a>
         <a href="{% url 'random' %}">Random patient</a>
+        <h3>Manage</h3>
+        <a href="{% url 'data' %}">Data sets</a>
+        <a href="{% url 'parameters_start' %}">Model parameters</a>
+        <h3>Reference</h3>
+        <a href="{% url 'schema' %}">Data schema</a>
+        <a href="{% url 'documents' %}">Documents</a>
         <a href="{% url 'disclaimer' %}">Disclaimer and licence</a>
         <h3>Settings</h3>
         <fieldset class="setting" data-setting="theme">

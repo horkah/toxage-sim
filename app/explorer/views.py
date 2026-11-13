@@ -7,15 +7,13 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-import toxage_risk
-
 from . import charts, cohort, filters, timeline
 from .middleware import accepted
 
 VIEWS = [("risk", "Risk"), ("characteristics", "Patient characteristics"),
          ("time", "Course over time"), ("interventions", "Interventions")]
 # Query parameters that are not filters.
-STATE = ("patient", "model", "view", "scenario", "compare")
+STATE = ("patient", "model", "view", "scenario", "compare", "dataset")
 
 
 def _query(query, **changes):
@@ -31,10 +29,10 @@ def _query(query, **changes):
 def _load(request):
     """Data set, risk models, selected and comparison scenario, rows of the
     selected scenario; None without data."""
-    dataset = cohort.newest()
+    dataset = cohort.active(request)
     if dataset is None:
         return None
-    models = toxage_risk.load()
+    models = cohort.risk_models()
     scenario = cohort.scenario(dataset, request.GET.get("scenario"))
     others = [s for s in dataset.scenarios if s["scenario_id"] != scenario["scenario_id"]]
     wanted = request.GET.get("compare")
@@ -115,7 +113,7 @@ def _intervention_sections(dataset, scenario, ids, models):
 def explorer(request):
     data = _load(request)
     if data is None:
-        return render(request, "explorer/empty.html")
+        return render(request, "explorer/empty.html", {"section": "explore"})
     dataset, models, scenario, compare, rows = data
     shown = [scenario] + ([compare] if compare else [])
 
@@ -136,7 +134,8 @@ def explorer(request):
     else:
         built = charts.build(selection, patient, focus, models)
         sections = built[-1:] if view == "characteristics" else built[:-1]
-    return render(request, "explorer/explorer.html", {
+    response = render(request, "explorer/explorer.html", {
+        "section": "explore",
         "dataset": dataset,
         "total": len(rows),
         "selection": len(selection),
@@ -169,6 +168,9 @@ def explorer(request):
             QueryDict(), **{k: request.GET.get(k) for k in STATE if k not in ("patient", "model")},
             model=focus.id, patient=patient["patient_id"] if patient else None),
     })
+    if request.GET.get("dataset") == str(dataset.pk):
+        response.set_cookie(cohort.DATASET_COOKIE, str(dataset.pk), max_age=365 * 86400, samesite="Lax")
+    return response
 
 
 def random_patient(request):

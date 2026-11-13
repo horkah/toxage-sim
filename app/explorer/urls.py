@@ -1,10 +1,21 @@
 from django.urls import path
 
-from . import views
+from . import pages, views
 
 urlpatterns = [
     path("", views.explorer, name="explorer"),
     path("random/", views.random_patient, name="random"),
+    path("data/", pages.data, name="data"),
+    path("data/generate/", pages.data_generate, name="data_generate"),
+    path("data/delete/", pages.data_delete, name="data_delete"),
+    path("data/use/", pages.data_use, name="data_use"),
+    path("data/<int:pk>/records/", pages.records, name="records"),
+    path("data/<int:pk>/export/<str:table>.csv", pages.export, name="export"),
+    path("parameters/", pages.parameters, name="parameters_start"),
+    path("parameters/<str:key>/", pages.parameters, name="parameters"),
+    path("schema/", pages.schema, name="schema"),
+    path("documents/", pages.documents, name="documents"),
+    path("documents/<str:key>/", pages.documents, name="document"),
     path("disclaimer/", views.disclaimer, name="disclaimer"),
     path("disclaimer/revoke/", views.revoke, name="revoke"),
 ]

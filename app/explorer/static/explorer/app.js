@@ -45,3 +45,9 @@ if (filters) {
 // Scenario choice: apply on change.
 const scenario = document.getElementById("scenario");
 if (scenario) scenario.addEventListener("change", () => scenario.requestSubmit());
+
+// Ask before deleting or resetting.
+document.addEventListener("submit", (event) => {
+  const question = event.submitter?.dataset.confirmButton || event.target.dataset.confirm;
+  if (question && !window.confirm(question)) event.preventDefault();
+});
