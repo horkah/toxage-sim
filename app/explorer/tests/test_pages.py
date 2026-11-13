@@ -60,9 +60,12 @@ class DataTest(CohortTestCase):
 
     def test_failure_is_shown(self):
         params.save("parameters", {"simulation/weeks": "0"})
-        self.client.post("/data/generate/", {"n": "9", "seed": "2"})
+        with self.assertLogs("explorer.store", "ERROR") as logged:
+            self.client.post("/data/generate/", {"n": "9", "seed": "2"})
+        self.assertIn("simulation weeks must be a whole number of at least 1", logged.output[0])
         failed = Dataset.objects.first()
         self.assertEqual(failed.status, "failed")
+        self.assertIn("simulation weeks", failed.message)
         self.assertContains(self.client.get("/data/"), "Failed:")
         self.assertEqual(cohort.newest(), self.dataset)
 

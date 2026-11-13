@@ -6,9 +6,9 @@ process. The Dataset row carries the state and the progress.
 """
 import csv
 import io
+import logging
 import os
 import threading
-import traceback
 
 from django.conf import settings
 from django.db import connection, transaction
@@ -23,6 +23,7 @@ from .models import Course, Dataset, Patient
 KEYS = ("scenario_id", "patient_id")
 TABLES = ("scenario", "baseline", "outcome", "event", "alert", "observation")
 _RUNNING = set()     # data sets that a thread of this process is generating
+log = logging.getLogger(__name__)
 
 
 def _strip(record):
@@ -94,7 +95,7 @@ def _run(dataset, scenarios, recalibrate, config, in_thread):
     try:
         _fill(dataset, scenarios, recalibrate, config)
     except Exception as error:     # the reason is shown to the user on the data page
-        traceback.print_exc()
+        log.exception("Generating data set %s failed", dataset.pk)
         Dataset.objects.filter(pk=dataset.pk).update(
             status=Dataset.FAILED, message=f"{type(error).__name__}: {error}"[:300])
     finally:

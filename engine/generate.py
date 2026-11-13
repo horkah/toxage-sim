@@ -92,6 +92,9 @@ def generate(n, seed, scenarios=None, validate=True, config=None, progress=None)
     config = config or default_config()
     regimens, params, iv = config["regimens"], config["parameters"], config["interventions"]
     scenarios = list(scenarios or iv["scenarios"])
+    weeks = params["simulation"]["weeks"]
+    if not isinstance(weeks, int) or isinstance(weeks, bool) or weeks < 1:
+        raise ValueError(f"simulation weeks must be a whole number of at least 1, not {weeks!r}")
     table = hazards.HazardTable(regimens, params, config["calibration"])
     patients, thresholds = cohort(n, seed, regimens, params, iv)
     data = {name: [] for name in TABLES}
