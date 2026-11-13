@@ -1,5 +1,8 @@
 # Start with:  docker compose up -d --build
-# The app is then at http://localhost:8000. Data stay in the volume toxage-data.
+# Behind the host's caddy-docker-proxy (compose project "caddy", external Docker
+# network "caddy"): Caddy reads the labels below, routes https://toxage-sim.bitzz.de
+# to this container and obtains the certificate.
+# Locally the app is also at http://localhost:8000. Data stay in the volume toxage-data.
 services:
   app:
     build: .
@@ -9,15 +12,33 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - toxage-data:/data
+    networks:
+      - caddy
+    labels:
+      caddy: toxage-sim.bitzz.de
+      # The port of the container, not of the host.
+      caddy.reverse_proxy: "{{upstreams 8000}}"
     environment:
       # Host names under which the app is reached, separated by commas. "*" allows all.
-      TOXAGE_ALLOWED_HOSTS: "toxage-sim.bitzz.de,localhost" 
+      # 127.0.0.1 is needed by the healthcheck of the Dockerfile.
+      TOXAGE_ALLOWED_HOSTS: "toxage-sim.bitzz.de,localhost,127.0.0.1"
       # Addresses with scheme from which forms may be sent, needed behind a proxy
       # with HTTPS, for example https://toxage.example.org
       TOXAGE_CSRF_TRUSTED_ORIGINS: "https://toxage-sim.bitzz.de"
       # 1: data and parameters can be viewed but not changed.
       TOXAGE_READ_ONLY: "0"
     restart: unless-stopped
+    # Without a limit Docker keeps the log of the container without end.
+    # Takes effect only for a newly created container (docker compose up -d).
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  caddy:
+    external: true
 
 volumes:
   toxage-data:
