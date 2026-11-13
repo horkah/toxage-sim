@@ -16,6 +16,9 @@ from .models import Setting
 
 REPO = Path(settings.REPO_DIR)
 SEP = "/"
+# Titles of top-level groups whose key is an abbreviation.
+GROUP_TITLES = {"ild": "Lung toxicity (ILD)", "severe_toxicity_90d": "Severe toxicity, 90 days",
+                "cardiovascular": "Cardiovascular events"}
 # Keys whose text explains a value. They are shown, not edited.
 NOTES = ("basis", "description", "source", "comment")
 
@@ -62,6 +65,11 @@ def leaves(data, prefix=()):
 
 def is_note(path):
     return path[-1] in NOTES
+
+
+def anchor(path):
+    """Id of the row of a parameter on the parameters page."""
+    return "param-" + path.replace(SEP, "--")
 
 
 def changes(key):
@@ -184,11 +192,14 @@ def form(key, posted=None, errors=None):
             continue
         name = SEP.join(path)
         current = changed.get(name, value)
-        group = groups.setdefault(path[0], {"title": path[0].replace("_", " "), "rows": [], "changed": 0,
+        group = groups.setdefault(path[0], {"title": GROUP_TITLES.get(path[0], path[0].replace("_", " ").capitalize()),
+                                            "anchor": f"group-{path[0]}",
+                                            "rows": [], "changed": 0,
                                             "note": notes.get(path[0], "")})
         group["changed"] += name in changed
         group["rows"].append({
             "path": name,
+            "anchor": anchor(name),
             "label": " › ".join(part.replace("_", " ") for part in path[1:]) or path[0].replace("_", " "),
             "default": show(value),
             "value": (posted or {}).get(name, show(current)),

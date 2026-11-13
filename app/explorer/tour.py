@@ -22,8 +22,10 @@ def has_snapshot():
 
 
 def context(request):
-    """Values that every page gives to the tour script."""
-    return {"tour_snapshot": has_snapshot(), "read_only": settings.READ_ONLY}
+    """Values that every page needs: the tour state, the mode, the version."""
+    from toxage_app.version import BUILD, VERSION
+    return {"tour_snapshot": has_snapshot(), "read_only": settings.READ_ONLY,
+            "app_version": VERSION, "app_build": BUILD, "repository": settings.REPOSITORY_URL}
 
 
 def state(request):

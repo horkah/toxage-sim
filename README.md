@@ -71,7 +71,8 @@ A first app exists:
 
 - [app/](app/) is a web app that shows the cohort and a single patient in relation to it: risk distribution, calibration, time to event by risk group, and observed and predicted rates by patient characteristic. Filters cover every field of the baseline and outcome records and every risk model.
 - The app shows the course over time, for the cohort and for a single patient under two scenarios, and compares all scenarios side by side.
-- Data sets are generated, inspected and deleted in the app. All model parameters can be changed there and reset to the defaults of the repository. The schema and the documents of the project can be read in the app.
+- Data sets are generated, inspected, exported to archive files, imported again and deleted in the app. All model parameters can be changed there and reset to the defaults of the repository. The data schema and the scientific background can be read in the app.
+- Pages change in place without reloading, and the parts of the app are linked to each other: patients, scenarios, fields, data sets and parameters. The page "About" names the authors and shows version and build.
 - A tutorial and a demo lead through all functions of the app. In the tutorial the user does each step herself; the demo runs on its own at an adjustable speed and leaves the app as it was.
 - `docker compose up -d --build` starts the app in a container, with the data in a volume. See [app/README.md](app/README.md).
 

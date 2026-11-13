@@ -2,7 +2,7 @@
 
 Web app to inspect the synthetic data and the risk scores: for the whole cohort, for a filtered part of it, and for one patient compared with the others.
 
-It is built with Django and nothing else; gunicorn serves it in the container. The packages are named in `pyproject.toml` in the repository root and pinned in `uv.lock`. The pages are Django templates, the charts are drawn as SVG by a small web component in plain JavaScript. Besides the explorer the app manages the data sets and the model parameters and shows the schema and the documents of the project.
+It is built with Django and nothing else; gunicorn serves it in the container. The packages are named in `pyproject.toml` in the repository root and pinned in `uv.lock`. The pages are Django templates, the charts are drawn as SVG by a small web component in plain JavaScript, and a small script loads pages in place, so the app reacts without reloading. Besides the explorer the app manages the data sets and the model parameters, keeps archives of them, and shows the schema and the scientific background of the project.
 
 ## Run with Docker
 
@@ -21,7 +21,7 @@ Then open http://localhost:8000, accept the terms, and generate a first data set
 | `TOXAGE_DATA_DIR` | Folder of the database and the secret key | `/data` |
 | `TOXAGE_DEBUG` | `1` for development | `0` |
 
-The image holds the app, the engine, the risk models, the schema and the documents, without the PDFs of the literature. It runs gunicorn with one worker process and several threads. One process is required: data sets are generated in a thread of the server process, and the rows of a scenario are kept in its memory.
+The image holds the app, the engine, the risk models, the schema and the documents, without the PDFs of the literature and without the folder `project/` (prompt log and internal notes), which are for developers only. It runs gunicorn with one worker process and several threads. One process is required: data sets are generated in a thread of the server process, and the rows of a scenario are kept in its memory.
 
 The app has no login. Everyone who reaches it can generate and delete data and change parameters, unless `TOXAGE_READ_ONLY=1` is set. It is a demonstrator for a trusted network.
 
@@ -55,37 +55,53 @@ just test-app
 just test-js
 ```
 
-The first command tests the Python code, the second the chart helpers in JavaScript. Node.js is only needed for the second.
+The first command tests the Python code, the second the helpers of the page script, the charts and the tours in JavaScript. Node.js is only needed for the second.
+
+## Version
+
+The version of the app is the one in `pyproject.toml`. Every build gets a stamp on top: the Docker image writes the time of the build and the commit into the file `BUILD` (`just docker-build` passes the commit), and a working copy uses the date and hash of the last commit. `TOXAGE_BUILD` overrides both. Version and build are shown in the footer of every page and on the page "About" (`toxage_app/version.py`).
 
 ## Sections
 
-The bar at the top and the menu lead to every part of the project:
+The bar at the top leads to five sections. Each piece of information has one place; links connect the places.
 
 | Section | Content |
 |---|---|
 | Explore | Cohort and single patient: risk, patient characteristics, course over time, interventions |
-| Data | Stored data sets: generate, choose for the explorer, inspect records, download as CSV, delete a scenario, a data set or everything |
-| Parameters | All model parameters of the engine and the risk models, with their defaults and notes; change, save, reset |
-| Schema | Tables and fields of the central data schema |
-| Documents | The documents of the repository: project overview, toxicity report, references, intervention model, the components, internal documentation, prompt log |
-| Guided tours | Tutorial and demo; in the menu |
-| Disclaimer and licence | Terms of use; in the menu |
+| Data | Stored data sets: generate, choose for the explorer, inspect records, download as CSV, export and import archives, delete a scenario, a data set or everything |
+| Parameters | All model parameters of the engine and the risk models, with their defaults and their basis; change, reset |
+| Reference | The data schema with every table and field, and the scientific background: toxicity report, intervention model, references, data engine, risk models |
+| About | What the project is, its authors and how it was made, version and build |
+
+"Help" next to the sections starts the tutorial or the demo, "Settings" holds theme, text size and the offer of the tours. The footer has the disclaimer and the version.
+
+The app shows the content of the project, not its development: the prompt log, the internal notes and the developer sections of the component documents (how to run, files, programming interface) stay in the repository.
 
 ## How it works
 
 ### Disclaimer
 
-Every page leads to the disclaimer until the user has accepted the limitations and terms of use. The acceptance is a cookie that holds the version of the terms. Without the box "Do not show this again" the cookie ends with the browser session, with the box it lasts one year. Raising `DISCLAIMER_VERSION` in `toxage_app/settings.py` asks every user again. The menu has a button to withdraw the acceptance.
+Every page leads to the disclaimer until the user has accepted the limitations and terms of use. The acceptance is a cookie that holds the version of the terms. Without the box "Do not show this again" the cookie ends with the browser session, with the box it lasts one year. Raising `DISCLAIMER_VERSION` in `toxage_app/settings.py` asks every user again. The settings have a button to withdraw the acceptance.
+
+### Pages that change in place
+
+Links and forms of the app load the next page in the background and swap only the changed part of the screen (`static/explorer/app.js`). A filter, a scenario, a risk model, a saved parameter or a deleted data set therefore changes the page without reloading it. Focus, scroll position and opened groups stay as they were, the address follows every change, and the back button works. Downloads, the disclaimer and other sites load as usual. Without JavaScript every link and form works as a normal page load.
+
+Before anything is deleted or replaced, a warning with a red sign asks for confirmation.
 
 ### One view for cohort and patient
 
-There is one page. Without a selected patient it shows the cohort. With a selected patient it shows the patient's data and risks on top, and marks the patient in every chart: the bar of the patient's group, a line at the patient's risk or event day, a ring around the patient's point.
+There is one page. A bar on top holds the context: the data set, the scenario with its comparison, and the patient. The cohort panel on the left counts the selected patients and shows every active filter as a chip that removes it on a click.
 
-A patient is selected by ID in the search field (`42` is enough for `P000042`), by the button "Random", which picks a patient of the current selection, or by a click on a point in a scatter plot. The whole state is in the address: filters, risk model and patient. A view can therefore be bookmarked and shared.
+Without a selected patient the page shows the cohort. With a selected patient it shows a patient card with the key facts, all characteristics and the outcome, and in the view "Risk" the patient's risk under the chosen model with the factors behind it. The cards of the risk models add the patient's risk under every model. The patient is marked in every chart: the bar of the patient's group, a line at the patient's risk or event day, a ring around the patient's point.
+
+A patient is selected by ID in the search field (`42` is enough for `P000042`), by the button "Random", which picks a patient of the current selection, by a click on a point in a scatter plot, or by a click on a patient ID in the records. The whole state is in the address: data set, filters, scenario, view, risk model and patient. A view can therefore be bookmarked and shared.
+
+Objects are linked to their other places: a field of the patient card or of the records to its description in the schema, a scenario in a table to its charts, a data set to its card on the page "Data", a risk model to its documentation and its parameters, a changed parameter of a data set to its row on the page "Parameters".
 
 ### Scenarios
 
-The engine simulates the same patients under several intervention scenarios. Two choices above the charts set which scenario the page shows and which one it is compared with. Usual care is the default; another scenario is compared with usual care unless something else is chosen. Filters, status bar and patient data refer to the outcome in the selected scenario.
+The engine simulates the same patients under several intervention scenarios. Two choices in the context bar set which scenario the page shows and which one it is compared with. Usual care is the default; a newly chosen scenario is compared with usual care unless something else is chosen. Filters, cohort, model cards and patient data refer to the outcome in the selected scenario.
 
 ### Views
 
@@ -104,7 +120,7 @@ The filters are built from the [schema](../schema/) and from the registered risk
 
 ### Charts
 
-The status bar shows the size of the selection and, per risk model, the observed rate, the mean predicted risk, the AUC and the Brier score. A tab chooses the risk model that the charts show.
+In the views "Risk" and "Patient characteristics" one card per risk model shows the observed rate, the mean predicted risk, the AUC and the Brier score in the selection. A click on a card chooses the risk model that the charts show.
 
 | Chart | Question it answers |
 |---|---|
@@ -121,15 +137,24 @@ The charts per characteristic are built from the schema as well, so new fields a
 
 A data set is one cohort, simulated under one or several scenarios with the parameters of that moment. Several data sets can be stored side by side. The explorer shows the data set chosen on the page "Data", else the newest.
 
-Generating runs in the background. The page shows the progress and reloads until the data set is ready. If the server restarts meanwhile, the data set is marked as failed and can be deleted. The form offers to calibrate the event rates again first; this is needed after changes of the regimens or the simulation parameters and takes about a minute.
+Generating runs in the background. The card of the data set shows the progress and updates itself until the data set is ready. If the server restarts meanwhile, the data set is marked as failed and can be deleted. The form offers to calibrate the event rates again first; this is needed after changes of the regimens or the simulation parameters and takes about a minute.
 
 Records can be inspected table by table in the layout of the [schema](../schema/), by scenario and by patient, and downloaded as CSV files that `schema/toxage_schema.py` reads back.
 
 Deleting a scenario removes the courses of all patients in it; the last scenario of a data set stays. Deleting gives the space on disk back at once.
 
+### Archive
+
+"Export everything" saves all data sets that are ready and the changed parameters into one file; "Export" on a data set saves only that data set. An archive can be imported later, into the same or another installation of the app:
+
+- **Add its data sets**: the data sets of the archive are added; data sets and parameters of the app stay.
+- **Replace everything**: all data sets and parameter changes of the app are replaced by those of the archive. The app asks first.
+
+The file is gzip-compressed JSON Lines (`.jsonl.gz`), described in `explorer/archive.py`: a header with the format version, the version of the app and of the schema tables, then one line per data set and one per patient with all its courses, and an end line with the counts. The records keep the layout of the schema, so an archive can also be read without the app. On import every patient record is checked against the schema; a file that is not an archive of the app, is newer than the app, is damaged or was cut off is refused, and the app stays as it was.
+
 ### Parameters
 
-The defaults are the JSON files of the repository: `engine/config/regimens.json`, `parameters.json`, `interventions.json` and `risk-model/config/models.json`. Each value can be changed in the app. Only the changed values are stored, in the database, and they stay until they are reset: one value, one file, or everything. Changed values are marked, and the default is shown next to each.
+The defaults are the JSON files of the repository: `engine/config/regimens.json`, `parameters.json`, `interventions.json` and `risk-model/config/models.json`. Each value can be changed in the app and is saved as soon as its field is left. Only the changed values are stored, in the database, and they stay until they are reset: one value, one file, or everything. Changed values are marked, the default is shown next to each, and the side bar counts the changes per file and group. A search field narrows the list.
 
 - Engine parameters apply to data sets generated from then on. A data set keeps the changed values it was made with and shows their number.
 - Risk model parameters apply to the risks in the explorer at once.
@@ -153,39 +178,42 @@ SQLite fits because there is one server process, the data are written once per d
 
 ### Tutorial and demo
 
-Two guided tours lead through the whole app in about 70 steps: the menu, generating a data set, the risk models and their charts, filters, a single patient, patient characteristics, the course over time, the scenarios and interventions, the parameters, records, deleting and resetting, the schema and the documents. Each step shows a hint with a short explanation next to the part of the page it is about.
+Two guided tours lead through the whole app in about 70 steps: help and settings, generating a data set, the archive, the risk models and their charts, filters, a single patient, patient characteristics, the course over time, the scenarios and interventions, the parameters, records, deleting and resetting, the reference and the page "About". Each step shows a hint with a short explanation next to the part of the page it is about.
 
 - In the **tutorial** the user does every step herself. The hint says what to do and moves on when it is done. "Do it for me" carries out a step, "Back" and "Next" move freely, "End" stops. The tutorial changes nothing on its own and leaves the data sets and parameters as the user made them; its last steps point to the ways to delete and reset.
 - The **demo** does every step itself. Two speed values control it: words per second for reading a hint, and seconds a new state of the screen is shown before the next step. Both can be changed while the demo runs, and it can be paused and stopped.
 
 The demo leaves the app exactly as it was. At its start the server notes the changed parameters, the stored data sets and the chosen data set. The demo deletes what it created and resets what it changed step by step, and at its end, or when it is stopped, the server puts the noted state back: parameters, data sets and chosen data set. If a demo is cut off, for example by closing the browser, the next page offers to restore the state.
 
-The app offers both tours once per browser session after the disclaimer. This offer can be turned off in the offer itself and turned on and off in the settings. Both tours can be started from the menu at any time.
+The app offers both tours once per browser session after the disclaimer. This offer can be turned off in the offer itself and turned on and off in the settings. Both tours can be started under "Help" at any time.
 
 In read-only mode the tours leave out all steps that change data or parameters.
 
 ### Settings
 
-The menu holds the settings: bright, dark or system theme, a larger text size, and whether the tours are offered at start. They are stored in the browser (local storage).
+"Settings" holds bright, dark or system theme, a larger text size, and whether the tours are offered at start. They are stored in the browser (local storage).
 
 ## Files
 
 | File | Content |
 |---|---|
-| `toxage_app/settings.py` | Settings, including the version of the terms |
+| `toxage_app/settings.py` | Settings, including the version of the terms and the address of the source code |
+| `toxage_app/version.py` | Version and build of the app |
 | `explorer/models.py` | Data sets, patients, one course per patient and scenario, and the changed parameters |
 | `explorer/store.py` | Generates data sets in the background, stores them, reads records, exports CSV, deletes |
 | `explorer/params.py` | Model parameters: defaults from the repository, changes of the user |
-| `explorer/pages.py` | Pages for data sets, records, parameters, schema and documents |
-| `explorer/docs.py` | The documents of the repository and a small Markdown renderer |
+| `explorer/pages.py` | Pages for data sets, archive, records, parameters, schema and documents |
+| `explorer/archive.py` | Export and import of archives |
+| `explorer/docs.py` | The documents shown in the app, without their developer sections, and a small Markdown renderer |
 | `explorer/cohort.py` | Loads the patients, adds the risks of all models, describes the schema fields |
 | `explorer/filters.py` | Filters built from schema and risk models |
 | `explorer/charts.py` | Data of the risk charts and key numbers |
 | `explorer/timeline.py` | Data of the charts over time and across scenarios |
-| `explorer/views.py`, `middleware.py` | Pages, random patient, disclaimer |
+| `explorer/views.py`, `middleware.py` | Explorer, random patient, about, disclaimer |
 | `explorer/templates/explorer/` | Templates |
 | `explorer/static/explorer/charts.js` | Web component `<tox-chart>` that draws the charts |
-| `explorer/static/explorer/app.js` | Settings and filter form |
+| `explorer/static/explorer/app.js` | Pages in place, warnings before deleting, messages, settings, forms that apply on change |
+| `explorer/static/explorer/img/logo.svg` | Logo and icon of the app |
 | `explorer/static/explorer/tour.js` | Tutorial and demo: hints, speed, offer at start |
 | `explorer/static/explorer/tour-steps.js` | The steps of the tours: text, page, target, action |
 | `explorer/tour.py` | State of the app for the tours; notes and restores the state around a demo |

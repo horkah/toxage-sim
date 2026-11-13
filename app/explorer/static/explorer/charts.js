@@ -220,11 +220,13 @@ function scatter(spec) {
 }
 
 const RENDER = { bars, line, scatter };
-let data;
+let data, source;
 
+// The chart data of the page. A page swapped in place brings its own element.
 function chartData() {
-  if (data === undefined) {
-    const el = document.getElementById("chart-data");
+  const el = document.getElementById("chart-data");
+  if (el !== source) {
+    source = el;
     data = el ? JSON.parse(el.textContent) : {};
   }
   return data;
@@ -252,7 +254,14 @@ export class ToxChart extends (globalThis.HTMLElement ?? class {}) {
     const params = target.dataset.id !== undefined
       ? { patient: target.dataset.id }
       : this.spec.links[Number(target.dataset.link)];
-    if (params) location.href = withParams(location.href, params);
+    if (!params) return;
+    const url = withParams(location.href, params);
+    // The page script loads it in place; without it, as a new page.
+    if (document.documentElement.dataset.router === "1") {
+      document.dispatchEvent(new CustomEvent("toxage:navigate", { detail: url }));
+    } else {
+      location.href = url;
+    }
   }
 }
 

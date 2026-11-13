@@ -78,11 +78,12 @@ class StoreTest(TestCase):
 
     def test_form(self):
         params.save("parameters", {self.PATH: "3"})
-        groups = {g["title"]: g for g in params.form("parameters", errors={"simulation/weeks": "bad"})}
-        row = next(r for r in groups["hazards"]["rows"] if r["path"] == self.PATH)
+        groups = {g["anchor"]: g for g in params.form("parameters", errors={"simulation/weeks": "bad"})}
+        row = next(r for r in groups["group-hazards"]["rows"] if r["path"] == self.PATH)
         self.assertEqual((row["value"], row["default"], row["changed"], row["kind"]), ("3.0", "2.0", True, "number"))
-        self.assertEqual(groups["hazards"]["changed"], 1)
-        weeks = next(r for r in groups["simulation"]["rows"] if r["path"] == "simulation/weeks")
+        self.assertEqual(row["anchor"], "param-" + self.PATH.replace("/", "--"))
+        self.assertEqual((groups["group-hazards"]["changed"], groups["group-hazards"]["title"]), (1, "Hazards"))
+        weeks = next(r for r in groups["group-simulation"]["rows"] if r["path"] == "simulation/weeks")
         self.assertEqual(weeks["error"], "bad")
         self.assertFalse(any(r["path"].endswith("/basis") for g in groups.values() for r in g["rows"]))
 

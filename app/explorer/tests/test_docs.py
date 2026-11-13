@@ -25,7 +25,8 @@ class RenderTest(SimpleTestCase):
         self.assertEqual(docs.inline("2 * 3 * 4"), "2 * 3 * 4")
 
     def test_links_lead_to_documents_of_the_app(self):
-        self.assertEqual(docs.inline("[s](../schema/)", "engine/README.md"), '<a href="../schema/">s</a>')
+        self.assertEqual(docs.inline("[s](../schema/)", "engine/README.md"), '<a href="/schema/">s</a>')
+        self.assertEqual(docs.inline("[a](../app/)", "engine/README.md"), "a")     # not shown in the app
         self.assertEqual(docs.inline("[r](references.md)", "background/toxicity-report.md"),
                          '<a href="../references/">r</a>')
         self.assertEqual(docs.inline("[x](EXTENSIONS.md#a)", "risk-model/README.md"),
@@ -38,5 +39,18 @@ class RenderTest(SimpleTestCase):
             html, _ = docs.page(document)
             self.assertGreater(len(html), 500, document.key)
             self.assertNotIn("<script", html)
-        self.assertEqual([g for g, _ in docs.groups()], ["Project", "Scientific background", "Components"])
-        self.assertTrue(docs.page(docs.DOCUMENTS["prompts"])[0].startswith("<pre>"))
+        self.assertEqual([g for g, _ in docs.groups()], ["Scientific background", "Models"])
+
+    def test_the_app_shows_no_developer_documents(self):
+        for key in ("prompts", "internal", "app", "project"):
+            self.assertNotIn(key, docs.DOCUMENTS)
+        self.assertFalse(any(d.path.startswith("project/") for d in docs.DOCUMENTS.values()))
+        titles = [t for _, t, _ in docs.page(docs.DOCUMENTS["engine"])[1]]
+        self.assertNotIn("Run", titles)
+        self.assertNotIn("Files", titles)
+        self.assertIn("Hazard model", titles)
+
+    def test_without_drops_sections(self):
+        text = "# A\nintro\n## Run\n```\n# not a heading\n```\n### Sub\nx\n## Keep\ny\n"
+        self.assertEqual(docs.without(text, ("Run",)), "# A\nintro\n## Keep\ny")
+        self.assertEqual(docs.without(text, ()), text)

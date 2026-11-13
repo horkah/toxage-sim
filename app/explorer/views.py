@@ -7,11 +7,16 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from . import charts, cohort, filters, timeline
+from . import charts, cohort, docs, filters, timeline
 from .middleware import accepted
+from .models import Dataset
 
 VIEWS = [("risk", "Risk"), ("characteristics", "Patient characteristics"),
          ("time", "Course over time"), ("interventions", "Interventions")]
+# Group of each risk model in the parameter file of the risk models.
+MODEL_GROUPS = {"severe90": "severe_toxicity_90d", "ild": "ild", "cv": "cardiovascular"}
+# Fields that sum up a patient at a glance, in the header of the patient card.
+KEY_FACTS = ("tumour_type", "regimen", "age_years", "sex", "ecog")
 # Query parameters that are not filters.
 STATE = ("patient", "model", "view", "scenario", "compare", "dataset")
 
@@ -132,12 +137,23 @@ def explorer(request):
         sections = _time_sections(dataset, shown, ids, patient, models)
     elif view == "interventions":
         sections = _intervention_sections(dataset, scenario, ids, models)
+        for r in sections[0]["table"]:
+            r["link"] = _query(request.GET, scenario=r["scenario"]["scenario_id"])
     else:
         built = charts.build(selection, patient, focus, models)
         sections = built[-1:] if view == "characteristics" else built[:-1]
+    summaries = [charts.summary(selection, m) for m in models]
+    risks = ({r["model"].id: r for r in charts.patient_risks(patient, selection, models)}
+             if patient and view in ("risk", "characteristics") else {})
+    model_links = [(m, _query(request.GET, model=m.id)) for m in models]
+    chips = filters.chips(specs, request.GET, active)
+    for chip in chips:
+        chip["remove"] = _query(request.GET, **{k: None for k in chip["keys"]})
+    facts = [(f, cohort.display(patient[f.name], f.unit)) for f in cohort.fields()] if patient else []
     response = render(request, "explorer/explorer.html", {
         "section": "explore",
         "dataset": dataset,
+        "datasets": Dataset.objects.filter(status=Dataset.READY).only("pk", "name", "n"),
         "total": len(rows),
         "selection": len(selection),
         "models": models,
@@ -146,24 +162,28 @@ def explorer(request):
         "scenario": scenario,
         "compare": compare,
         "scenarios": dataset.scenarios,
-        "summaries": [charts.summary(selection, m) for m in models],
+        "summaries": summaries,
+        "model_cards": [(s, q, risks.get(s["model"].id)) for s, (_, q) in zip(summaries, model_links)],
+        "model_doc": docs.anchor("risk-model", f"Candidate {focus.candidate}:"),
+        "model_group": MODEL_GROUPS.get(focus.id, ""),
         "filter_form": filters.form(specs, request.GET, active),
         "active_count": len(active),
+        "chips": chips,
         "patient": patient,
         "patient_id": wanted,
         "patient_in_selection": patient is not None and patient["patient_id"] in ids,
-        "patient_fields": [
-            (f, cohort.display(patient[f.name], f.unit)) for f in cohort.fields()
-        ] if patient else [],
-        "patient_risks": charts.patient_risks(patient, selection, models) if patient else [],
+        "patient_fields": facts,
+        "key_facts": [(f, v) for f, v in facts if f.name in KEY_FACTS and f.table == "baseline"],
+        "patient_risk": risks.get(focus.id) if view == "risk" else None,
         "sections": sections,
         "chart_data": {cid: spec for s in sections for cid, spec in s["charts"]},
         "keep": [(k, v) for k, values in request.GET.lists() if k != "patient"
                  for v in values],
         "keep_state": [(k, v) for k, values in request.GET.lists()
                        if k not in ("scenario", "compare") for v in values],
-        "model_links": [(m, _query(request.GET, model=m.id)) for m in models],
+        "model_links": model_links,
         "view_links": [(key, label, _query(request.GET, view=key)) for key, label in VIEWS],
+        "patient_time": _query(request.GET, view="time"),
         "clear_patient": _query(request.GET, patient=None),
         "reset_filters": _query(
             QueryDict(), **{k: request.GET.get(k) for k in STATE if k not in ("patient", "model")},
@@ -203,9 +223,13 @@ def disclaimer(request):
             return response
         error = True
     return render(request, "explorer/disclaimer.html", {
-        "next": target, "error": error, "accepted": accepted(request),
-        "version": settings.DISCLAIMER_VERSION,
+        "section": "disclaimer", "next": target, "error": error, "accepted": accepted(request),
+        "terms_version": settings.DISCLAIMER_VERSION,
     })
+
+
+def about(request):
+    return render(request, "explorer/about.html", {"section": "about"})
 
 
 @require_POST

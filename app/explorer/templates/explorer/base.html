@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}toxage-sim explorer{% endblock %}</title>
+  <title>{% block title %}toxage-sim{% endblock %}</title>
   <script>
     try {
       for (const key of ["theme", "textsize"]) {
@@ -12,75 +12,94 @@
       }
     } catch (e) {}
   </script>
-  <link rel="stylesheet" href="{% static 'explorer/style.css' %}">
-  <script type="module" src="{% static 'explorer/app.js' %}"></script>
-  <script type="module" src="{% static 'explorer/charts.js' %}"></script>
-  {% block tour %}<script type="module" src="{% static 'explorer/tour.js' %}"></script>{% endblock %}
-  {% block head %}{% endblock %}
+  <link rel="icon" type="image/svg+xml" href="{% static 'explorer/img/logo.svg' %}">
+  <link rel="stylesheet" href="{% static 'explorer/style.css' %}?v={{ app_version }}">
+  <script type="module" src="{% static 'explorer/app.js' %}?v={{ app_version }}"></script>
+  <script type="module" src="{% static 'explorer/charts.js' %}?v={{ app_version }}"></script>
+  {% block tour %}<script type="module" src="{% static 'explorer/tour.js' %}?v={{ app_version }}"></script>{% endblock %}
 </head>
-<body data-read-only="{{ read_only|yesno:'1,0' }}" data-tour-snapshot="{{ tour_snapshot|yesno:'1,0' }}">
+<body data-read-only="{{ read_only|yesno:'1,0' }}" data-tour-snapshot="{{ tour_snapshot|yesno:'1,0' }}" data-section="{{ section }}">
+  <div class="loadbar" aria-hidden="true"></div>
   <header class="topbar">
-    <a class="brand" href="{% url 'explorer' %}">toxage-sim <span>explorer</span></a>
+    <a class="brand" href="{% url 'explorer' %}" aria-label="toxage-sim, start">
+      <img src="{% static 'explorer/img/logo.svg' %}" alt="" width="30" height="30">
+      <span>toxage<b>-sim</b></span>
+    </a>
     {% block nav %}
-    <nav class="mainnav" aria-label="Sections">
-      <a href="{% url 'explorer' %}"{% if section == "explore" %} class="active"{% endif %}>Explore</a>
-      <a href="{% url 'data' %}"{% if section == "data" %} class="active"{% endif %}>Data</a>
-      <a href="{% url 'parameters_start' %}"{% if section == "parameters" %} class="active"{% endif %}>Parameters</a>
-      <a href="{% url 'schema' %}"{% if section == "schema" %} class="active"{% endif %}>Schema</a>
-      <a href="{% url 'documents' %}"{% if section == "documents" %} class="active"{% endif %}>Documents</a>
+    <nav class="mainnav" id="nav" aria-label="Sections">
+      <a href="{% url 'explorer' %}"{% if section == "explore" %} class="active" aria-current="page"{% endif %}>Explore</a>
+      <a href="{% url 'data' %}"{% if section == "data" %} class="active" aria-current="page"{% endif %}>Data</a>
+      <a href="{% url 'parameters_start' %}"{% if section == "parameters" %} class="active" aria-current="page"{% endif %}>Parameters</a>
+      <a href="{% url 'documents' %}"{% if section == "reference" %} class="active" aria-current="page"{% endif %}>Reference</a>
+      <a href="{% url 'about' %}"{% if section == "about" %} class="active" aria-current="page"{% endif %}>About</a>
     </nav>
-    {% endblock %}
-    {% block tools %}{% endblock %}
-    {% block menu %}
-    <details class="menu">
-      <summary aria-label="Menu"><span class="burger" aria-hidden="true"></span></summary>
-      <nav class="menu-panel">
-        <h3>Explore</h3>
-        <a href="{% url 'explorer' %}">Cohort and risk</a>
-        <a href="{% url 'explorer' %}?view=characteristics">Patient characteristics</a>
-        <a href="{% url 'explorer' %}?view=time">Course over time</a>
-        <a href="{% url 'explorer' %}?view=interventions">Interventions</a>
-        <a href="{% url 'random' %}">Random patient</a>
-        <h3>Manage</h3>
-        <a href="{% url 'data' %}">Data sets</a>
-        <a href="{% url 'parameters_start' %}">Model parameters</a>
-        <h3>Guided tours</h3>
-        <button type="button" class="link" data-tour-start="tutorial">Tutorial: step by step, you act</button>
-        <button type="button" class="link" data-tour-start="demo">Demo: runs by itself</button>
-        <h3>Reference</h3>
-        <a href="{% url 'schema' %}">Data schema</a>
-        <a href="{% url 'documents' %}">Documents</a>
-        <a href="{% url 'disclaimer' %}">Disclaimer and licence</a>
-        <h3>Settings</h3>
-        <fieldset class="setting" data-setting="theme">
-          <legend>Theme</legend>
-          <label><input type="radio" name="theme" value=""> system</label>
-          <label><input type="radio" name="theme" value="light"> bright</label>
-          <label><input type="radio" name="theme" value="dark"> dark</label>
-        </fieldset>
-        <fieldset class="setting" data-setting="welcome">
-          <legend>Offer tutorial and demo at start</legend>
-          <label><input type="radio" name="welcome" value=""> yes</label>
-          <label><input type="radio" name="welcome" value="off"> no</label>
-        </fieldset>
-        <fieldset class="setting" data-setting="textsize">
-          <legend>Text size</legend>
-          <label><input type="radio" name="textsize" value=""> normal</label>
-          <label><input type="radio" name="textsize" value="large"> large</label>
-        </fieldset>
-        <form method="post" action="{% url 'revoke' %}">{% csrf_token %}
-          <button type="submit" class="link">Show the disclaimer again</button>
-        </form>
-        {% block menu_about %}{% endblock %}
-      </nav>
-    </details>
+    <div class="tools">
+      <details class="popover" id="help">
+        <summary aria-label="Help and guided tours" title="Help and guided tours"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.4a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.4-2.7 4.1"/><circle cx="12" cy="17.6" r=".6" class="fill"/></svg><span class="label">Help</span></summary>
+        <div class="popover-panel">
+          <h3>Guided tours</h3>
+          <button type="button" class="menuitem" data-tour-start="tutorial"><b>Tutorial</b><small>Step by step; you click and type yourself.</small></button>
+          <button type="button" class="menuitem" data-tour-start="demo"><b>Demo</b><small>Runs by itself and leaves the app as it was.</small></button>
+        </div>
+      </details>
+      <details class="popover" id="settings">
+        <summary aria-label="Settings" title="Settings"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="label">Settings</span></summary>
+        <div class="popover-panel">
+          <fieldset class="setting" data-setting="theme">
+            <legend>Theme</legend>
+            <div class="segmented">
+              <label><input type="radio" name="theme" value=""><span>System</span></label>
+              <label><input type="radio" name="theme" value="light"><span>Bright</span></label>
+              <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+            </div>
+          </fieldset>
+          <fieldset class="setting" data-setting="textsize">
+            <legend>Text size</legend>
+            <div class="segmented">
+              <label><input type="radio" name="textsize" value=""><span>Normal</span></label>
+              <label><input type="radio" name="textsize" value="large"><span>Large</span></label>
+            </div>
+          </fieldset>
+          <fieldset class="setting" data-setting="welcome">
+            <legend>Offer the tours at start</legend>
+            <div class="segmented">
+              <label><input type="radio" name="welcome" value=""><span>Yes</span></label>
+              <label><input type="radio" name="welcome" value="off"><span>No</span></label>
+            </div>
+          </fieldset>
+          <form method="post" action="{% url 'revoke' %}" data-native>{% csrf_token %}
+            <button type="submit" class="link">Show the disclaimer again</button>
+          </form>
+        </div>
+      </details>
+    </div>
     {% endblock %}
   </header>
-  {% block status %}{% endblock %}
-  <main>{% block content %}{% endblock %}</main>
-  <footer class="statusbar">
-    <span>Synthetic data only. Demonstrator, not a medical device, not for clinical use.</span>
-    {% block footer %}{% endblock %}
+  <main id="main" data-page="{% block page %}{{ section }}{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="footer">
+    <span class="footer-note"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"/></svg>
+      Synthetic data only. A research demonstrator, not a medical device, not for clinical use.
+      <a href="{% url 'disclaimer' %}">Disclaimer and terms</a></span>
+    <a class="footer-version" href="{% url 'about' %}" title="About this app">toxage-sim {{ app_version }} · build {{ app_build }}</a>
   </footer>
+  <dialog class="confirm" id="confirm" aria-labelledby="confirm-title">
+    <form method="dialog">
+      <div class="confirm-body">
+        <svg class="warning" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4.5 45 41.5H3z" class="tri"/><path d="M24 17v12" class="mark"/><circle cx="24" cy="35" r="2.2" class="dot"/></svg>
+        <div>
+          <h2 id="confirm-title">Delete?</h2>
+          <p class="confirm-text"></p>
+          <p class="confirm-note">This cannot be undone.</p>
+        </div>
+      </div>
+      <div class="confirm-buttons">
+        <button value="cancel" autofocus>Cancel</button>
+        <button value="ok" class="danger">Delete</button>
+      </div>
+    </form>
+  </dialog>
+  <div class="toasts" aria-live="polite"></div>
 </body>
 </html>

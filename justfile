@@ -89,13 +89,13 @@ reset-db:
 
 # --- Docker ----------------------------------------------------------------
 
-# Build the container image
+# Build the container image; the build stamp carries the commit
 docker-build:
-    docker compose build
+    GIT_COMMIT=$(git rev-parse --short HEAD) docker compose build
 
 # Start the container at http://localhost:8000
 docker-up:
-    docker compose up -d --build
+    GIT_COMMIT=$(git rev-parse --short HEAD) docker compose up -d --build
 
 # Stop the container; the data stay in the volume
 docker-down:

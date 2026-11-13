@@ -1,59 +1,78 @@
 {% extends "explorer/base.html" %}
 {% block title %}{{ source.title }} · Parameters · toxage-sim{% endblock %}
 {% block content %}
-<div class="page wide">
-  <h1>Model parameters</h1>
-  <p class="muted">The defaults are the files of the repository. Changed values are stored in the database of the app
-    and stay until they are reset. {% if is_engine %}They apply to data sets generated from now on; stored data sets keep
-    the values they were made with.{% else %}They apply to the risks shown in the explorer at once.{% endif %}</p>
-  <nav class="tabs" aria-label="Parameter file">
-    {% for s, n in sources %}
-    <a href="{% url 'parameters' s.key %}"{% if s.key == source.key %} class="active" aria-current="page"{% endif %}>{{ s.title }}{% if n %} <span class="count">{{ n }}</span>{% endif %}</a>
-    {% endfor %}
-  </nav>
-  <p>{{ source.intro }} <span class="muted">File: <code>{{ source.path }}</code>.</span></p>
-  {% if saved %}<p class="notice" role="status">Saved.</p>{% endif %}
-  {% if errors %}<p class="notice error" role="alert">{{ errors|length }} value{{ errors|length|pluralize }} could not be saved. The other values were saved.</p>{% endif %}
+<div class="layout">
+  <aside class="sidebar subnav" data-keep-scroll id="param-nav">
+    <nav aria-label="Parameter file">
+      <h2>Parameter files</h2>
+      {% for s, n in sources %}
+      <a href="{% url 'parameters' s.key %}" class="navitem{% if s.key == source.key %} active{% endif %}"{% if s.key == source.key %} aria-current="page"{% endif %}>
+        <span>{{ s.title }}</span>{% if n %}<span class="count" title="{{ n }} changed">{{ n }}</span>{% endif %}</a>
+      {% endfor %}
+    </nav>
+    <nav aria-label="Groups of {{ source.title }}" class="toc">
+      <h2>In {{ source.title }}</h2>
+      {% for g in groups %}<a href="#{{ g.anchor }}" class="navitem small"><span>{{ g.title }}</span>{% if g.changed %}<span class="count">{{ g.changed }}</span>{% endif %}</a>{% endfor %}
+    </nav>
+  </aside>
 
-  <form method="post" class="params">{% csrf_token %}
-    <div class="actions sticky">
-      {% if not read_only %}
-      <button type="submit" name="action" value="save" class="primary">Save changes</button>
-      <button type="submit" name="action" value="reset_source"{% if not changed_here %} disabled{% endif %} data-confirm-button="Reset all values of “{{ source.title }}” to the defaults?">Reset this section ({{ changed_here }})</button>
-      <button type="submit" name="action" value="reset_all"{% if not changed_total %} disabled{% endif %} data-confirm-button="Reset all {{ changed_total }} changed values to the defaults?">Reset everything ({{ changed_total }})</button>
-      {% else %}<span class="muted">Read-only mode: values cannot be changed.</span>{% endif %}
-    </div>
-    {% for g in groups %}
-    <details{% if g.changed or forloop.first %} open{% endif %}>
-      <summary>{{ g.title }}{% if g.changed %} <span class="count">{{ g.changed }} changed</span>{% endif %}</summary>
-      {% if g.note %}<p class="muted">{{ g.note }}</p>{% endif %}
-      <table class="paramtable">
-        <thead><tr><th>Parameter</th><th>Value</th><th>Default</th><th></th></tr></thead>
-        <tbody>
-        {% for r in g.rows %}
-        <tr{% if r.changed %} class="changed"{% endif %}>
-          <th><label for="p-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">{{ r.label }}</label>
-            {% if r.note %}<small>{{ r.note }}</small>{% endif %}</th>
-          <td>
-            {% if r.kind == "bool" %}
-            <select name="p:{{ r.path }}" id="p-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"{% if read_only %} disabled{% endif %}>
-              <option value="true"{% if r.value == "true" %} selected{% endif %}>true</option>
-              <option value="false"{% if r.value == "false" %} selected{% endif %}>false</option>
-            </select>
-            {% else %}
-            <input type="{% if r.kind == 'number' %}number{% else %}text{% endif %}" step="any" name="p:{{ r.path }}"
-                   id="p-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" value="{{ r.value }}"{% if read_only %} readonly{% endif %}>
-            {% endif %}
-            {% if r.error %}<small class="error">{{ r.error }}</small>{% endif %}
-          </td>
-          <td class="muted">{{ r.default }}</td>
-          <td>{% if r.changed and not read_only %}<button type="submit" name="action" value="reset:{{ r.path }}" class="link">reset</button>{% endif %}</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-    </details>
-    {% endfor %}
-  </form>
+  <div class="views">
+    <header class="page-head">
+      <div>
+        <h1>{{ source.title }}</h1>
+        <p class="lead">{{ source.intro }}</p>
+        <p class="muted small">{% if is_engine %}Changes apply to data sets generated from now on; stored data sets keep the values they were made with.{% else %}Changes apply to the risks in the explorer at once.{% endif %}
+          Defaults come from <code>{{ source.path }}</code>.</p>
+      </div>
+    </header>
+    {% if saved %}<p class="notice" role="status" data-toast>Saved.</p>{% endif %}
+    {% if errors %}<p class="notice error" role="alert">{{ errors|length }} value{{ errors|length|pluralize }} could not be saved. The other values were saved.</p>{% endif %}
+
+    <form method="post" class="params" id="params" data-auto>{% csrf_token %}
+      <div class="toolbar sticky">
+        <input type="search" class="param-search" placeholder="Find a parameter" aria-label="Find a parameter" data-find="#params tbody tr">
+        <span class="spacer"></span>
+        {% if not read_only %}
+        <span class="muted small autosave">Changes are saved as you go.</span>
+        <noscript><button type="submit" name="action" value="save" class="primary">Save changes</button></noscript>
+        <button type="submit" name="action" value="reset_source"{% if not changed_here %} disabled{% endif %}
+                data-confirm="All {{ changed_here }} changed value{{ changed_here|pluralize }} of “{{ source.title }}” will go back to the defaults." data-confirm-title="Reset this file?" data-confirm-action="Reset">Reset this file ({{ changed_here }})</button>
+        <button type="submit" name="action" value="reset_all"{% if not changed_total %} disabled{% endif %}
+                data-confirm="All {{ changed_total }} changed value{{ changed_total|pluralize }} in all parameter files will go back to the defaults." data-confirm-title="Reset everything?" data-confirm-action="Reset">Reset everything ({{ changed_total }})</button>
+        {% else %}<span class="muted small">Read-only mode: values cannot be changed.</span>{% endif %}
+      </div>
+      {% for g in groups %}
+      <details id="{{ g.anchor }}"{% if g.changed or forloop.first %} open{% endif %}>
+        <summary>{{ g.title }}{% if g.changed %} <span class="count">{{ g.changed }} changed</span>{% endif %}</summary>
+        {% if g.note %}<p class="basis">{{ g.note }}</p>{% endif %}
+        <table class="paramtable">
+          <thead><tr><th>Parameter</th><th>Value</th><th>Default</th><th><span class="sr-only">Reset</span></th></tr></thead>
+          <tbody>
+          {% for r in g.rows %}
+          <tr id="{{ r.anchor }}"{% if r.changed %} class="changed"{% endif %}>
+            <th><label for="p-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">{{ r.label }}</label>
+              {% if r.note %}<small>{{ r.note }}</small>{% endif %}</th>
+            <td>
+              {% if r.kind == "bool" %}
+              <select name="p:{{ r.path }}" id="p-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"{% if read_only %} disabled{% endif %}>
+                <option value="true"{% if r.value == "true" %} selected{% endif %}>true</option>
+                <option value="false"{% if r.value == "false" %} selected{% endif %}>false</option>
+              </select>
+              {% else %}
+              <input type="{% if r.kind == 'number' %}number{% else %}text{% endif %}" step="any" name="p:{{ r.path }}"
+                     id="p-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" value="{{ r.value }}"{% if read_only %} readonly{% endif %}>
+              {% endif %}
+              {% if r.error %}<small class="error">{{ r.error }}</small>{% endif %}
+            </td>
+            <td class="default">{{ r.default }}</td>
+            <td>{% if r.changed and not read_only %}<button type="submit" name="action" value="reset:{{ r.path }}" class="iconbutton" title="Back to the default {{ r.default }}" aria-label="Reset to the default">↺</button>{% endif %}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </details>
+      {% endfor %}
+    </form>
+  </div>
 </div>
 {% endblock %}

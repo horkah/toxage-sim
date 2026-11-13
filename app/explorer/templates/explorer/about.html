@@ -1,0 +1,59 @@
+{% extends "explorer/base.html" %}
+{% load static %}
+{% block title %}About · toxage-sim{% endblock %}
+{% block content %}
+<div class="page">
+  <section class="hero">
+    <img src="{% static 'explorer/img/logo.svg' %}" alt="" width="88" height="88">
+    <div>
+      <h1>toxage<b>-sim</b></h1>
+      <p class="lead">Synthetic patients, risk models and early detection of toxicity from systemic cancer therapy.</p>
+      <p class="version-line"><span class="badge accent">Version {{ app_version }}</span> <span class="badge">Build {{ app_build }}</span></p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>What this is</h2>
+    <p>Cancer therapies save and prolong lives, but they often harm the patient as well. In clinical trials of
+      systemic treatments for advanced cancer, more than half of the patients have at least one severe side
+      effect, and some of them are noticed late. The project asks how well toxicity can be predicted at the
+      start of a therapy, and how much earlier it could be detected.</p>
+    <p>It works with synthetic data only. A data engine simulates patients with advanced pancreatic, prostate
+      or breast cancer week by week, based on published trials and guidelines. Risk models estimate the risk
+      of severe side effects at therapy start. Intervention scenarios show what risk-adapted dosing and
+      monitoring could change. This app brings the three together.</p>
+    <p>New here? “Help” on top starts a guided tour through every part of the app.</p>
+  </section>
+
+  <section class="panel" id="authors">
+    <h2>Authors and credits</h2>
+    <dl class="credits">
+      <dt>Concept, scientific scope and development</dt>
+      <dd><a href="https://github.com/horkah" rel="noopener">horkah</a> conceived the project, set its scientific
+        questions and every requirement, directed the implementation through written prompts, and reviewed and
+        accepted each change.</dd>
+      <dt>AI-assisted implementation</dt>
+      <dd>Large parts of the code, the documentation and the summaries of the literature were written with
+        Claude, an AI model by <a href="https://www.anthropic.com" rel="noopener">Anthropic</a>, working under the
+        author's direction. Such contributions are marked as co-authored in the version history of the project.</dd>
+      <dt>Responsibility</dt>
+      <dd>The author is responsible for the content. AI-assisted work can contain errors. Statements about the
+        literature cite their sources, listed in the <a href="{% url 'document' 'references' %}">references</a>,
+        so that they can be checked.</dd>
+      <dt>Source code</dt>
+      <dd><a href="{{ repository }}" rel="noopener">{{ repository|cut:"https://" }}</a></dd>
+    </dl>
+  </section>
+
+  <section class="panel">
+    <h2>Version</h2>
+    <dl class="facts-list">
+      <dt>App version</dt><dd>{{ app_version }}</dd>
+      <dt>Build</dt><dd>{{ app_build }}</dd>
+      <dt>Terms of use</dt><dd><a href="{% url 'disclaimer' %}">Disclaimer and terms</a></dd>
+      <dt>Technology</dt><dd>Django, plain JavaScript and SVG charts. No external services, no tracking.
+        Settings stay in this browser; data stay on the server of this installation.</dd>
+    </dl>
+  </section>
+</div>
+{% endblock %}

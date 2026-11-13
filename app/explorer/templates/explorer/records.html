@@ -1,17 +1,21 @@
 {% extends "explorer/base.html" %}
 {% block title %}Records · {{ dataset.name }} · toxage-sim{% endblock %}
+{% block page %}records{% endblock %}
 {% block content %}
 <div class="page wide">
-  <p><a href="{% url 'data' %}">← Data sets</a></p>
-  <h1>Records of “{{ dataset.name }}”</h1>
+  <p class="crumbs"><a href="{% url 'data' %}#dataset-{{ dataset.pk }}">Data sets</a> › {{ dataset.name }}</p>
+  <header class="page-head">
+    <div>
+      <h1>Records</h1>
+      <p class="lead">{{ description }} <a href="{% url 'schema' %}#{{ table }}">Fields of “{{ table }}”</a></p>
+    </div>
+  </header>
   <nav class="tabs" aria-label="Table">
-    <span>Table</span>
     {% for t in tables %}
-    <a href="?table={{ t }}&scenario={{ scenario.scenario_id }}{% if patient_id %}&patient={{ patient_id }}{% endif %}"{% if t == table %} class="active" aria-current="page"{% endif %}>{{ t }}</a>
+    <a href="?table={{ t }}&amp;scenario={{ scenario.scenario_id }}{% if patient_id %}&amp;patient={{ patient_id }}{% endif %}"{% if t == table %} class="active" aria-current="page"{% endif %}>{{ t }}</a>
     {% endfor %}
   </nav>
-  <p class="muted">{{ description }}</p>
-  <form method="get" class="scenario">
+  <form method="get" class="toolbar" id="records-filter" data-auto>
     <input type="hidden" name="table" value="{{ table }}">
     {% if by_scenario %}
     <label for="rec-scenario">Scenario</label>
@@ -23,26 +27,28 @@
     <label for="rec-patient">Patient</label>
     <input type="search" name="patient" id="rec-patient" value="{{ patient_id }}" placeholder="all, or an ID such as 42">
     {% endif %}
-    <button type="submit">Show</button>
-    <a class="button" href="{% url 'export' dataset.pk table %}{% if by_scenario %}?scenario={{ scenario.scenario_id }}{% endif %}">Download CSV</a>
-    {% if by_scenario %}<a class="button" href="{% url 'export' dataset.pk table %}">Download CSV, all scenarios</a>{% endif %}
+    <noscript><button type="submit">Show</button></noscript>
+    <span class="spacer"></span>
+    <a class="button" href="{% url 'export' dataset.pk table %}{% if by_scenario %}?scenario={{ scenario.scenario_id }}{% endif %}" download>CSV{% if by_scenario %} of this scenario{% endif %}</a>
+    {% if by_scenario %}<a class="button" href="{% url 'export' dataset.pk table %}" download>CSV of all scenarios</a>{% endif %}
   </form>
   {% if rows %}
-  <p class="muted">Records {{ first }} to {{ first|add:rows|length|add:"-1" }}{% if total %} of {{ total }}{% endif %}.</p>
+  <p class="muted small">Records {{ first }} to {{ last }}{% if total %} of {{ total }}{% endif %}.
+    {% if patient_col >= 0 %}Click a patient ID to explore the patient.{% endif %}</p>
   <div class="scroll">
   <table class="numbers records">
-    <thead><tr>{% for name, title, unit in fields %}<th title="{{ name }}">{{ title }}{% if unit %}<br><small>{{ unit }}</small>{% endif %}</th>{% endfor %}</tr></thead>
+    <thead><tr>{% for name, title, unit in fields %}<th><a href="{% url 'schema' %}#{{ table }}-{{ name }}" title="{{ name }}: in the data schema">{{ title }}</a>{% if unit %}<br><small>{{ unit }}</small>{% endif %}</th>{% endfor %}</tr></thead>
     <tbody>
-    {% for row in rows %}<tr>{% for value in row %}<td>{{ value }}</td>{% endfor %}</tr>{% endfor %}
+    {% for row in rows %}<tr>{% for value in row %}{% if forloop.counter0 == patient_col %}<td><a href="{% url 'explorer' %}?dataset={{ dataset.pk }}&amp;scenario={{ scenario.scenario_id }}&amp;patient={{ value }}">{{ value }}</a></td>{% else %}<td>{{ value }}</td>{% endif %}{% endfor %}</tr>{% endfor %}
     </tbody>
   </table>
   </div>
   <p class="actions">
-    {% if page > 1 %}<a class="button" href="?table={{ table }}&scenario={{ scenario.scenario_id }}&patient={{ patient_id }}&page={{ page|add:"-1" }}">← Previous</a>{% endif %}
-    {% if more %}<a class="button" href="?table={{ table }}&scenario={{ scenario.scenario_id }}&patient={{ patient_id }}&page={{ page|add:"1" }}">Next →</a>{% endif %}
+    {% if page > 1 %}<a class="button" href="?table={{ table }}&amp;scenario={{ scenario.scenario_id }}&amp;patient={{ patient_id }}&amp;page={{ page|add:"-1" }}">← Previous</a>{% endif %}
+    {% if more %}<a class="button" href="?table={{ table }}&amp;scenario={{ scenario.scenario_id }}&amp;patient={{ patient_id }}&amp;page={{ page|add:"1" }}">Next →</a>{% endif %}
   </p>
   {% else %}
-  <p>No records.</p>
+  <p class="panel muted">No records{% if patient_id %} for patient {{ patient_id }}{% endif %}.</p>
   {% endif %}
 </div>
 {% endblock %}

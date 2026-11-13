@@ -1,10 +1,10 @@
 {% extends "explorer/base.html" %}
 {% block title %}Disclaimer · toxage-sim{% endblock %}
-{% block menu %}{% endblock %}
-{% block nav %}{% endblock %}
+{% block nav %}{% if accepted %}{{ block.super }}{% endif %}{% endblock %}
 {% block tour %}{% endblock %}
 {% block content %}
 <section class="panel narrow disclaimer">
+  {% load static %}<img class="disclaimer-logo" src="{% static 'explorer/img/logo.svg' %}" alt="" width="56" height="56">
   <h1>Before you start</h1>
   <p class="lead">This app is a research demonstrator of the toxage-sim project. Please read
     the limitations and the terms of use.</p>
@@ -37,9 +37,9 @@
     <li>These terms are preliminary and may change. A change of the terms asks you to
       accept them again.</li>
   </ol>
-  <p class="muted">Terms version {{ version }}.</p>
+  <p class="muted">Terms version {{ terms_version }}.</p>
 
-  <form method="post" class="accept">
+  <form method="post" class="accept" data-native>
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ next }}">
     <label><input type="checkbox" name="accept" value="yes" required>

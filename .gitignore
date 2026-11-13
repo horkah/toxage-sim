@@ -8,3 +8,4 @@ app/db.sqlite3
 app/db.sqlite3-*
 app/secret_key
 .venv/
+/BUILD

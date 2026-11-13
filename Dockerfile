@@ -16,14 +16,20 @@ RUN pip install --no-cache-dir uv \
 ENV PATH=/srv/toxage/.venv/bin:$PATH
 
 # The app reads the engine, the risk models, the schema and the documents
-# from the repository, so all of them are part of the image.
+# from the repository, so all of them are part of the image. The project
+# folder (prompt log, internal notes) is for developers and stays out.
 COPY README.md ./
 COPY schema schema
 COPY engine engine
 COPY risk-model risk-model
 COPY background background
-COPY project project
 COPY app app
+
+# Every build gets its own stamp: the time of the build and, if given, the
+# commit, e.g. GIT_COMMIT=$(git rev-parse --short HEAD). The app shows it in
+# the footer and on the about page.
+ARG GIT_COMMIT=""
+RUN echo "$(date -u +%Y%m%d.%H%M)${GIT_COMMIT:+ ($GIT_COMMIT)}" > BUILD
 
 # The database and the secret key live in /data, which is a volume.
 RUN useradd --system --create-home toxage && mkdir /data && chown toxage /data

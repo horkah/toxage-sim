@@ -104,3 +104,37 @@ def form(filter_specs, query, active):
         groups.setdefault(f.group, []).append(entry)
     return [{"name": name, "entries": entries, "active": any(e["active"] for e in entries)}
             for name, entries in groups.items()]
+
+
+def _bound(value):
+    return f"{value:g}"
+
+
+def chips(filter_specs, query, active):
+    """The active filters as short texts, in spec order:
+    [{"key", "label", "value", "keys": query keys that hold the filter}]."""
+    from .cohort import display
+    found = []
+    for f in filter_specs:
+        if f.key not in active:
+            continue
+        condition = active[f.key]
+        if f.kind == "choice":
+            value = ", ".join(display(c) for c in f.choices if c in condition)
+            keys = [f.key]
+        elif f.kind == "bool":
+            value = "yes" if condition else "no"
+            keys = [f.key]
+        else:
+            low, high = (None if b is None else b * f.scale for b in condition)
+            unit = f" {f.unit}" if f.unit and f.unit != "%" else f.unit
+            if low is not None and high is not None:
+                value = _bound(low) if low == high else f"{_bound(low)}–{_bound(high)}"
+            elif low is not None:
+                value = f"≥ {_bound(low)}"
+            else:
+                value = f"≤ {_bound(high)}"
+            value += unit
+            keys = [f"{f.key}_min", f"{f.key}_max"]
+        found.append({"key": f.key, "label": f.label, "value": value, "keys": keys})
+    return found

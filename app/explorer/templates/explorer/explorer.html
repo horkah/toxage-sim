@@ -1,71 +1,86 @@
 {% extends "explorer/base.html" %}
 {% load explorer_tags %}
-{% block title %}{% if patient %}{{ patient.patient_id }} · {% endif %}toxage-sim explorer{% endblock %}
-
-{% block tools %}
-<form class="search" method="get" action="{% url 'explorer' %}" role="search">
-  {% for key, value in keep %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
-  <input type="search" name="patient" value="{{ patient_id }}" placeholder="Patient ID, e.g. 42"
-         aria-label="Patient ID">
-  <button type="submit">Show</button>
-</form>
-<a class="button" href="{% url 'random' %}?{{ request.GET.urlencode }}"
-   title="Random patient of the current selection">Random</a>
-{% if patient_id %}<a class="button" href="?{{ clear_patient }}">Clear patient</a>{% endif %}
-{% endblock %}
-
-{% block menu_about %}
-<h3>Data set</h3>
-<p class="muted">“{{ dataset.name }}”: {{ total }} synthetic patients, seed {{ dataset.metadata.seed }},
-  {{ scenarios|length }} scenarios, followed for up to {{ dataset.metadata.weeks }} weeks,
-  schema {{ dataset.metadata.schema_version.baseline }}, generated {{ dataset.created|date:"Y-m-d H:i" }} UTC.</p>
-{% endblock %}
-
-{% block status %}
-<div class="statusbar top" role="status">
-  <span><a href="{% url 'data' %}" title="Data sets">{{ dataset.name }}</a></span>
-  <span><b>{{ selection }}</b> of {{ total }} patients
-    {% if active_count %}· {{ active_count }} filter{{ active_count|pluralize }} active{% endif %}</span>
-  {% for s in summaries %}
-  <span class="{% if s.model == focus %}focus{% endif %}" title="{{ s.events }} events among {{ s.n }} patients for whom the model applies">
-    <b>{{ s.model.name }}</b> observed {{ s.observed|pct }} · predicted {{ s.predicted|pct }}
-    · AUC {{ s.auc|num }} · Brier {{ s.brier|num:3 }} · n {{ s.n }}</span>
-  {% endfor %}
-  <span>Scenario <b>{{ scenario.title }}</b>{% if compare %} against {{ compare.title }}{% endif %}</span>
-  {% if patient %}<span class="patient-tag">Patient {{ patient.patient_id }}</span>{% endif %}
-</div>
-{% endblock %}
+{% block title %}{% if patient %}{{ patient.patient_id }} · {% endif %}Explore · toxage-sim{% endblock %}
 
 {% block content %}
+<div class="context" id="context">
+  <form method="get" class="ctx-field" id="dataset-switch" data-auto>
+    <input type="hidden" name="view" value="{{ view }}">
+    <input type="hidden" name="model" value="{{ focus.id }}">
+    <label for="dataset-select">Data set</label>
+    <select name="dataset" id="dataset-select">
+      {% for d in datasets %}<option value="{{ d.pk }}"{% if d.pk == dataset.pk %} selected{% endif %}>{{ d.name }}</option>{% endfor %}
+    </select>
+    <a class="iconbutton small" href="{% url 'data' %}#dataset-{{ dataset.pk }}" title="{{ total }} patients, followed up to {{ dataset.metadata.weeks }} weeks. Details on the data page." aria-label="About this data set"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".7" class="fill"/></svg></a>
+  </form>
+
+  <form method="get" class="ctx-field scenario" id="scenario" data-auto>
+    {% for key, value in keep_state %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+    <label for="scenario-select">Scenario</label>
+    <select name="scenario" id="scenario-select" title="{{ scenario.description }}">
+      {% for s in scenarios %}<option value="{{ s.scenario_id }}"{% if s.scenario_id == scenario.scenario_id %} selected{% endif %}>{{ s.title }}</option>{% endfor %}
+    </select>
+    <label for="compare-select">vs.</label>
+    <select name="compare" id="compare-select" data-clear-when="scenario">
+      <option value="none">nothing</option>
+      {% for s in scenarios %}{% if s.scenario_id != scenario.scenario_id %}<option value="{{ s.scenario_id }}"{% if s.scenario_id == compare.scenario_id %} selected{% endif %}>{{ s.title }}</option>{% endif %}{% endfor %}
+    </select>
+    <noscript><button type="submit">Show</button></noscript>
+  </form>
+
+  <form class="ctx-field search" id="patient-search" method="get" action="{% url 'explorer' %}" role="search">
+    {% for key, value in keep %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+    <label for="patient-input">Patient</label>
+    <input type="search" name="patient" id="patient-input" value="{{ patient_id }}" placeholder="ID, e.g. 42" autocomplete="off">
+    <button type="submit">Show</button>
+    <a class="button" id="random" href="{% url 'random' %}?{{ request.GET.urlencode }}" title="A random patient of the current selection">Random</a>
+  </form>
+</div>
+<p class="scenario-note"><b>{{ scenario.title }}</b>{% if compare %} compared with <b>{{ compare.title }}</b>{% endif %}: {{ scenario.description }}</p>
+
 <div class="layout">
-  <aside>
-    <form method="get" class="filters" id="filters">
-      <h2>Filters</h2>
+  <aside class="sidebar" id="sidebar" data-keep-scroll>
+    <section class="cohort" id="cohort" aria-live="polite">
+      <h2>Cohort</h2>
+      <p class="cohort-count"><b>{{ selection }}</b> of {{ total }} patients</p>
+      <div class="meter" role="presentation"><span style="width: {% widthratio selection total 100 %}%"></span></div>
+      {% if chips %}
+      <ul class="chips" aria-label="Active filters">
+        {% for c in chips %}<li><a href="?{{ c.remove }}" title="Remove this filter"><span>{{ c.label }}:</span> {{ c.value }}<i aria-hidden="true">×</i></a></li>{% endfor %}
+      </ul>
+      <a class="link small" id="filters-reset" href="?{{ reset_filters }}">Reset all filters</a>
+      {% else %}
+      <p class="muted small">No filter. Choose below, or click a bar or a point in a chart.</p>
+      {% endif %}
+    </section>
+    <form method="get" class="filters" id="filters" data-auto>
       <input type="hidden" name="model" value="{{ focus.id }}">
       <input type="hidden" name="view" value="{{ view }}">
       <input type="hidden" name="scenario" value="{{ scenario.scenario_id }}">
       {% if compare %}<input type="hidden" name="compare" value="{{ compare.scenario_id }}">{% endif %}
       {% if patient %}<input type="hidden" name="patient" value="{{ patient.patient_id }}">{% endif %}
       {% for group in filter_form %}
-      <details {% if group.active or forloop.first %}open{% endif %}>
+      <details id="filter-group-{{ forloop.counter }}"{% if group.active or forloop.first %} open{% endif %}>
         <summary>{{ group.name }}</summary>
         {% for e in group.entries %}
         <fieldset{% if e.active %} class="active"{% endif %}>
-          <legend>{{ e.spec.label }}{% if e.spec.unit %} ({{ e.spec.unit }}){% endif %}</legend>
+          <legend>{{ e.spec.label }}{% if e.spec.unit %} <span class="unit">{{ e.spec.unit }}</span>{% endif %}</legend>
           {% if e.spec.kind == "choice" %}
+            <div class="choices">
             {% for c in e.spec.choices %}
-            <label><input type="checkbox" name="{{ e.spec.key }}" value="{{ c }}"{% if c in e.selected %} checked{% endif %}> {{ c|label }}</label>
+            <label class="choice"><input type="checkbox" name="{{ e.spec.key }}" value="{{ c }}"{% if c in e.selected %} checked{% endif %}><span>{{ c|label }}</span></label>
             {% endfor %}
+            </div>
           {% elif e.spec.kind == "bool" %}
-            <select name="{{ e.spec.key }}" aria-label="{{ e.spec.label }}">
-              <option value="">any</option>
-              <option value="true"{% if e.value == "true" %} selected{% endif %}>yes</option>
-              <option value="false"{% if e.value == "false" %} selected{% endif %}>no</option>
-            </select>
+            <div class="segmented small">
+              <label><input type="radio" name="{{ e.spec.key }}" value=""{% if not e.value %} checked{% endif %}><span>any</span></label>
+              <label><input type="radio" name="{{ e.spec.key }}" value="true"{% if e.value == "true" %} checked{% endif %}><span>yes</span></label>
+              <label><input type="radio" name="{{ e.spec.key }}" value="false"{% if e.value == "false" %} checked{% endif %}><span>no</span></label>
+            </div>
           {% else %}
             <span class="range">
               <input type="number" step="any" name="{{ e.spec.key }}_min" value="{{ e.min }}" placeholder="min" aria-label="{{ e.spec.label }} minimum">
-              <span>–</span>
+              <span aria-hidden="true">–</span>
               <input type="number" step="any" name="{{ e.spec.key }}_max" value="{{ e.max }}" placeholder="max" aria-label="{{ e.spec.label }} maximum">
             </span>
           {% endif %}
@@ -73,37 +88,82 @@
         {% endfor %}
       </details>
       {% endfor %}
-      <div class="actions">
-        <button type="submit" class="primary">Apply</button>
-        <a class="button" href="?{{ reset_filters }}">Reset</a>
-      </div>
+      <noscript><button type="submit" class="primary">Apply</button></noscript>
     </form>
   </aside>
 
   <div class="views">
+    <nav class="tabs" aria-label="View">
+      {% for key, label, query in view_links %}
+      <a href="?{{ query }}"{% if key == view %} class="active" aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
+    </nav>
+
+    {% if view == "risk" or view == "characteristics" %}
+    <nav class="models" aria-label="Risk model">
+      {% for s, query, r in model_cards %}
+      <a href="?{{ query }}" data-model="{{ s.model.id }}" class="model{% if s.model == focus %} active{% endif %}"{% if s.model == focus %} aria-current="true"{% endif %}
+         title="{{ s.events }} events among {{ s.n }} patients for whom the model applies">
+        <span class="model-name">{{ s.model.name }}</span>
+        <span class="model-rates"><b>{{ s.observed|pct }}</b> observed · <b>{{ s.predicted|pct }}</b> predicted</span>
+        <span class="model-quality">AUC {{ s.auc|num }} · Brier {{ s.brier|num:3 }} · n {{ s.n }}</span>
+        {% if r %}<span class="model-patient">Patient {{ patient.patient_id }}: {% if r.applies %}<b>{{ r.risk|pct }}</b>{% else %}does not apply{% endif %}</span>{% endif %}
+      </a>
+      {% endfor %}
+    </nav>
+    <p class="model-info">Candidate {{ focus.candidate }} of the toxicity report, outcome within {{ focus.window_days }} days.
+      Source: {{ focus.source }}. Risks at therapy start without an intervention.
+      <a href="{% url 'document' 'risk-model' %}{% if model_doc %}#{{ model_doc }}{% endif %}">How the model works</a>
+      · <a href="{% url 'parameters' 'risk' %}{% if model_group %}#group-{{ model_group }}{% endif %}">Its parameters</a></p>
+    {% endif %}
+
     {% if patient_id and not patient %}
-    <p class="notice error" role="alert">No patient with ID “{{ patient_id }}”.</p>
+    <p class="notice error" role="alert">No patient with ID “{{ patient_id }}” in this data set. <a href="?{{ clear_patient }}">Close</a></p>
     {% endif %}
 
     {% if patient %}
-    <section class="panel patient">
-      <h2>Patient {{ patient.patient_id }}
-        {% if not patient_in_selection %}<span class="tag">outside the current filter</span>{% endif %}</h2>
-      <div class="patient-grid">
-        <table class="facts">
-          {% for f, value in patient_fields %}
-          {% ifchanged f.table %}<tr><th colspan="2" class="group">{% if f.table == "baseline" %}At therapy start{% else %}Outcome in the scenario {{ scenario.title }}{% endif %}</th></tr>{% endifchanged %}
-          <tr><th>{{ f.label }}</th><td>{{ value }}</td></tr>
-          {% endfor %}
-        </table>
-        {% for r in patient_risks %}
-        <div class="riskcard{% if r.model == focus %} focus{% endif %}">
-          <h3>{{ r.model.name }}</h3>
+    <section class="panel patient" id="patient">
+      <header class="patient-head">
+        <div>
+          <h2>Patient {{ patient.patient_id }}
+            {% if not patient_in_selection %}<span class="tag warn">outside the current filter</span>{% endif %}</h2>
+          <ul class="keyfacts">
+            {% for f, value in key_facts %}<li><span>{{ f.label }}</span>{{ value }}</li>{% endfor %}
+          </ul>
+        </div>
+        <div class="patient-actions">
+          {% if view != "time" %}<a class="button" href="?{{ patient_time }}">Course over time</a>{% endif %}
+          <a class="button" href="{% url 'records' dataset.pk %}?table=event&amp;scenario={{ scenario.scenario_id }}&amp;patient={{ patient.patient_id }}">Records</a>
+          <a class="iconbutton" href="?{{ clear_patient }}" aria-label="Close the patient" title="Close the patient">×</a>
+        </div>
+      </header>
+      <div class="patient-body">
+        <details class="factsbox" id="patient-facts">
+          <summary>All characteristics and the outcome</summary>
+          <div class="facts">
+            {% for f, value in patient_fields %}
+            {% ifchanged f.table %}{% if not forloop.first %}</dl>{% endif %}<h3>{% if f.table == "baseline" %}At therapy start{% else %}Outcome under {{ scenario.title }}{% endif %}</h3><dl>{% endifchanged %}
+            <div><dt><a href="{% url 'schema' %}#{{ f.table }}-{{ f.name }}" title="In the data schema">{{ f.label }}</a></dt><dd>{{ value }}</dd></div>
+            {% if forloop.last %}</dl>{% endif %}
+            {% endfor %}
+          </div>
+        </details>
+        {% if patient_risk %}{% with r=patient_risk %}
+        <div class="riskcard focus">
+          <div class="riskcard-head">
+            <div>
+              <h3>{{ r.model.name }}</h3>
+              {% if r.applies %}<p class="big">{{ r.risk|pct }}</p>{% endif %}
+            </div>
+            {% if r.applies %}
+            <dl class="riskmeta">
+              <dt>Reference patient, same regimen</dt><dd>{{ r.reference|pct }}</dd>
+              <dt>Percentile in the selection</dt><dd>{{ r.percentile|num:0 }}</dd>
+              <dt>Observed</dt><dd>{% if r.observed %}<b class="event-text">event</b>{% if r.onset %}, day {{ r.onset }}{% endif %}{% else %}no event{% endif %}</dd>
+            </dl>
+            {% endif %}
+          </div>
           {% if r.applies %}
-          <p class="big">{{ r.risk|pct }}</p>
-          <p class="muted">Reference patient on this regimen: {{ r.reference|pct }}<br>
-            Percentile in the selection: {{ r.percentile|num:0 }}</p>
-          <p>Observed: {% if r.observed %}<b class="event-text">event</b>{% if r.onset %} on day {{ r.onset }}{% endif %}{% else %}no event{% endif %}</p>
           <table class="factors">
             <caption>Risk factors, {{ r.model.ratio_kind }} (1 = no effect)</caption>
             {% for f in r.factors %}
@@ -115,55 +175,24 @@
             {% endfor %}
           </table>
           {% else %}
-          <p class="muted">The model does not apply to this regimen.</p>
+          <p class="muted">The model does not apply to the regimen of this patient. Choose another risk model above.</p>
           {% endif %}
         </div>
-        {% endfor %}
+        {% endwith %}{% endif %}
       </div>
     </section>
     {% endif %}
 
-    <form method="get" class="scenario" id="scenario">
-      {% for key, value in keep_state %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
-      <label for="scenario-select">Scenario</label>
-      <select name="scenario" id="scenario-select">
-        {% for s in scenarios %}<option value="{{ s.scenario_id }}"{% if s.scenario_id == scenario.scenario_id %} selected{% endif %}>{{ s.title }}</option>{% endfor %}
-      </select>
-      <label for="compare-select">compared with</label>
-      <select name="compare" id="compare-select">
-        <option value="none">nothing</option>
-        {% for s in scenarios %}{% if s.scenario_id != scenario.scenario_id %}<option value="{{ s.scenario_id }}"{% if s.scenario_id == compare.scenario_id %} selected{% endif %}>{{ s.title }}</option>{% endif %}{% endfor %}
-      </select>
-      <noscript><button type="submit">Show</button></noscript>
-    </form>
-    <p class="muted scenario-note">{{ scenario.title }}: {{ scenario.description }}</p>
-
-    <nav class="tabs" aria-label="View">
-      <span>View</span>
-      {% for key, label, query in view_links %}
-      <a href="?{{ query }}"{% if key == view %} class="active" aria-current="page"{% endif %}>{{ label }}</a>
-      {% endfor %}
-    </nav>
-
-    {% if view == "risk" or view == "characteristics" %}
-    <nav class="tabs" aria-label="Risk model of the charts">
-      <span>Risk model</span>
-      {% for m, query in model_links %}
-      <a href="?{{ query }}"{% if m == focus %} class="active" aria-current="page"{% endif %}>{{ m.name }}</a>
-      {% endfor %}
-    </nav>
-    <p class="muted model-info">{{ focus.name }}: candidate {{ focus.candidate }} of the toxicity report,
-      outcome within {{ focus.window_days }} days. Source: {{ focus.source }}.
-      The risk models describe the risk at therapy start without an intervention.</p>
-    {% endif %}
-
+    {{ chart_data|json_script:"chart-data" }}
     {% for s in sections %}
     <section class="charts">
-      <h2>{{ s.title }}</h2>
-      <p class="note">{{ s.note }}</p>
+      <header class="section-head">
+        <h2>{{ s.title }}</h2>
+        <p class="note">{{ s.note }}</p>
+      </header>
       {% if s.table %}
       <div class="scroll">
-      <table class="numbers">
+      <table class="numbers scenarios">
         <thead><tr>
           <th>Scenario</th><th>Taking part</th><th>Severe toxicity, 90 days</th><th>Severe events per patient</th>
           <th>Events recognised early per patient</th><th>Cardiovascular events</th><th>Deaths from toxicity</th><th>Hospital days per patient</th>
@@ -173,7 +202,7 @@
         <tbody>
         {% for r in s.table %}
         <tr{% if r.scenario.scenario_id == scenario.scenario_id %} class="selected"{% endif %}>
-          <td>{{ r.scenario.title }}</td><td>{{ r.participating|pct }}</td><td>{{ r.severe_90d|pct }}</td>
+          <td><a href="?{{ r.link }}" title="Select this scenario">{{ r.scenario.title }}</a></td><td>{{ r.participating|pct }}</td><td>{{ r.severe_90d|pct }}</td>
           <td>{{ r.severe_events|num }}</td><td>{{ r.early|num }}</td><td>{{ r.cv_events }}</td><td>{{ r.toxic_deaths }}</td>
           <td>{{ r.hospital_days|num }}</td><td>{{ r.alerts|num }}</td><td>{{ r.false_share|pct:0 }}</td>
           <td>{{ r.qaly|num:3 }}</td><td>{{ r.cost|num:0 }}</td><td>{{ r.d_cost|num:0 }}</td>
@@ -211,7 +240,6 @@
       {% endif %}
     </section>
     {% endfor %}
-    {{ chart_data|json_script:"chart-data" }}
   </div>
 </div>
 {% endblock %}

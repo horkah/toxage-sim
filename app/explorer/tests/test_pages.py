@@ -120,6 +120,18 @@ class DataTest(CohortTestCase):
         self.assertNotContains(self.client.get("/data/"), "Generate a data set")
         self.assertEqual(self.client.post("/data/use/", {"dataset": self.dataset.pk}).status_code, 302)
 
+    def test_records_link_to_patients_and_the_schema(self):
+        response = self.client.get(f"/data/{self.dataset.pk}/records/?table=outcome&scenario=combined&patient=3")
+        self.assertContains(response, f'href="/?dataset={self.dataset.pk}&amp;scenario=combined&amp;patient=P000003"')
+        self.assertContains(response, 'href="/schema/#outcome-qaly"')
+
+    def test_data_page_links_and_warnings(self):
+        response = self.client.get("/data/")
+        self.assertContains(response, f'href="/?dataset={self.dataset.pk}&amp;scenario=combined"')
+        self.assertContains(response, f'href="/data/{self.dataset.pk}/archive/"')
+        self.assertContains(response, 'data-confirm-title="Delete this data set?"')
+        self.assertContains(response, 'data-confirm-title="Delete this scenario?"', count=7)
+
     def test_records_of_every_table(self):
         for table in store.TABLES:
             response = self.client.get(f"/data/{self.dataset.pk}/records/?table={table}&scenario=combined")
@@ -178,6 +190,14 @@ class ParameterPageTest(TestCase):
             self.assertEqual(response.context["section"], "parameters")
         self.assertEqual(self.client.get("/parameters/x/").status_code, 404)
 
+    def test_saving_in_place_answers_with_the_page(self):
+        response = self.client.post("/parameters/risk/", {f"p:{self.PATH}": "3"}, headers={"X-Toxage-Fetch": "1"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Saved.")
+        self.assertContains(response, 'class="changed"')
+        self.assertContains(response, f'id="param-{self.PATH.replace("/", "--")}"')
+        self.assertEqual(params.changes("risk"), {self.PATH: 3})
+
     def test_save_and_reset_one_value(self):
         response = self.client.post("/parameters/risk/", {"action": "save", f"p:{self.PATH}": "3"})
         self.assertRedirects(response, "/parameters/risk/?saved=1")
@@ -217,13 +237,39 @@ class RiskParameterTest(CohortTestCase):
         self.assertGreater(after, before)
 
 
+class AboutTest(TestCase):
+    def setUp(self):
+        self.client.cookies[COOKIE] = settings.DISCLAIMER_VERSION
+
+    def test_about_page_and_footer_show_the_version(self):
+        from toxage_app.version import BUILD, VERSION
+        response = self.client.get("/about/")
+        self.assertEqual(response.context["section"], "about")
+        self.assertContains(response, f"Version {VERSION}")
+        self.assertContains(response, f"Build {BUILD}")
+        self.assertContains(response, "https://github.com/horkah")
+        self.assertContains(response, "Authors and credits")
+        self.assertContains(self.client.get("/schema/"), f"toxage-sim {VERSION} · build {BUILD}")
+
+    def test_version_follows_the_environment_and_the_build_file(self):
+        import importlib
+        import os
+        from unittest import mock
+        from toxage_app import version
+        with mock.patch.dict(os.environ, {"TOXAGE_BUILD": "20990101.0000 (abc1234)"}):
+            self.assertEqual(importlib.reload(version).BUILD, "20990101.0000 (abc1234)")
+        importlib.reload(version)
+        self.assertRegex(version.VERSION, r"^\d+\.\d+\.\d+$")
+
+
 class ReferenceTest(TestCase):
     def setUp(self):
         self.client.cookies[COOKIE] = settings.DISCLAIMER_VERSION
 
     def test_schema_page(self):
         response = self.client.get("/schema/")
-        self.assertEqual([t["name"] for t in response.context["tables"]], list(toxage_schema.TABLES))
+        self.assertEqual([t["name"] for t in response.context["schema_tables"]], list(toxage_schema.TABLES))
+        self.assertContains(response, 'id="outcome-qaly"')     # anchors of the fields, linked from other pages
         self.assertContains(response, "usual_care_grade")
         self.assertContains(response, "Quality-adjusted life years")
 
@@ -232,8 +278,9 @@ class ReferenceTest(TestCase):
         self.assertContains(response, "Toxicity report")
         response = self.client.get("/documents/report/")
         self.assertContains(response, "Candidates for risk models")
-        self.assertContains(response, "On this page")
-        self.assertContains(self.client.get("/documents/prompts/"), "prompting.log")
+        self.assertContains(response, 'href="#8-candidates-for-risk-models"')     # headings in the side bar
+        self.assertEqual(self.client.get("/documents/prompts/").status_code, 404)
+        self.assertEqual(self.client.get("/documents/internal/").status_code, 404)
         self.assertEqual(self.client.get("/documents/x/").status_code, 404)
 
     def test_pages_need_the_disclaimer(self):
@@ -243,6 +290,5 @@ class ReferenceTest(TestCase):
 
     def test_menu_reaches_every_section(self):
         response = self.client.get("/schema/")
-        for url in ("/data/", "/parameters/", "/schema/", "/documents/", "/?view=time", "/?view=interventions",
-                    "/disclaimer/"):
+        for url in ("/", "/data/", "/parameters/", "/documents/", "/about/", "/disclaimer/"):
             self.assertContains(response, f'href="{url}"')

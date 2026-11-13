@@ -1,0 +1,22 @@
+{% extends "explorer/base.html" %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar subnav" id="reference-nav" data-keep-scroll>
+    <nav aria-label="Reference">
+      <h2>Data</h2>
+      <a href="{% url 'schema' %}" class="navitem{% if page == 'schema' %} active{% endif %}">Data schema</a>
+      {% if page == "schema" %}{% for name, title in tables %}<a href="#{{ name }}" class="navitem sub">{{ name }}</a>{% endfor %}{% endif %}
+      {% for group, items in groups %}
+      <h2>{{ group }}</h2>
+      {% for d in items %}
+      <a href="{% url 'document' d.key %}" class="navitem{% if d.key == page %} active{% endif %}"{% if d.key == page %} aria-current="page"{% endif %}>{{ d.title }}</a>
+      {% if d.key == page and headings %}
+      {% for level, title, anchor in headings %}<a href="#{{ anchor }}" class="navitem sub">{{ title }}</a>{% endfor %}
+      {% endif %}
+      {% endfor %}
+      {% endfor %}
+    </nav>
+  </aside>
+  <div class="views">{% block reference %}{% endblock %}</div>
+</div>
+{% endblock %}

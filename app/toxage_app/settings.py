@@ -77,6 +77,9 @@ TIME_ZONE = "UTC"
 USE_TZ = True
 STATIC_URL = "static/"
 
+# Source code of the project, linked on the about page.
+REPOSITORY_URL = "https://github.com/horkah/toxage-sim"
+
 # Disclaimer and licence terms. Raising the version asks every user again.
 DISCLAIMER_VERSION = "1"
 DISCLAIMER_COOKIE = "toxage_disclaimer"

@@ -5,8 +5,9 @@
 // and the tour goes on when it sees the result. In the demo the tour reads
 // the hint for the user, does the step itself and goes on after a pause.
 //
-// A tour spans many pages. Its state is kept in the session storage of the
-// tab, the speed of the demo and the offer at start in the local storage.
+// A tour spans many pages. Pages are mostly swapped in place (app.js); the
+// hint stays and is placed again after each swap. Its state is kept in the
+// session storage of the tab, the speed of the demo and the offer at start in the local storage.
 // Before a demo the server keeps a snapshot of parameters and data sets and
 // brings it back at the end, so that the demo leaves no trace.
 
@@ -249,7 +250,7 @@ function hintText(step) {
 }
 
 // Wait while the user reads. The time already spent on the hint counts,
-// because some pages reload themselves while a hint is shown.
+// because a page may load again while a hint is shown.
 async function reading(step) {
   const mine = run;
   for (;;) {
@@ -392,7 +393,7 @@ export async function start(mode) {
   state = { mode, i: 0, acted: false, shownAt: null, doneAt: null, paused: false,
             mem: { known: before.datasets.map((d) => d.id) } };
   save();
-  document.querySelector("details.menu[open]")?.removeAttribute("open");
+  for (const pop of document.querySelectorAll("details.popover[open]")) pop.open = false;
   play();
 }
 
@@ -442,9 +443,12 @@ function unfinished() {
 
 function init() {
   if (!document.querySelector(".mainnav")) return;      // not on the disclaimer
-  for (const button of document.querySelectorAll("[data-tour-start]")) {
-    button.addEventListener("click", () => start(button.dataset.tourStart));
-  }
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-tour-start]");
+    if (button) start(button.dataset.tourStart);
+  });
+  // A page swapped in place moves the target of the hint.
+  document.addEventListener("toxage:swap", () => { if (panel) requestAnimationFrame(position); });
   state = read(KEY);
   if (state) return play();
   if (document.body.dataset.tourSnapshot === "1") unfinished();

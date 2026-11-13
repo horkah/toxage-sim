@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="toxage-sim">
+  <defs>
+    <linearGradient id="tx-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a78d6"/>
+      <stop offset="1" stop-color="#0d3f80"/>
+    </linearGradient>
+    <clipPath id="tx-half"><rect x="0" y="32" width="64" height="32"/></clipPath>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#tx-bg)"/>
+  <g transform="rotate(-45 32 32)">
+    <rect x="20" y="9" width="24" height="46" rx="12" fill="#eb6834" clip-path="url(#tx-half)"/>
+    <rect x="20" y="9" width="24" height="46" rx="12" fill="none" stroke="#fff" stroke-width="3.6"/>
+    <line x1="20" y1="32" x2="44" y2="32" stroke="#fff" stroke-width="3.6"/>
+  </g>
+  <circle cx="20.9" cy="28.3" r="1.9" fill="#fff"/>
+  <circle cx="24.8" cy="24.4" r="2.3" fill="#fff"/>
+  <circle cx="28.7" cy="20.5" r="2.7" fill="#fff"/>
+</svg>

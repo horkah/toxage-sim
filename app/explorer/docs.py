@@ -4,6 +4,7 @@ The documents are Markdown files. render() turns the subset of Markdown that
 they use into HTML: headings, paragraphs, lists, tables, code blocks, and
 inline code, bold, italic and links. Everything else is shown as text.
 """
+import functools
 import re
 from dataclasses import dataclass
 from html import escape
@@ -20,23 +21,29 @@ class Document:
     title: str
     group: str
     path: str
+    summary: str = ""
+    # Sections for developers (how to run, files, programming interface) are
+    # left out: the app shows the content, the repository the code.
+    omit: tuple = ()
 
     def text(self):
         return (REPO / self.path).read_text(encoding="utf-8")
 
 
 DOCUMENTS = {d.key: d for d in (
-    Document("project", "Project overview", "Project", "README.md"),
-    Document("report", "Toxicity report", "Scientific background", "background/toxicity-report.md"),
-    Document("references", "References", "Scientific background", "background/references.md"),
-    Document("interventions", "Intervention model", "Scientific background", "background/intervention-model.md"),
-    Document("schema", "Data schema", "Components", "schema/README.md"),
-    Document("engine", "Data engine", "Components", "engine/README.md"),
-    Document("risk-model", "Risk models", "Components", "risk-model/README.md"),
-    Document("risk-extensions", "Risk models: possible extensions", "Components", "risk-model/EXTENSIONS.md"),
-    Document("app", "App", "Components", "app/README.md"),
-    Document("internal", "Internal documentation", "Project", "project/internal-documentation.md"),
-    Document("prompts", "Prompt log", "Project", "project/prompting.log"),
+    Document("report", "Toxicity report", "Scientific background", "background/toxicity-report.md",
+             "How often severe toxicity occurs with which therapy, who is at risk, and what guidelines ask for."),
+    Document("interventions", "Intervention model", "Scientific background", "background/intervention-model.md",
+             "From the offer of an intervention to its effect on health and costs."),
+    Document("references", "References", "Scientific background", "background/references.md",
+             "The 28 published sources of the project."),
+    Document("engine", "Data engine", "Models", "engine/README.md",
+             "How the synthetic patients are simulated week by week.", omit=("Run", "Files")),
+    Document("risk-model", "Risk models", "Models", "risk-model/README.md",
+             "The risk models, their factors and how well they work on the synthetic data.",
+             omit=("Run", "Files", "Interface")),
+    Document("risk-extensions", "Risk models: next steps", "Models", "risk-model/EXTENSIONS.md",
+             "Possible extensions of the risk models."),
 )}
 
 
@@ -55,6 +62,9 @@ def _link(target, base):
         return target
     path, _, anchor = target.partition("#")
     resolved = (REPO / base).parent.joinpath(path).resolve()
+    # The schema has a page of its own in the app.
+    if resolved in ((REPO / "schema").resolve(), (REPO / "schema" / "README.md").resolve()):
+        return "/schema/" + (f"#{anchor}" if anchor else "")
     for d in DOCUMENTS.values():
         if resolved in ((REPO / d.path).resolve(), (REPO / d.path).resolve().parent) and (
                 resolved.is_file() or (REPO / d.path).name == "README.md"):
@@ -167,9 +177,43 @@ def render(text, base=""):
     return "\n".join(out), headings
 
 
+def without(text, omit):
+    """Markdown text without the sections whose heading is in omit. A section
+    ends at the next heading of the same or a higher level."""
+    if not omit:
+        return text
+    kept, skipping, fenced = [], None, False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            fenced = not fenced
+        match = None if fenced or stripped.startswith("```") else re.match(r"(#{1,6}) (.*)", stripped)
+        if match:
+            level = len(match.group(1))
+            if skipping is not None and level <= skipping:
+                skipping = None
+            if skipping is None and match.group(2).strip() in omit:
+                skipping = level
+        if skipping is None:
+            kept.append(line)
+    return "\n".join(kept)
+
+
 def page(document):
     """(html, headings) of a document. Plain text files are shown as they are."""
     text = document.text()
     if not document.path.endswith(".md"):
         return f"<pre>{escape(text)}</pre>", []
-    return render(text, document.path)
+    return render(without(text, document.omit), document.path)
+
+
+@functools.lru_cache(maxsize=64)
+def _headings(key):
+    return tuple(page(DOCUMENTS[key])[1])
+
+
+def anchor(key, prefix):
+    """Anchor of the first heading of a document that starts with prefix, or ""."""
+    if key not in DOCUMENTS:
+        return ""
+    return next((a for _, title, a in _headings(key) if title.startswith(prefix)), "")

@@ -1,4 +1,4 @@
-"""Pages next to the explorer: data sets, parameters, schema, documents."""
+"""Pages next to the explorer: data sets, archive, parameters, reference."""
 from functools import wraps
 
 from django.conf import settings
@@ -9,7 +9,7 @@ from django.views.decorators.http import require_POST
 
 from schema import toxage_schema
 
-from . import cohort, docs, params, store
+from . import archive, cohort, docs, params, store
 from .models import Dataset
 
 PAGE = 50
@@ -26,6 +26,12 @@ def changes_data(view):
     return wrapped
 
 
+def fetched(request):
+    """True for requests of the page script, which swaps the page in place
+    and needs no redirect after a change."""
+    return request.headers.get("X-Toxage-Fetch") == "1"
+
+
 def _int(text, default, low, high):
     try:
         return max(low, min(high, int(text)))
@@ -35,7 +41,18 @@ def _int(text, default, low, high):
 
 # Data sets -----------------------------------------------------------------------
 
-def data(request):
+def _changed_list(changes):
+    """Changed parameters of a data set: [(source, path label, value, anchor)]."""
+    found = []
+    for key, changed in changes.items():
+        source = params.SOURCES.get(key)
+        for path, value in changed.items():
+            found.append((source.title if source else key, key, path.replace(params.SEP, " › ").replace("_", " "),
+                          params.show(value), params.anchor(path)))
+    return found
+
+
+def data(request, message=None, error=None):
     store.mark_interrupted()
     datasets = list(Dataset.objects.all())
     active = cohort.active(request)
@@ -44,18 +61,22 @@ def data(request):
     for d in datasets:
         d.record_counts = [(s["scenario_id"], s["title"], d.metadata.get("records", {}).get(s["scenario_id"], {}))
                            for s in d.scenarios]
-        d.changed = sum(len(v) for v in d.settings.values())
+        d.changed_list = _changed_list(d.settings)
+        d.changed = len(d.changed_list)
     return render(request, "explorer/data.html", {
         "section": "data",
         "datasets": datasets,
+        "ready_count": sum(d.ready for d in datasets),
         "active": active,
         "running": any(d.status == Dataset.RUNNING for d in datasets),
         "scenarios": params.effective("interventions")["scenarios"],
-        "changed": {params.SOURCES[k].title: len(v) for k, v in changed.items() if k in params.ENGINE},
+        "changed": [(params.SOURCES[k].title, k, len(v)) for k, v in changed.items() if k in params.ENGINE],
         "needs_calibration": params.needs_calibration(changed),
         "size_mb": None if size is None else size / 1e6,
         "max_patients": MAX_PATIENTS,
         "read_only": settings.READ_ONLY,
+        "message": message,
+        "error": error,
     })
 
 
@@ -94,6 +115,43 @@ def data_use(request):
     return response
 
 
+# Archive -------------------------------------------------------------------------
+
+def archive_export(request, pk=None):
+    """The whole app, or one data set, as an archive file that can be imported later."""
+    dataset = get_object_or_404(Dataset, pk=pk, status=Dataset.READY) if pk is not None else None
+    response = StreamingHttpResponse(archive.gzipped(archive.lines([dataset] if dataset else None)),
+                                     content_type="application/gzip")
+    response["Content-Disposition"] = f'attachment; filename="{archive.filename(dataset)}"'
+    return response
+
+
+def _data_page(request, **kwargs):
+    """The data page as the answer to a form; it can be loaded again at /data/."""
+    response = data(request, **kwargs)
+    response["X-Toxage-Location"] = reverse("data")
+    return response
+
+
+@require_POST
+@changes_data
+def archive_import(request):
+    upload = request.FILES.get("archive")
+    if upload is None:
+        return _data_page(request, error="Please choose an archive file.")
+    replace = request.POST.get("mode") == "replace"
+    try:
+        result = archive.load(upload, replace=replace)
+    except archive.ArchiveError as problem:
+        return _data_page(request, error=f"The archive was not imported. {problem}")
+    text = (f"Imported {result['datasets']} data set{'s' if result['datasets'] != 1 else ''} "
+            f"with {result['patients']} patients")
+    text += " and the parameter changes of the archive." if result["parameters"] else "."
+    if fetched(request):
+        return _data_page(request, message=text)
+    return redirect("data")
+
+
 def _table(request):
     table = request.GET.get("table")
     return table if table in store.TABLES else "baseline"
@@ -116,11 +174,15 @@ def records(request, pk):
         if i >= (page - 1) * PAGE:
             found.append([cohort.display(record.get(name)) for name, _, _ in fields])
     total = None if patient_id else store.count(dataset, table, scenario["scenario_id"])
+    names = [name for name, _, _ in fields]
     return render(request, "explorer/records.html", {
+        "patient_col": names.index("patient_id") if "patient_id" in names else -1,
+        "scenario_col": names.index("scenario_id") if "scenario_id" in names else -1,
         "section": "data",
         "dataset": dataset, "table": table, "tables": store.TABLES, "scenario": scenario,
         "scenarios": dataset.scenarios, "patient_id": patient_id, "fields": fields, "rows": found,
         "page": page, "more": more, "total": total, "first": (page - 1) * PAGE + 1,
+        "last": (page - 1) * PAGE + len(found),
         "by_scenario": table not in ("scenario", "baseline"),
         "by_patient": table != "scenario",
         "description": toxage_schema.load(table)["description"],
@@ -164,8 +226,9 @@ def parameters(request, key="parameters"):
             posted = {k[2:]: v for k, v in request.POST.items() if k.startswith("p:")}
             errors = params.save(key, posted)
         cohort.clear_cache()
-        if not errors:
+        if not errors and not fetched(request):
             return redirect(f"{reverse('parameters', args=[key])}?saved=1")
+        saved = not errors
     changed = params.all_changes()
     return render(request, "explorer/parameters.html", {
         "section": "parameters",
@@ -173,7 +236,7 @@ def parameters(request, key="parameters"):
         "sources": [(s, len(changed.get(s.key, {}))) for s in params.SOURCES.values()],
         "groups": params.form(key, posted, errors),
         "errors": errors,
-        "saved": request.GET.get("saved") == "1",
+        "saved": saved or request.GET.get("saved") == "1",
         "changed_here": len(changed.get(key, {})),
         "changed_total": sum(len(v) for v in changed.values()),
         "is_engine": key in params.ENGINE,
@@ -181,7 +244,17 @@ def parameters(request, key="parameters"):
     })
 
 
-# Schema and documents ------------------------------------------------------------
+# Reference: schema and documents -------------------------------------------------
+
+def _reference(request, template, **context):
+    return render(request, template, {
+        "section": "reference",
+        "groups": docs.groups(),
+        "tables": [(name, toxage_schema.load(name)["title"]) for name in toxage_schema.TABLES],
+        "dataset": cohort.active(request),
+        **context,
+    })
+
 
 def schema(request):
     tables = []
@@ -202,21 +275,17 @@ def schema(request):
             fields.append({"name": key, "title": f.get("title", key), "type": types, "values": values,
                            "unit": f.get("unit", ""), "description": f.get("description", "")})
         tables.append({"name": name, "title": spec["title"], "version": spec["version"],
-                       "description": spec["description"], "fields": fields})
-    return render(request, "explorer/schema.html", {
-        "section": "schema","tables": tables})
+                       "description": spec["description"], "fields": fields,
+                       "records": name in store.TABLES})
+    return _reference(request, "explorer/schema.html", schema_tables=tables, page="schema")
 
 
 def documents(request, key=None):
     if key is None:
-        return render(request, "explorer/documents.html", {
-        "section": "documents","groups": docs.groups()})
+        return _reference(request, "explorer/documents.html", page="index")
     if key not in docs.DOCUMENTS:
         raise Http404
     document = docs.DOCUMENTS[key]
     html, headings = docs.page(document)
-    return render(request, "explorer/document.html", {
-        "section": "documents",
-        "document": document, "html": html, "groups": docs.groups(),
-        "headings": [h for h in headings if h[0] == 2],
-    })
+    return _reference(request, "explorer/document.html", document=document, html=html, page=key,
+                      headings=[h for h in headings if h[0] == 2])

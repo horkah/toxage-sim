@@ -50,35 +50,36 @@ export const STEPS = [
     title: "The sections",
     target: ".mainnav",
     text: [
-      "Five sections. “Explore” holds the charts. “Data” creates, inspects and deletes data sets. “Parameters” holds every number of the models. “Schema” describes the data tables. “Documents” has the scientific background and the documentation of the project.",
+      "Five sections. “Explore” holds the charts. “Data” creates, inspects, exports and imports data sets. “Parameters” holds every number of the models. “Reference” has the data schema and the scientific background. “About” has the version and the authors.",
+      "Pages change in place, without reloading. Objects are linked: a patient ID leads to the patient, a scenario to its charts, a field to its description in the schema.",
     ],
   },
   {
-    title: "The menu",
-    target: "details.menu summary",
+    title: "Help and settings",
+    target: "#help summary",
     text: [
-      "The menu leads to the same places and holds the settings: bright or dark theme, text size, and whether tutorial and demo are offered at start. Both tours can be started from the menu at any time.",
+      "“Help” starts the tutorial or the demo at any time. “Settings” holds the bright or dark theme, the text size, and whether the tours are offered at start.",
     ],
-    do: "Open the menu.",
-    act: (t) => { const m = t.q("details.menu"); if (m) m.open = true; },
-    until: (t) => t.q("details.menu[open]") !== null,
+    do: "Open the settings.",
+    act: (t) => { const m = t.q("#settings"); if (m) m.open = true; },
+    until: (t) => t.q("#settings[open]") !== null,
   },
   {
     title: "Settings",
-    target: '.menu-panel fieldset[data-setting="theme"]',
+    target: '#settings fieldset[data-setting="theme"]',
     text: [
       "Settings are kept in this browser. They do not change data or models.",
     ],
-    do: "Close the menu again.",
-    act: (t) => { const m = t.q("details.menu"); if (m) m.open = false; },
-    until: (t) => t.q("details.menu[open]") === null,
+    do: "Close the settings again.",
+    act: (t) => { const m = t.q("#settings"); if (m) m.open = false; },
+    until: (t) => t.q("#settings[open]") === null,
   },
 
   // --- Data: create -------------------------------------------------------------
   {
     title: "Data sets",
     url: "/data/",
-    target: ".page h1",
+    target: ".page-head h1",
     text: [
       "A data set is one cohort of synthetic patients. Several can be stored side by side. The explorer shows one of them.",
       "The tour now creates a small data set of its own.",
@@ -87,30 +88,30 @@ export const STEPS = [
   {
     title: "Name",
     url: "/data/",
-    target: 'form.form input[name="name"]',
+    target: '#generate input[name="name"]',
     changes: true,
     text: ["A name helps to tell data sets apart. Without one, the app uses the size and the seed."],
     do: "Enter a name, for example “Tour cohort”.",
-    act: (t) => t.fill('form.form input[name="name"]', "Tour cohort"),
-    until: (t) => (t.q('form.form input[name="name"]')?.value || "") !== "",
+    act: (t) => t.fill('#generate input[name="name"]', "Tour cohort"),
+    until: (t) => (t.q('#generate input[name="name"]')?.value || "") !== "",
   },
   {
     title: "Number of patients",
     url: "/data/",
-    target: 'form.form input[name="n"]',
+    target: '#generate input[name="n"]',
     changes: true,
     text: [
       "The patients are split equally over the three tumour types. Inside each type the engine forms subgroups: for example hormone-sensitive and castration-resistant prostate cancer, each with its own regimens, age and course.",
       "Small cohorts are quick but noisy. 300 patients are enough for the tour.",
     ],
     do: "Set the number of patients to 300.",
-    act: (t) => t.fill('form.form input[name="n"]', "300"),
-    until: (t) => t.q('form.form input[name="n"]')?.value === "300",
+    act: (t) => t.fill('#generate input[name="n"]', "300"),
+    until: (t) => t.q('#generate input[name="n"]')?.value === "300",
   },
   {
     title: "Seed",
     url: "/data/",
-    target: 'form.form input[name="seed"]',
+    target: '#generate input[name="seed"]',
     changes: true,
     text: [
       "The seed fixes all random decisions. The same seed with the same parameters gives exactly the same patients, so a result can be reproduced.",
@@ -119,7 +120,7 @@ export const STEPS = [
   {
     title: "Scenarios",
     url: "/data/",
-    target: "form.form fieldset",
+    target: "#generate fieldset",
     changes: true,
     text: [
       "The engine simulates the same patients under several scenarios: usual care, a risk-adapted start of therapy, weekly symptom monitoring, home monitoring for lung toxicity, home monitoring for cardiovascular events, all of them combined, and perfect detection as an upper limit.",
@@ -129,7 +130,7 @@ export const STEPS = [
   {
     title: "Calibration",
     url: "/data/",
-    target: 'form.form input[name="recalibrate"]',
+    target: '#generate input[name="recalibrate"]',
     changes: true,
     text: [
       "The engine is calibrated so that usual care reproduces the rates of severe side effects from the published trials. After a change of regimens or simulation parameters this has to be done again, which takes about a minute. With default parameters it is not needed.",
@@ -138,11 +139,11 @@ export const STEPS = [
   {
     title: "Generate",
     url: "/data/",
-    target: 'form.form button[type="submit"]',
+    target: '#generate button[type="submit"]',
     changes: true,
     text: ["Generating runs in the background on the server."],
     do: "Click “Generate”.",
-    act: (t) => t.click('form.form button[type="submit"]'),
+    act: (t) => t.click('#generate button[type="submit"]'),
     until: created("A"),
   },
   {
@@ -154,7 +155,7 @@ export const STEPS = [
     wait: true,
     text: [
       "The engine now simulates each patient under each scenario: every week adverse events can start, the dose can change, therapy can end, the patient can die. Follow-up runs until death or for ten years.",
-      "The page reloads until the data set is ready.",
+      "The card updates itself until the data set is ready.",
     ],
     until: ready("A"),
   },
@@ -165,6 +166,14 @@ export const STEPS = [
     needs: "A",
     text: [
       "Per scenario the data set holds one outcome per patient, the weekly observations while on therapy, the adverse events, and the alerts of the monitoring. Usual care has no alerts.",
+    ],
+  },
+  {
+    title: "Archive",
+    url: "/data/",
+    target: "#archive",
+    text: [
+      "“Export” on a data set, or “Export everything”, saves a file that can be imported later, also into another installation of the app. An import adds the data sets of the file, or replaces all data sets and parameter changes.",
     ],
   },
   {
@@ -180,11 +189,11 @@ export const STEPS = [
 
   // --- Explore: risk --------------------------------------------------------------
   {
-    title: "The status bar",
+    title: "The context",
     url: "/",
-    target: ".statusbar.top",
+    target: "#context",
     text: [
-      "The bar shows how many patients are selected and, for each risk model, the observed rate of the event, the mean predicted risk, and two measures of quality: the AUC says how well the model ranks patients (0.5 is chance, 1 is perfect), the Brier score how far the risks are from what happened (lower is better).",
+      "The bar on top says what is shown: the data set, the scenario and the patient. Everything below follows it.",
     ],
   },
   {
@@ -193,6 +202,14 @@ export const STEPS = [
     target: "#scenario",
     text: [
       "All charts refer to one scenario and can be compared with a second one. The default is usual care, which is what the risk models describe: the risk at therapy start without an intervention.",
+    ],
+  },
+  {
+    title: "The cohort",
+    url: "/",
+    target: "#cohort",
+    text: [
+      "The panel on the left counts the selected patients. Each active filter shows here as a chip; a click on a chip removes it.",
     ],
   },
   {
@@ -206,8 +223,9 @@ export const STEPS = [
   {
     title: "Risk models",
     url: "/",
-    target: 'nav[aria-label="Risk model of the charts"]',
+    target: 'nav[aria-label="Risk model"]',
     text: [
+      "Each card is a risk model with the observed rate of its event, the mean predicted risk, and two measures of quality: the AUC says how well the model ranks patients (0.5 is chance, 1 is perfect), the Brier score how far the risks are from what happened (lower is better).",
       "Three risk models exist. The first estimates the risk of any severe side effect (grade 3 to 5) within 90 days. It starts from the published rate of the regimen and shifts it by age, performance status and impaired geriatric domains.",
       "The second estimates the risk of lung toxicity under trastuzumab deruxtecan, with six published risk factors such as low oxygen saturation and reduced renal function.",
       "The third estimates the risk of a heart attack, a stroke or cardiovascular death in the first year for men with prostate cancer under androgen deprivation.",
@@ -249,16 +267,16 @@ export const STEPS = [
   {
     title: "The second risk model",
     url: "/",
-    target: 'nav[aria-label="Risk model of the charts"] a[href*="model=ild"]',
+    target: 'nav[aria-label="Risk model"] a[href*="model=ild"]',
     text: ["All charts follow the chosen risk model."],
     do: "Click “Lung toxicity”.",
-    act: (t) => t.click('nav[aria-label="Risk model of the charts"] a[href*="model=ild"]'),
+    act: (t) => t.click('nav[aria-label="Risk model"] a[href*="model=ild"]'),
     until: (t) => t.has("model=ild"),
   },
   {
     title: "Lung toxicity",
     url: "/?model=ild",
-    target: ".statusbar.top",
+    target: 'nav[aria-label="Risk model"] a[data-model="ild"]',
     text: [
       "The model applies only to the regimens for which a rate is published, so it covers fewer patients. The engine uses the same published risk factors to generate lung toxicity, so this model ranks patients well by construction.",
       "For severe side effects the engine works differently from the model: a hidden frailty drives the events. That model therefore gains little over the plain rate of the regimen. This is a result, not an error.",
@@ -270,20 +288,20 @@ export const STEPS = [
     target: 'tox-chart[chart^="vs-"]',
     text: ["Each point is a patient for whom both models give a risk: is a patient at high risk for one outcome also at high risk for the other?"],
     do: "Click “Cardiovascular events”.",
-    act: (t) => t.click('nav[aria-label="Risk model of the charts"] a[href*="model=cv"]'),
+    act: (t) => t.click('nav[aria-label="Risk model"] a[href*="model=cv"]'),
     until: (t) => t.has("model=cv"),
   },
   {
     title: "Cardiovascular events",
     url: "/?model=cv",
-    target: ".statusbar.top",
+    target: 'nav[aria-label="Risk model"] a[data-model="cv"]',
     text: [
       "The third model covers the men with prostate cancer, who all get androgen deprivation. Its outcome is a heart attack, a stroke or cardiovascular death within the first year.",
       "The rates and the effect of an earlier event come from the HERO trial: under a GnRH agonist an earlier event raises the risk more than fourfold, under an antagonist hardly at all. The effects of age, diabetes, hypertension, smoking and renal function are assumptions.",
       "The engine adds factors the model does not know, such as frailty. The model therefore ranks patients well but predicts somewhat too few events.",
     ],
     do: "Go back to the first risk model.",
-    act: (t) => t.click('nav[aria-label="Risk model of the charts"] a[href*="model=severe90"]'),
+    act: (t) => t.click('nav[aria-label="Risk model"] a[href*="model=severe90"]'),
     until: (t) => t.has("model=severe90"),
   },
 
@@ -302,18 +320,18 @@ export const STEPS = [
   {
     title: "A filtered cohort",
     url: "/?tumour_type=breast",
-    target: ".statusbar.top",
+    target: "#cohort",
     text: [
-      "All numbers and charts now refer to the patients with breast cancer. The address of the page holds the whole state: filters, scenario, view and patient. A view can be bookmarked or passed on.",
+      "All numbers and charts now refer to the patients with breast cancer; the chip shows the filter. The page changed in place, and its address holds the whole state: filters, scenario, view and patient. A view can be bookmarked or passed on.",
     ],
   },
   {
     title: "Reset the filters",
     url: "/?tumour_type=breast",
-    target: "#filters .actions a.button",
-    text: ["“Reset” removes all filters and keeps scenario, view and patient."],
-    do: "Click “Reset”.",
-    act: (t) => t.click("#filters .actions a.button"),
+    target: "#filters-reset",
+    text: ["“Reset all filters” removes all filters and keeps scenario, view and patient."],
+    do: "Click “Reset all filters”.",
+    act: (t) => t.click("#filters-reset"),
     until: (t) => !t.has("tumour_type="),
   },
 
@@ -334,7 +352,8 @@ export const STEPS = [
     url: "/",
     target: ".panel.patient .facts",
     text: [
-      "On the left: what is known at therapy start, such as tumour, regimen, age, performance status, blood values and comorbidity, and below it what happened to this patient in the selected scenario.",
+      "On top the key facts. Below: everything known at therapy start, such as tumour, regimen, age, performance status, blood values and comorbidity, and what happened to this patient in the selected scenario.",
+      "Each name leads to its description in the data schema. “Records” shows the patient's rows in the data tables.",
     ],
   },
   {
@@ -342,7 +361,7 @@ export const STEPS = [
     url: "/",
     target: ".panel.patient .riskcard",
     text: [
-      "For each risk model: the patient's risk, the risk of a reference patient on the same regimen, the position among the selected patients, and what was observed.",
+      "The cards of the risk models above now also show this patient's risk under each model. Below, the chosen model in detail: the patient's risk, the risk of a reference patient on the same regimen, the position among the selected patients, and what was observed.",
       "The bars show which factors raise or lower the risk and by how much. Together with the reference risk they give the patient's risk exactly.",
     ],
   },
@@ -357,10 +376,10 @@ export const STEPS = [
   {
     title: "A random patient",
     url: "/",
-    target: '.topbar a.button[href^="/random/"]',
+    target: "#random",
     text: ["“Random” picks a patient from the current selection."],
     do: "Click “Random”.",
-    act: (t) => { t.mem.before = new URLSearchParams(location.search).get("patient"); t.click('.topbar a.button[href^="/random/"]'); },
+    act: (t) => { t.mem.before = new URLSearchParams(location.search).get("patient"); t.click("#random"); },
     until: (t) => {
       const now = new URLSearchParams(location.search).get("patient");
       return now !== null && now !== (t.mem.before ?? "42") && now !== "P000042";
@@ -460,6 +479,7 @@ export const STEPS = [
     text: [
       "One row per scenario, for the same patients. An intervention works only as far as it reaches people: “Taking part” is lower in older and frailer patients, reports are missing in some weeks, patients drop out, and not every alert is acted on.",
       "Monitoring also costs: most alerts are false. The last columns give quality-adjusted life years and costs against usual care. The costs are placeholders, so these columns show how the model works, not a result.",
+      "A click on the name of a scenario selects it.",
     ],
   },
   {
@@ -493,17 +513,18 @@ export const STEPS = [
   {
     title: "Model parameters",
     url: "/parameters/parameters/",
-    target: ".page h1",
+    target: ".page-head h1",
     text: [
       "Every number of the models is here. The defaults are files of the repository. A changed value is stored in the database of the app and stays until it is reset.",
     ],
   },
   {
-    title: "Four groups of parameters",
+    title: "Four parameter files",
     url: "/parameters/parameters/",
     target: 'nav[aria-label="Parameter file"]',
     text: [
-      "“Regimens” has the published rates of each therapy. “Simulation” has the population, the hazards of adverse events, survival and the measurements. “Interventions” has participation, detection, early treatment, costs and the scenarios. “Risk models” has the coefficients of the two risk models.",
+      "“Regimens” has the published rates of each therapy. “Simulation” has the population, the hazards of adverse events, survival and the measurements. “Interventions” has participation, detection, early treatment, costs and the scenarios. “Risk models” has the coefficients of the three risk models.",
+      "Below the files, the groups of the open file lead straight to their place. The field “Find a parameter” narrows the list as you type.",
     ],
   },
   {
@@ -531,18 +552,8 @@ export const STEPS = [
     text: [
       "This is the odds ratio for a performance status of ECOG 2 or higher in the model for severe side effects. The default of 2 is an assumption.",
     ],
-    do: "Set the value to 4.",
+    do: "Set the value to 4 and leave the field, with Tab or Enter.",
     act: (t) => t.fill(param(ECOG), "4"),
-    until: (t) => t.q(param(ECOG))?.value === "4",
-  },
-  {
-    title: "Save",
-    url: "/parameters/risk/",
-    target: 'form.params button[value="save"]',
-    changes: true,
-    text: ["Nothing changes before it is saved."],
-    do: "Click “Save changes”.",
-    act: (t) => t.click('form.params button[value="save"]'),
     until: isChanged(ECOG),
   },
   {
@@ -551,16 +562,16 @@ export const STEPS = [
     target: changedRow(ECOG),
     changes: true,
     text: [
-      "The changed row is marked, the default stays visible, and the tabs count the changes. A value that does not fit, such as text for a number, is refused with a note.",
+      "A value is saved as soon as its field is left; a short message confirms it. The changed row is marked, the default stays visible, and the files and groups on the left count the changes. A value that does not fit, such as text for a number, is refused with a note.",
     ],
   },
   {
     title: "The effect in the explorer",
     url: "/?model=severe90&ecog_min=2",
-    target: ".statusbar.top",
+    target: 'nav[aria-label="Risk model"] a[data-model="severe90"]',
     changes: true,
     text: [
-      "The explorer, filtered to patients with ECOG 2 or higher. With the doubled odds ratio the model now predicts a much higher risk than is observed: the mean predicted risk in the status bar lies well above the observed rate.",
+      "The explorer, filtered to patients with ECOG 2 or higher. With the doubled odds ratio the model now predicts a much higher risk than is observed: on the card of the model, the mean predicted risk lies well above the observed rate.",
     ],
   },
   {
@@ -569,8 +580,8 @@ export const STEPS = [
     target: `button[value="reset:${ECOG}"]`,
     changes: true,
     free: true,
-    text: ["“reset” next to a changed value brings its default back."],
-    do: "Click “reset” in the marked row.",
+    text: ["The arrow ↺ next to a changed value brings its default back."],
+    do: "Click ↺ in the marked row.",
     act: (t) => t.click(`button[value="reset:${ECOG}"]`),
     until: isDefault(ECOG),
   },
@@ -582,8 +593,8 @@ export const STEPS = [
     text: [
       "Engine parameters act on data sets generated from then on. This one is the share of patients that the risk prediction at therapy start flags as high risk. The default is 0.3.",
     ],
-    do: "Set the value to 0.5 and click “Save changes”.",
-    act: (t) => { t.fill(param(FLAGGED), "0.5"); t.click('form.params button[value="save"]'); },
+    do: "Set the value to 0.5 and leave the field.",
+    act: (t) => t.fill(param(FLAGGED), "0.5"),
     until: isChanged(FLAGGED),
   },
 
@@ -591,17 +602,17 @@ export const STEPS = [
   {
     title: "A data set with changed parameters",
     url: "/data/",
-    target: "form.form",
+    target: "#generate",
     changes: true,
     text: [
       "The form now says that a parameter differs from the defaults. A new data set will use it. Calibrating again is not needed here, because this parameter does not touch usual care.",
     ],
     do: "Enter the name “Tour cohort B”, set 150 patients, and click “Generate”.",
     act: (t) => {
-      t.fill('form.form input[name="name"]', "Tour cohort B");
-      t.fill('form.form input[name="n"]', "150");
-      t.check('form.form input[name="recalibrate"]', false);
-      t.click('form.form button[type="submit"]');
+      t.fill('#generate input[name="name"]', "Tour cohort B");
+      t.fill('#generate input[name="n"]', "150");
+      t.check('#generate input[name="recalibrate"]', false);
+      t.click('#generate button[type="submit"]');
     },
     until: created("B"),
   },
@@ -666,7 +677,7 @@ export const STEPS = [
     text: [
       "Data can be removed in parts. Deleting a scenario removes the courses of all patients in it. The space on disk is given back at once.",
     ],
-    do: "Click “delete scenario” in the row “Perfect detection” and confirm.",
+    do: "Click “delete scenario” in the row “Perfect detection” and confirm the warning.",
     act: (t) => t.click(`${card("B")} form:has(input[name="scenario"][value="perfect_detection"]) button`),
     until: async (t) => {
       const d = (await t.state()).datasets.find((x) => x.id === t.mem.B);
@@ -681,7 +692,7 @@ export const STEPS = [
     needs: "B",
     free: true,
     text: ["“Delete data set” removes it with all its scenarios."],
-    do: "Click “Delete data set” of “Tour cohort B” and confirm.",
+    do: "Click “Delete data set” of “Tour cohort B” and confirm the warning.",
     act: (t) => t.click(`${card("B")} .actions form[action="/data/delete/"] button`),
     until: gone("B"),
   },
@@ -692,9 +703,9 @@ export const STEPS = [
     changes: true,
     free: true,
     text: [
-      "“Reset this section” brings all values of this group back to the defaults, “Reset everything” those of all four groups.",
+      "“Reset this file” brings all values of this file back to the defaults, “Reset everything” those of all four files.",
     ],
-    do: "Click “Reset this section” and confirm.",
+    do: "Click “Reset this file” and confirm.",
     act: (t) => t.click('form.params button[value="reset_source"]'),
     until: isDefault(FLAGGED),
   },
@@ -708,7 +719,7 @@ export const STEPS = [
     text: [
       "With the last data set of the tour gone and the parameters reset, the app is as it was before.",
     ],
-    do: "Click “Delete data set” of the first data set of the tour and confirm.",
+    do: "Click “Delete data set” of the first data set of the tour and confirm the warning.",
     act: (t) => t.click(`${card("A")} .actions form[action="/data/delete/"] button`),
     until: gone("A"),
   },
@@ -717,17 +728,18 @@ export const STEPS = [
   {
     title: "The data schema",
     url: "/schema/",
-    target: ".page .tabs",
+    target: 'nav[aria-label="Tables"]',
     text: [
       "The engine, the risk models and the app share one description of the data: seven tables, each field with title, type, allowed values, unit and meaning. Filters, charts and labels of the app are built from it.",
+      "Field names in the patient card and in the records lead here.",
     ],
   },
   {
-    title: "Documents",
+    title: "Reference",
     url: "/documents/",
-    target: ".page .panel",
+    target: ".cards",
     text: [
-      "The documents of the project can be read here: the report on therapy toxicity with its 28 references, the intervention model, and the documentation of schema, engine, risk models and app.",
+      "The reference holds the data schema and the documents behind the models: the report on therapy toxicity with its 28 references, the intervention model, and the descriptions of the data engine and the risk models.",
     ],
     do: "Open the “Toxicity report”.",
     act: (t) => t.click('a[href="/documents/report/"]'),
@@ -736,18 +748,26 @@ export const STEPS = [
   {
     title: "The scientific background",
     url: "/documents/report/",
-    target: ".docnav",
+    target: "#reference-nav",
     text: [
       "The report collects what trials and guidelines say about side effects of therapy in the three tumour types, and derives ten candidates for risk models. The app implements the first two.",
       "The rates of the regimens in the engine, the risk factors of lung toxicity and the rates of cardiovascular events come from these sources. Effect sizes of the interventions, costs and quality-of-life weights are assumptions.",
     ],
   },
   {
+    title: "About",
+    url: "/about/",
+    target: "#authors",
+    text: [
+      "Who made the app and how, and which version runs here. The version and the build also stand in the footer of every page, next to the link to the disclaimer.",
+    ],
+  },
+  {
     title: "The end",
     url: "/",
-    target: "details.menu summary",
+    target: "#help summary",
     text: [
-      "That was every part of the app. Tutorial and demo can be started again from the menu, and the offer at start can be switched off and on in the settings there.",
+      "That was every part of the app. Tutorial and demo can be started again under “Help”, and the offer at start can be switched off and on under “Settings”.",
     ],
   },
 ];

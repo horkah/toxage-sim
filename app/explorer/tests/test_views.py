@@ -101,6 +101,30 @@ class ExplorerTest(CohortTestCase):
         self.assertContains(response, "Patient P000003")
         self.assertContains(response, "Risk factors")
 
+    def test_model_cards_show_the_patient(self):
+        response = self.client.get("/?patient=3")
+        cards = response.context["model_cards"]
+        self.assertEqual([s["model"].id for s, _, _ in cards], ["severe90", "ild", "cv"])
+        self.assertTrue(all(r is not None for _, _, r in cards))
+        self.assertEqual(response.context["patient_risk"]["model"].id, "severe90")
+        self.assertContains(response, "Patient P000003: ")
+        self.assertIsNone(self.client.get("/?patient=3&view=time").context["patient_risk"])
+
+    def test_filters_show_as_chips_that_remove_themselves(self):
+        response = self.client.get("/?tumour_type=breast&tumour_type=prostate&age_years_min=60&risk_severe90_max=50")
+        chips = {c["key"]: c for c in response.context["chips"]}
+        self.assertEqual(chips["tumour_type"]["value"], "prostate, breast")
+        self.assertEqual(chips["age_years"]["value"], "≥ 60 years")
+        self.assertEqual(chips["risk_severe90"]["value"], "≤ 50%")
+        self.assertEqual(chips["age_years"]["remove"], "tumour_type=breast&tumour_type=prostate&risk_severe90_max=50")
+        self.assertContains(response, "Reset all filters")
+
+    def test_scenarios_and_patients_link_to_each_other(self):
+        response = self.client.get("/?view=interventions&patient=3")
+        self.assertContains(response, 'href="?view=interventions&amp;patient=3&amp;scenario=combined"')
+        self.assertContains(response, f'href="/data/{self.dataset.pk}/records/?table=event&amp;scenario=usual_care&amp;patient=P000003"')
+        self.assertContains(response, 'href="/schema/#baseline-age_years"')
+
     def test_patient_outside_filter(self):
         row = self.rows[0]
         other = next(t for t in ("pancreas", "prostate", "breast") if t != row["tumour_type"])
