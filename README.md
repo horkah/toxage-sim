@@ -27,6 +27,24 @@ The project works with synthetic data. A data engine generates patients, therapi
 | [app/](app/) | App to inspect data and risk scores |
 | [project/](project/) | Project management and internal documentation |
 
+## Getting started
+
+The project uses [uv](https://docs.astral.sh/uv/) for the Python environment and [just](https://just.systems/) for its tasks.
+
+```bash
+just setup
+```
+
+```bash
+just test
+```
+
+```bash
+just serve
+```
+
+`just` alone lists all tasks: tests, generating and calibrating with the engine, scoring and evaluating with the risk models, running the app, and Docker. `just docker-up` starts the app in a container instead.
+
 ## Status
 
 The scientific background is in place:

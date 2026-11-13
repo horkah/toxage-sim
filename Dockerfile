@@ -9,8 +9,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     TOXAGE_ALLOWED_HOSTS=*
 
 WORKDIR /srv/toxage
-COPY app/requirements.txt app/requirements.txt
-RUN pip install --no-cache-dir -r app/requirements.txt
+# The Python environment comes from pyproject.toml and uv.lock, as in development.
+COPY pyproject.toml uv.lock ./
+RUN pip install --no-cache-dir uv \
+    && uv sync --frozen --no-dev --no-cache
+ENV PATH=/srv/toxage/.venv/bin:$PATH
 
 # The app reads the engine, the risk models, the schema and the documents
 # from the repository, so all of them are part of the image.

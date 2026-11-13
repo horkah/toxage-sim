@@ -112,3 +112,8 @@ der letzte prompt war gedacht, dass du ihn ausführst, nachdem der vorherige abg
 2026-11-13 07:50 (+01:00) | model: claude-fable-5-2 | attachments: none
 --------------------------------------------------------------------------------
 Resume
+
+================================================================================
+2026-11-13 08:25 (+01:00) | model: claude-fable-5-2 | attachments: none
+--------------------------------------------------------------------------------
+Equip the project with just (justfile covering all relevant tasks on the system console level) and uv (for python environment deployment encapsulation) that should be quick
