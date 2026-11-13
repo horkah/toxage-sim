@@ -15,9 +15,10 @@
   <link rel="stylesheet" href="{% static 'explorer/style.css' %}">
   <script type="module" src="{% static 'explorer/app.js' %}"></script>
   <script type="module" src="{% static 'explorer/charts.js' %}"></script>
+  {% block tour %}<script type="module" src="{% static 'explorer/tour.js' %}"></script>{% endblock %}
   {% block head %}{% endblock %}
 </head>
-<body>
+<body data-read-only="{{ read_only|yesno:'1,0' }}" data-tour-snapshot="{{ tour_snapshot|yesno:'1,0' }}">
   <header class="topbar">
     <a class="brand" href="{% url 'explorer' %}">toxage-sim <span>explorer</span></a>
     {% block nav %}
@@ -43,6 +44,9 @@
         <h3>Manage</h3>
         <a href="{% url 'data' %}">Data sets</a>
         <a href="{% url 'parameters_start' %}">Model parameters</a>
+        <h3>Guided tours</h3>
+        <button type="button" class="link" data-tour-start="tutorial">Tutorial: step by step, you act</button>
+        <button type="button" class="link" data-tour-start="demo">Demo: runs by itself</button>
         <h3>Reference</h3>
         <a href="{% url 'schema' %}">Data schema</a>
         <a href="{% url 'documents' %}">Documents</a>
@@ -53,6 +57,11 @@
           <label><input type="radio" name="theme" value=""> system</label>
           <label><input type="radio" name="theme" value="light"> bright</label>
           <label><input type="radio" name="theme" value="dark"> dark</label>
+        </fieldset>
+        <fieldset class="setting" data-setting="welcome">
+          <legend>Offer tutorial and demo at start</legend>
+          <label><input type="radio" name="welcome" value=""> yes</label>
+          <label><input type="radio" name="welcome" value="off"> no</label>
         </fieldset>
         <fieldset class="setting" data-setting="textsize">
           <legend>Text size</legend>

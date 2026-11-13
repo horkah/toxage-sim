@@ -156,7 +156,7 @@ def save(key, posted):
 def reset(key=None, path=None):
     """Bring defaults back: one value, one source, or everything."""
     if key is None:
-        Setting.objects.all().delete()
+        Setting.objects.filter(pk__in=SOURCES).delete()
     elif path is None:
         Setting.objects.filter(pk=key).delete()
     else:

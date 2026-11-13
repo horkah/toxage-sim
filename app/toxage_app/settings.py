@@ -55,7 +55,8 @@ WSGI_APPLICATION = "toxage_app.wsgi.application"
 TEMPLATES = [{
     "BACKEND": "django.template.backends.django.DjangoTemplates",
     "APP_DIRS": True,
-    "OPTIONS": {"context_processors": ["django.template.context_processors.request"]},
+    "OPTIONS": {"context_processors": ["django.template.context_processors.request",
+                                       "explorer.tour.context"]},
 }]
 
 # SQLite in one file. Write-ahead logging lets pages be read while a data set
