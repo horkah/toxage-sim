@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { formUrl, matches, swappable } from "../static/explorer/app.js";
+import { afterFailure, formUrl, matches, swappable } from "../static/explorer/app.js";
 
 test("formUrl keeps the non-empty values of a form", () => {
   const url = formUrl("http://h/?old=1", [["tumour_type", "breast"], ["tumour_type", "prostate"], ["age_min", ""], ["view", "time"]]);
@@ -26,4 +26,12 @@ test("matches finds every word in any order", () => {
   assert.ok(matches("Odds ratio ECOG 2 or higher", "ecog odds"));
   assert.ok(matches("anything", "  "));
   assert.ok(!matches("Odds ratio ECOG", "ecog age"));
+});
+
+test("afterFailure never repeats a sent form as a page load", () => {
+  assert.equal(afterFailure("POST", false, false), "message");     // e.g. a deletion: no GET of /data/delete/
+  assert.equal(afterFailure("POST", false, true), "ignore");       // the page is being left
+  assert.equal(afterFailure("GET", false, false), "load");
+  assert.equal(afterFailure("GET", false, true), "ignore");
+  assert.equal(afterFailure("GET", true, false), "ignore");        // update of a part of the page
 });

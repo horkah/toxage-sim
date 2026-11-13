@@ -34,6 +34,18 @@ export function swappable(url, origin) {
   return true;
 }
 
+// What to do when a request of the page script fails without an answer:
+// "ignore" when the page is being left (browsers such as Firefox cancel the
+// running requests then and report it as an error) or for the update of a
+// part of the page, which the next update repeats; "message" for a form that
+// was sent, which must not be repeated as a page load (a GET of a POST
+// address such as /data/delete/ is refused with 405); "load" to load a page
+// address normally.
+export function afterFailure(method, partial, leaving) {
+  if (leaving || partial) return "ignore";
+  return method === "GET" ? "load" : "message";
+}
+
 // True if a text matches every word of a search, ignoring case.
 export function matches(text, query) {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
@@ -112,6 +124,7 @@ function question(form, submitter) {
 let controller = null;
 let pollTimer = null;
 let shown = null;       // path and query of the page on screen
+let leaving = false;    // the browser is leaving the page
 
 const here = () => location.pathname + location.search;
 
@@ -196,7 +209,10 @@ export async function visit(href, options = {}) {
       headers: { [HEADER]: "1", ...(method === "POST" ? { "X-CSRFToken": csrf() } : {}) },
     });
   } catch (error) {
-    if (error.name !== "AbortError") location.href = url.href;
+    if (error.name === "AbortError") return;
+    const next = afterFailure(method, Boolean(options.only), leaving);
+    if (next === "load") location.href = url.href;
+    else if (next === "message") toast("The server could not be reached. Please try again.");
     return;
   } finally {
     if (mine === controller || options.only) document.documentElement.classList.remove("loading");
@@ -339,6 +355,9 @@ function init() {
   document.addEventListener("input", onInput);
   document.addEventListener("toxage:navigate", (event) => visit(event.detail));
   document.documentElement.dataset.router = "1";
+  addEventListener("beforeunload", () => { leaving = true; });
+  addEventListener("pagehide", () => { leaving = true; });
+  addEventListener("pageshow", () => { leaving = false; });
   addEventListener("popstate", () => {
     // A jump to an anchor on the same page needs no load.
     if (here() === shown) return revealHash();

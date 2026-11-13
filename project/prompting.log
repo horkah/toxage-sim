@@ -158,3 +158,17 @@ improvements and redesign for the demo:
 2026-11-14 00:28 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 my locale time is German Berlin time. my server should be correctly configured. but the build times (in the version naming) are 1 hour off, I think. And I saw UTC or so somewhere else. please correct to reflect server time in all those places.
+
+================================================================================
+2026-11-14 00:41 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+the bug is still there in the demo loop, when the page jumps to https://toxage-sim.bitzz.de/data/delete
+Looks like there’s a problem with this site
+The server at toxage-sim.bitzz.de sent back an error: 405 Method Not Allowed
+What can you do about it?
+
+* Check to make sure you’ve typed the website address correctly.
+* The site could be temporarily unavailable or too busy. Try again in a few moments.
+
+
+please fix
