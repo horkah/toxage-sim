@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import pages, views
+from . import pages, tour, views
 
 urlpatterns = [
     path("", views.explorer, name="explorer"),
@@ -16,6 +16,9 @@ urlpatterns = [
     path("schema/", pages.schema, name="schema"),
     path("documents/", pages.documents, name="documents"),
     path("documents/<str:key>/", pages.documents, name="document"),
+    path("tour/state/", tour.state, name="tour_state"),
+    path("tour/snapshot/", tour.snapshot, name="tour_snapshot"),
+    path("tour/restore/", tour.restore, name="tour_restore"),
     path("disclaimer/", views.disclaimer, name="disclaimer"),
     path("disclaimer/revoke/", views.revoke, name="revoke"),
 ]
