@@ -153,3 +153,8 @@ improvements and redesign for the demo:
 * hide the demo loop controls (pause, stop, speed options) after first step), and show if clicked or touched on hint text. If clicked/touched again, the controls disappear again. while the controls are shown, the demo halts for an additional five seconds, then resumes automatically, in next step of course controls are hidden again (until click/touch)
 * redefine the time per word as the inverse parameter: not words per second, but seconds per 20 words, minimum 0, default the corresponding of what you had. with proper scale.
 * the delete dataset option threw an error in demo mode (probably because there is now a warning window that needs confirmation, that warning window needs to be disabled for the demo mode)
+
+================================================================================
+2026-11-14 00:28 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+my locale time is German Berlin time. my server should be correctly configured. but the build times (in the version naming) are 1 hour off, I think. And I saw UTC or so somewhere else. please correct to reflect server time in all those places.

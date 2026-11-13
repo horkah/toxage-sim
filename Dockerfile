@@ -25,11 +25,12 @@ COPY risk-model risk-model
 COPY background background
 COPY app app
 
-# Every build gets its own stamp: the time of the build and, if given, the
-# commit, e.g. GIT_COMMIT=$(git rev-parse --short HEAD). The app shows it in
-# the footer and on the about page.
+# Every build gets its own stamp: the moment of the build in seconds since
+# 1970 and, if given, the commit, e.g. GIT_COMMIT=$(git rev-parse --short HEAD).
+# The app shows it in the footer and on the about page, in the time zone of
+# the server (TZ in docker-compose.yml).
 ARG GIT_COMMIT=""
-RUN echo "$(date -u +%Y%m%d.%H%M)${GIT_COMMIT:+ ($GIT_COMMIT)}" > BUILD
+RUN echo "$(date +%s)${GIT_COMMIT:+ $GIT_COMMIT}" > BUILD
 
 # The database and the secret key live in /data, which is a volume.
 RUN useradd --system --create-home toxage && mkdir /data && chown toxage /data

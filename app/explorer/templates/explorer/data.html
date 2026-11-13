@@ -21,7 +21,7 @@
         <header>
           <div>
             <h2>{{ d.name }}</h2>
-            <p class="meta">{{ d.n }} patients · seed {{ d.seed }} · {{ d.created|date:"Y-m-d H:i" }} UTC
+            <p class="meta">{{ d.n }} patients · seed {{ d.seed }} · {{ d.created|date:"Y-m-d H:i T" }}
               {% if d.ready %}· up to {{ d.metadata.weeks }} weeks{% endif %}</p>
           </div>
           {% if d.pk == active.pk %}<span class="badge accent">shown in the explorer</span>

@@ -49,7 +49,7 @@
     <h2>Version</h2>
     <dl class="facts-list">
       <dt>App version</dt><dd>{{ app_version }}</dd>
-      <dt>Build</dt><dd>{{ app_build }}</dd>
+      <dt>Build</dt><dd>{{ app_build }} <span class="muted">(date and time of the build in the time zone of the server, {{ time_zone }}, and the commit)</span></dd>
       <dt>Terms of use</dt><dd><a href="{% url 'disclaimer' %}">Disclaimer and terms</a></dd>
       <dt>Technology</dt><dd>Django, plain JavaScript and SVG charts. No external services, no tracking.
         Settings stay in this browser; data stay on the server of this installation.</dd>

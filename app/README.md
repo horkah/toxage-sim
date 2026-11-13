@@ -20,6 +20,7 @@ Then open http://localhost:8000, accept the terms, and generate a first data set
 | `TOXAGE_SECRET_KEY` | Secret key; without it one is created once and kept in the data folder | created |
 | `TOXAGE_DATA_DIR` | Folder of the database and the secret key | `/data` |
 | `TOXAGE_DEBUG` | `1` for development | `0` |
+| `TZ` | Time zone of the server; the app shows all times in it: build, data sets, archives | `Europe/Berlin` (set in `docker-compose.yml`) |
 
 The image holds the app, the engine, the risk models, the schema and the documents, without the PDFs of the literature and without the folder `project/` (prompt log and internal notes), which are for developers only. It runs gunicorn with one worker process and several threads. One process is required: data sets are generated in a thread of the server process, and the rows of a scenario are kept in its memory.
 
@@ -59,7 +60,9 @@ The first command tests the Python code, the second the helpers of the page scri
 
 ## Version
 
-The version of the app is the one in `pyproject.toml`. Every build gets a stamp on top: the Docker image writes the time of the build and the commit into the file `BUILD` (`just docker-build` passes the commit), and a working copy uses the date and hash of the last commit. `TOXAGE_BUILD` overrides both. Version and build are shown in the footer of every page and on the page "About" (`toxage_app/version.py`).
+The version of the app is the one in `pyproject.toml`. Every build gets a stamp on top: the Docker image writes the moment of the build (seconds since 1970) and the commit into the file `BUILD` (`just docker-build` passes the commit), and a working copy uses the moment and hash of the last commit. The app shows the moment as date and time in the time zone of the server, e.g. `20261113.2245 (abc1234)`. `TOXAGE_BUILD` overrides both and is shown as it is.
+
+All times of the app are shown in the time zone of the server (`toxage_app/zone.py`): the variable `TZ`, else the zone configured in the system (`/etc/timezone` or `/etc/localtime`), else UTC. A container does not know the zone of its host, so `docker-compose.yml` passes `TZ`, by default `Europe/Berlin`; set `TZ` in `.env` for another zone. Version and build are shown in the footer of every page and on the page "About" (`toxage_app/version.py`).
 
 ## Sections
 

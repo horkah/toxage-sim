@@ -20,9 +20,9 @@ import gzip
 import io
 import json
 import zlib
-from datetime import datetime, timezone
 
 from django.db import transaction
+from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
 from schema import toxage_schema
@@ -52,7 +52,7 @@ def lines(datasets=None):
                     if whole else datasets)
     yield _line({
         "type": "archive", "format": FORMAT, "format_version": FORMAT_VERSION,
-        "app_version": VERSION, "build": BUILD, "created": datetime.now(timezone.utc).isoformat(),
+        "app_version": VERSION, "build": BUILD, "created": timezone.localtime().isoformat(),
         "content": "app" if whole else "datasets",
         "schema_version": {t: toxage_schema.load(t)["version"] for t in toxage_schema.TABLES},
     })
@@ -62,7 +62,7 @@ def lines(datasets=None):
     patients = 0
     for d in datasets:
         yield _line({
-            "type": "dataset", "ref": d.pk, "name": d.name, "created": d.created.isoformat(),
+            "type": "dataset", "ref": d.pk, "name": d.name, "created": timezone.localtime(d.created).isoformat(),
             "n": d.n, "seed": d.seed, "metadata": d.metadata, "scenarios": d.scenarios,
             "settings": d.settings, "calibrated": d.calibrated,
         })
@@ -97,7 +97,7 @@ def gzipped(text_lines):
 
 
 def filename(dataset=None):
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M")
+    stamp = timezone.localtime().strftime("%Y%m%d-%H%M")
     return f"toxage-sim-{'dataset-%d-' % dataset.pk if dataset else ''}{stamp}.jsonl.gz"
 
 

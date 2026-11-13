@@ -3,6 +3,8 @@ import os
 import sys
 from pathlib import Path
 
+from .zone import local_zone
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 REPO_DIR = BASE_DIR.parent
 for path in (REPO_DIR, REPO_DIR / "risk-model"):
@@ -73,7 +75,8 @@ DATABASES = {"default": {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LANGUAGE_CODE = "en"
-TIME_ZONE = "UTC"
+# All times are shown in the time zone of the server (toxage_app/zone.py).
+TIME_ZONE = local_zone()
 USE_TZ = True
 STATIC_URL = "static/"
 

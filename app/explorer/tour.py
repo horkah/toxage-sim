@@ -25,7 +25,8 @@ def context(request):
     """Values that every page needs: the tour state, the mode, the version."""
     from toxage_app.version import BUILD, VERSION
     return {"tour_snapshot": has_snapshot(), "read_only": settings.READ_ONLY,
-            "app_version": VERSION, "app_build": BUILD, "repository": settings.REPOSITORY_URL}
+            "app_version": VERSION, "app_build": BUILD, "repository": settings.REPOSITORY_URL,
+            "time_zone": settings.TIME_ZONE}
 
 
 def state(request):

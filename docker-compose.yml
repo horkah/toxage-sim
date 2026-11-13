@@ -21,6 +21,8 @@ services:
       TOXAGE_ALLOWED_HOSTS: "${TOXAGE_ALLOWED_HOSTS:-localhost,127.0.0.1}"
       TOXAGE_CSRF_TRUSTED_ORIGINS: "${TOXAGE_CSRF_TRUSTED_ORIGINS:-http://localhost:8000}"
       TOXAGE_READ_ONLY: "${TOXAGE_READ_ONLY:-0}"
+      # Time zone of the server: the app shows all times in it (build, data sets, archives).
+      TZ: "${TZ:-Europe/Berlin}"
     restart: unless-stopped
     logging:
       driver: json-file
