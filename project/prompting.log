@@ -231,3 +231,8 @@ when readonly is 1, the demo should still have special permission to have script
 2026-11-14 02:04 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 this is now version 0.2.1 - please upate version number
+
+================================================================================
+2026-11-14 02:14 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+is it straightforward and safe to optimize the database for the parallel worlds with deduplication of identical data? I am thinking of just leaving a reference "unchanged from base" binary tag for those which are identical copies. they then aren't stored but looked up from the base entry. you surely figure that out how to optimize the memory and don't compromise speed or stability. of course, deleting the base scenario is then would require remapping to acertain data integrity also after such partial deletion.
