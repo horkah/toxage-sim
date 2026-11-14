@@ -100,6 +100,8 @@ Citations follow APA style (7th edition). Each entry has an anchor (e.g. `#basch
 
 PDFs are stored in `papers/`. "Read" says which text the report in `toxicity-report.md` is based on.
 
+**Use of the PDFs:** members of the project group obtained them through the access of their institutions for academic research. They are kept in the repository solely for the group's own scientific work within this project. Any other use, and any passing on outside the group, is not permitted. Copyright remains with the publishers and authors; the licence of each article applies.
+
 | Reference | PMID | PDF in `papers/` | Read |
 |---|---|---|---|
 | [Absolom et al. (2021)](#absolom-2021) | 33417506 | missing | abstract |
