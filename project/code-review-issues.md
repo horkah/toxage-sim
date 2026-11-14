@@ -15,16 +15,6 @@ What remains needs a decision of the author.
 
 ## Major
 
-### M3. The cache of rows and events has no limit
-
-- Where: `app/explorer/cohort.py` (`_CACHE`).
-- What: the scored rows and the events of every data set and scenario that a
-  page used stay in memory until parameters or data change. The view
-  "Interventions" loads all seven scenarios. With several large data sets
-  (up to 20 000 patients each) the memory of the single server process grows
-  without limit, and the container can be killed.
-- Fix: keep only the most recently used entries (least recently used out).
-
 ### M4. No access control on a public installation (needs a decision)
 
 - Where: whole app; `docker-compose.yml` (`TOXAGE_READ_ONLY` defaults to 0).

@@ -4,6 +4,9 @@ central schema.
 
 A row is the baseline record of a patient, the outcome record of one scenario
 and the risks. The rows of a scenario are kept in memory after first use."""
+import os
+import threading
+from collections import OrderedDict
 from dataclasses import dataclass
 
 import toxage_risk
@@ -14,7 +17,32 @@ from .models import Course, Dataset
 
 USUAL_CARE = "usual_care"
 DATASET_COOKIE = "toxage_dataset"
-_CACHE = {}
+# Rows and events of the scenarios used last, least recently used out. The
+# limit counts patients over all entries: rows take about 5.5 KB and events
+# about 1.3 KB per patient and scenario, so 60 000 patients are about 400 MB.
+# One data set of 1500 patients under seven scenarios needs 2 x 10 500.
+CACHE_PATIENTS = int(os.environ.get("TOXAGE_CACHE_PATIENTS", 60000))
+_CACHE = OrderedDict()      # key -> (value, number of patients)
+_CACHE_LOCK = threading.Lock()
+
+
+def _cached(key, size, compute):
+    """The value of key from the cache, else compute() it and keep it. The
+    oldest entries leave when the cache holds more than CACHE_PATIENTS
+    patients; the newest entry always stays, even if it alone is larger."""
+    with _CACHE_LOCK:
+        if key in _CACHE:
+            _CACHE.move_to_end(key)
+            return _CACHE[key][0]
+    value = compute()       # outside the lock: other requests need not wait
+    with _CACHE_LOCK:
+        _CACHE[key] = (value, size)
+        _CACHE.move_to_end(key)
+        total = sum(n for _, n in _CACHE.values())
+        while total > CACHE_PATIENTS and len(_CACHE) > 1:
+            _, (_, n) = _CACHE.popitem(last=False)
+            total -= n
+    return value
 
 
 @dataclass(frozen=True)
@@ -79,7 +107,8 @@ def score(records, models):
 
 def clear_cache():
     """Forget the stored rows and events, e.g. after a change of parameters or data."""
-    _CACHE.clear()
+    with _CACHE_LOCK:
+        _CACHE.clear()
 
 
 def newest():
@@ -116,21 +145,18 @@ def scenario(dataset, wanted):
 
 def rows(dataset, scenario_id, models):
     """Baseline, outcome and risks of all patients in one scenario."""
-    key = (dataset.pk, scenario_id, "rows")
-    if key not in _CACHE:
+    def compute():
+        """Read baseline and outcome of every patient and add the risks."""
         pairs = Course.objects.filter(patient__dataset=dataset, scenario_id=scenario_id).order_by(
             "patient__patient_id").values_list("patient__baseline", "outcome")
-        _CACHE[key] = score([{**b, **o} for b, o in pairs], models)
-    return _CACHE[key]
+        return score([{**b, **o} for b, o in pairs], models)
+    return _cached((dataset.pk, scenario_id, "rows"), dataset.n, compute)
 
 
 def events(dataset, scenario_id):
     """Adverse events of one scenario as {patient_id: [event records]}."""
-    key = (dataset.pk, scenario_id, "events")
-    if key not in _CACHE:
-        _CACHE[key] = dict(Course.objects.filter(
-            patient__dataset=dataset, scenario_id=scenario_id).values_list("patient__patient_id", "events"))
-    return _CACHE[key]
+    return _cached((dataset.pk, scenario_id, "events"), dataset.n, lambda: dict(Course.objects.filter(
+        patient__dataset=dataset, scenario_id=scenario_id).values_list("patient__patient_id", "events")))
 
 
 def course(dataset, scenario_id, patient_id):

@@ -20,6 +20,7 @@ Then open http://localhost:8000, accept the terms, and generate a first data set
 | `TOXAGE_SECRET_KEY` | Secret key; without it one is created once and kept in the data folder | created |
 | `TOXAGE_DATA_DIR` | Folder of the database and the secret key | `/data` |
 | `TOXAGE_DEBUG` | `1` for development | `0` |
+| `TOXAGE_CACHE_PATIENTS` | Patients whose rows and events are kept in memory, over all data sets and scenarios; about 400 MB for 60 000 | `60000` |
 | `TZ` | Time zone of the server; the app shows all times in it: build, data sets, archives | `Europe/Berlin` (set in `docker-compose.yml`) |
 
 The image holds the app, the engine, the risk models, the schema and the documents, without the PDFs of the literature and without the folder `project/` (prompt log and internal notes), which are for developers only. It runs gunicorn with one worker process and several threads. One process is required: data sets are generated in a thread of the server process, and the rows of a scenario are kept in its memory.

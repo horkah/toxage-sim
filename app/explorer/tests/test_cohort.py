@@ -125,3 +125,28 @@ class ScenarioTest(CohortTestCase):
         dataset = cohort.newest()
         self.assertEqual(cohort.scenario_ids(dataset), ["usual_care", "lung_monitoring"])
         self.assertEqual(Patient.objects.count(), 9)
+
+
+class CacheTest(CohortTestCase):
+    """The cache of rows and events keeps the patients used last, up to a limit (finding M3)."""
+    n = 30
+
+    def test_the_cache_has_a_limit_and_keeps_the_newest(self):
+        from unittest import mock
+        cohort.clear_cache()
+        scenarios = cohort.scenario_ids(self.dataset)
+        with mock.patch.object(cohort, "CACHE_PATIENTS", 3 * self.n):     # room for three entries
+            first = cohort.rows(self.dataset, scenarios[0], self.models)
+            for sid in scenarios[1:4]:
+                cohort.rows(self.dataset, sid, self.models)
+            self.assertEqual(len(cohort._CACHE), 3)
+            self.assertNotIn((self.dataset.pk, scenarios[0], "rows"), cohort._CACHE)   # oldest left
+            cohort.rows(self.dataset, scenarios[1], self.models)                       # used again
+            cohort.events(self.dataset, scenarios[4])
+            self.assertIn((self.dataset.pk, scenarios[1], "rows"), cohort._CACHE)
+            self.assertNotIn((self.dataset.pk, scenarios[2], "rows"), cohort._CACHE)
+            self.assertEqual(cohort.rows(self.dataset, scenarios[0], self.models), first)   # computed again
+        with mock.patch.object(cohort, "CACHE_PATIENTS", 1):            # one entry larger than the limit
+            cohort.events(self.dataset, scenarios[0])
+            self.assertEqual(list(cohort._CACHE), [(self.dataset.pk, scenarios[0], "events")])
+        cohort.clear_cache()
