@@ -180,5 +180,10 @@
       "cardiovascular_event_rate": null,
       "source": "Cortes et al. (2022), KEYNOTE-355; treatment-related adverse events of grade 3 to 5; immune-mediated events of grade 3 or 4; median exposure 26.4 weeks"
     }
-  }
+  },
+  "whole_numbers": [
+    "regimens/*/lab_interval_weeks",
+    "regimens/*/chemotherapy_weeks",
+    "regimens/*/max_treatment_weeks"
+  ]
 }

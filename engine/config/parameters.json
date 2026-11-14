@@ -612,5 +612,17 @@
     "iterations": 6,
     "trial_like_maximum_ecog": 1,
     "basis": "event rates are matched to the literature in generated patients with ECOG 0 or 1"
-  }
+  },
+  "whole_numbers": [
+    "simulation/weeks",
+    "simulation/calibration_weeks",
+    "simulation/observation_weeks_after_stop",
+    "population/pretreated_from_lines",
+    "hazards/ild/recognition_delay/maximum_days_if_prompt",
+    "measurements/labs_weeks_after_stop",
+    "calibration/patients",
+    "calibration/seed",
+    "calibration/iterations",
+    "calibration/trial_like_maximum_ecog"
+  ]
 }

@@ -59,7 +59,7 @@
                 <option value="false"{% if r.value == "false" %} selected{% endif %}>false</option>
               </select>
               {% else %}
-              <input type="{% if r.kind == 'number' %}number{% else %}text{% endif %}" step="any" name="p:{{ r.path }}"
+              <input type="{% if r.kind == 'number' %}number{% else %}text{% endif %}" step="{% if r.whole %}1{% else %}any{% endif %}" name="p:{{ r.path }}"
                      id="p-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" value="{{ r.value }}"{% if read_only %} readonly{% endif %}>
               {% endif %}
               {% if r.error %}<small class="error">{{ r.error }}</small>{% endif %}

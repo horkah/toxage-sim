@@ -166,7 +166,7 @@ The defaults are the JSON files of the repository: `engine/config/regimens.json`
 - Engine parameters apply to data sets generated from then on. A data set keeps the changed values it was made with and shows their number.
 - Risk model parameters apply to the risks in the explorer at once.
 - Texts that explain a value, such as its source, are shown and cannot be changed.
-- A value keeps the type of its default: number, true or false, text, or a list in JSON notation.
+- A value keeps the type of its default: number, true or false, text, or a list in JSON notation. Parameters that must be whole numbers, such as weeks, days and counts, are listed in the key `whole_numbers` of their file (`*` stands for any one key, e.g. `regimens/*/lab_interval_weeks`); for them a fraction is refused. Other numbers keep fractions, e.g. costs with cents.
 - A change is tried before it is kept: the risk models score 300 synthetic patients, the engine simulates 21 patients under all scenarios. A value that makes them fail, such as a regimen rate of 1 or a negative hazard ratio, is refused with the reason, and the stored values stay. If stored values break the risk models anyway, e.g. from an older version, the explorer says so and links to the parameters.
 
 ### Storage

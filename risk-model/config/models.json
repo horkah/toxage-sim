@@ -198,5 +198,11 @@
       "high_from": 0.1,
       "basis": "assumption"
     }
-  }
+  },
+  "whole_numbers": [
+    "severe_toxicity_90d/reference_patient/ga_impaired_domains",
+    "ild/window_days",
+    "cardiovascular/window_days",
+    "cardiovascular/rate_window_days"
+  ]
 }

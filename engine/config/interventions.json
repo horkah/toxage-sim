@@ -299,5 +299,10 @@
       ],
       "perfect": true
     }
-  }
+  },
+  "whole_numbers": [
+    "participation/monitoring_weeks_after_stop",
+    "natural_course/stage_days/*",
+    "consequences/intensive_care/*/days"
+  ]
 }

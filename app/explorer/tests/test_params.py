@@ -44,6 +44,29 @@ class HelperTest(SimpleTestCase):
 class StoreTest(TestCase):
     PATH = "hazards/dose_exponent/value"
 
+    def test_whole_numbers_refuse_fractions(self):
+        self.assertTrue(params.is_whole("parameters", "simulation/weeks"))
+        self.assertTrue(params.is_whole("regimens", "olaparib/lab_interval_weeks"))       # * for any regimen
+        self.assertTrue(params.is_whole("interventions", "consequences/intensive_care/4/days"))
+        self.assertFalse(params.is_whole("interventions", "costs/hospital_day"))           # cents allowed
+        self.assertFalse(params.is_whole("regimens", "olaparib"))
+        with self.assertRaisesMessage(ValueError, "must be a whole number"):
+            params.parse("2.5", 520, whole=True)
+        self.assertEqual(params.parse("104.0", 520, whole=True), 104)
+        self.assertIsInstance(params.parse("104.0", 520, whole=True), int)
+        self.assertEqual(params.parse("812.5", 800), 812.5)
+        errors = params.save("parameters", {"simulation/weeks": "60.5"})
+        self.assertEqual(errors, {"simulation/weeks": "must be a whole number"})
+        self.assertEqual(params.changes("parameters"), {})
+
+    def test_the_list_of_whole_numbers_is_no_parameter(self):
+        for key in params.SOURCES:
+            paths = [params.SEP.join(p) for g in params.form(key) for p in [r["path"].split(params.SEP) for r in g["rows"]]]
+            self.assertNotIn("whole_numbers", paths)
+        rows = {r["path"]: r for g in params.form("parameters") for r in g["rows"]}
+        self.assertTrue(rows["simulation/weeks"]["whole"])
+        self.assertFalse(rows["survival/frailty_log_hazard_ratio"]["whole"])
+
     def test_save_stores_only_changes(self):
         errors = params.save("parameters", {self.PATH: "3", "simulation/weeks": "520", "unknown/path": "1"})
         self.assertEqual(errors, {})

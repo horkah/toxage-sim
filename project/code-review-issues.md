@@ -31,21 +31,6 @@ What remains needs a decision of the author.
 
 ## Minor
 
-### m4. Whole-number parameters accept fractions (needs a decision)
-
-- Where: `app/explorer/params.py` (`parse`).
-- What: a value keeps the type of its default, but a fraction is accepted
-  where the default is a whole number: 2.5 for `simulation/weeks` is saved
-  and fails only when a data set is generated (with a clear message, as the
-  parameters page now tries every change on a small cohort). A whole number in the parameter files does not always mean "only
-  whole numbers", though: costs such as 800 euros per hospital day may well
-  get cents, so a general rule would be wrong.
-- Options: mark the parameters that must be whole numbers (weeks, days,
-  counts) in the parameter files, e.g. with a key "integer": true next to the
-  value, and refuse fractions there; or rely on the check that every change
-  now gets on a small cohort.
-- Status: open, decision of the author.
-
 ### m9. Thresholds of risk factors are fixed in the code (needs a decision)
 
 - Where: `engine/hazards.py` (`multipliers`, `general_multiplier`),

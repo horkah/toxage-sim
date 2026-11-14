@@ -6,6 +6,7 @@ can change single values in the app; only the changed values are stored, as
 by "/". Removing a stored value brings the default back.
 """
 import copy
+import functools
 import json
 import math
 from dataclasses import dataclass
@@ -36,9 +37,20 @@ class Source:
 
     def default(self):
         """The values of the file as they are in the repository."""
-        with open(REPO / self.path, encoding="utf-8") as f:
-            data = json.load(f)
+        data = self._read()
         return data[self.root] if self.root else data
+
+    def _read(self):
+        """The whole JSON file."""
+        with open(REPO / self.path, encoding="utf-8") as f:
+            return json.load(f)
+
+    @functools.cache
+    def whole_numbers(self):
+        """Path patterns of the parameters that must be whole numbers, from the
+        list "whole_numbers" of the file, relative to the root key."""
+        prefix = f"{self.root}{SEP}" if self.root else ""
+        return [p[len(prefix):] if p.startswith(prefix) else p for p in self._read().get("whole_numbers", [])]
 
 
 SOURCES = {s.key: s for s in (
@@ -69,9 +81,21 @@ def leaves(data, prefix=()):
 
 
 def is_note(path):
-    """True for keys that explain a value (basis, source, ...); they are shown, not
-    edited."""
-    return path[-1] in NOTES
+    """True for keys that explain a value (basis, source, ...) or describe the
+    file (the list whole_numbers); they are not edited."""
+    return path[-1] in NOTES or path == ("whole_numbers",)
+
+
+def matches(path, pattern):
+    """True if a parameter path fits a pattern of whole_numbers; * stands for
+    any one key, e.g. "*/lab_interval_weeks" for every regimen."""
+    parts, wanted = path.split(SEP), pattern.split(SEP)
+    return len(parts) == len(wanted) and all(w in ("*", p) for p, w in zip(parts, wanted))
+
+
+def is_whole(key, path):
+    """True if the parameter must be a whole number."""
+    return any(matches(path, pattern) for pattern in SOURCES[key].whole_numbers())
 
 
 def anchor(path):
@@ -112,9 +136,10 @@ def effective(key, changed=None):
     return apply(SOURCES[key].default(), changes(key) if changed is None else changed)
 
 
-def parse(text, default):
+def parse(text, default, whole=False):
     """Turn the text of a form field into a value of the type of the default.
-    Raises ValueError with a readable message."""
+    whole=True refuses fractions (parameters listed in whole_numbers). Raises
+    ValueError with a readable message."""
     text = text.strip()
     if isinstance(default, bool):
         if text not in ("true", "false"):
@@ -127,7 +152,9 @@ def parse(text, default):
             raise ValueError("must be a number") from None
         if value != value or value in (float("inf"), float("-inf")):
             raise ValueError("must be a finite number")
-        return int(value) if value == int(value) and isinstance(default, int) else value
+        if whole and value != int(value):
+            raise ValueError("must be a whole number")
+        return int(value) if value == int(value) and (whole or isinstance(default, int)) else value
     if isinstance(default, str):
         return text
     try:
@@ -158,7 +185,7 @@ def save(key, posted):
         if path not in default:
             continue
         try:
-            value = parse(text, default[path])
+            value = parse(text, default[path], is_whole(key, path))
         except ValueError as error:
             errors[path] = str(error)
             continue
@@ -265,7 +292,8 @@ def _store(key, changed):
 
 def form(key, posted=None, errors=None):
     """Groups of one source for the form: [{"title", "rows": [row], "changed": n}].
-    A row has path, label, default, value, changed, note, error, kind."""
+    A row has path, label, default, value, changed, note, error, kind and
+    whole (True for a parameter that must be a whole number)."""
     default = SOURCES[key].default()
     changed = changes(key)
     notes = {SEP.join(p[:-1]): v for p, v in leaves(default) if is_note(p) and isinstance(v, str)}
@@ -290,6 +318,7 @@ def form(key, posted=None, errors=None):
             "note": notes.get(SEP.join(path[:-1]), "") if len(path) > 2 else "",
             "error": (errors or {}).get(name, ""),
             "kind": "bool" if isinstance(value, bool) else "number" if isinstance(value, (int, float)) else "text",
+            "whole": is_whole(key, name),
         })
     return list(groups.values())
 
