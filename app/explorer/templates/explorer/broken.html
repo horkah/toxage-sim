@@ -1,0 +1,10 @@
+{% extends "explorer/base.html" %}
+{% block title %}Explore · toxage-sim{% endblock %}
+{% block content %}
+<section class="panel narrow">
+  <h1>The risk models cannot be computed</h1>
+  <p>With the parameters stored in this app, {{ problem }}.</p>
+  <p>Changed values of the risk models can be reset on the parameters page.</p>
+  <p class="actions"><a class="button primary" href="{% url 'parameters' 'risk' %}">Parameters of the risk models</a></p>
+</section>
+{% endblock %}

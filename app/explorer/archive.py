@@ -232,6 +232,11 @@ def load(fileobj, replace=False):
             elif kind == "parameters":
                 if replace:
                     for key, changed in (rec.get("changes") or {}).items():
+                        problem = params.check(key, changed) if key in params.SOURCES and changed else None
+                        if problem:
+                            raise ArchiveError(f"Line {number}: the parameter changes of the archive "
+                                               f"do not work in this app: {problem}.")
+                    for key, changed in (rec.get("changes") or {}).items():
                         if key in params.SOURCES and changed:
                             Setting.objects.create(pk=key, value=changed)
                     restored = True

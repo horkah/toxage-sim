@@ -6,7 +6,7 @@ from django.db import OperationalError, connection
 from django.test import TestCase, TransactionTestCase, override_settings
 
 from explorer import cohort, params, store
-from explorer.models import Course, Dataset, Patient
+from explorer.models import Course, Dataset, Patient, Setting
 from schema import toxage_schema
 
 from .helpers import CohortTestCase
@@ -63,7 +63,8 @@ class DataTest(CohortTestCase):
         self.assertContains(self.client.get("/data/"), "3 parameters changed, event rates calibrated again")
 
     def test_failure_is_shown(self):
-        params.save("parameters", {"simulation/weeks": "0"})
+        # Stored directly: the parameters page refuses this value (see ParameterCheckTest).
+        Setting.objects.create(pk="parameters", value={"simulation/weeks": 0})
         with self.assertLogs("explorer.store", "ERROR") as logged:
             self.client.post("/data/generate/", {"n": "9", "seed": "2"})
         self.assertIn("simulation weeks must be a whole number of at least 1", logged.output[0])
@@ -363,3 +364,58 @@ class RunningTest(TransactionTestCase):
         store.mark_interrupted()
         dataset.refresh_from_db()
         self.assertEqual(dataset.message, "Interrupted by a restart of the app")
+
+
+@override_settings(ASYNC_JOBS=False)
+class ParameterCheckTest(CohortTestCase):
+    """Values of the right type that break the models are refused (finding M1)."""
+    n = 6
+    RATE = "severe_toxicity_90d/regimen_rates/olaparib/rate"
+
+    def setUp(self):
+        super().setUp()
+        self.client.cookies[COOKIE] = settings.DISCLAIMER_VERSION
+
+    def test_values_that_break_the_risk_models_are_refused(self):
+        for path, value in ((self.RATE, "1"), (self.RATE, "0"), (self.RATE, "2"),
+                            ("ild/hazard_ratios/spo2_below_95/value", "-1")):
+            with self.subTest(path=path, value=value):
+                errors = params.save("risk", {path: value})
+                self.assertIn("not saved", errors[path])
+                self.assertEqual(params.changes("risk"), {})
+        self.assertEqual(params.save("risk", {self.RATE: "0.6"}), {})
+        self.assertEqual(params.changes("risk"), {self.RATE: 0.6})
+
+    def test_values_that_break_the_engine_are_refused(self):
+        for path, value in (("simulation/weeks", "0"), ("simulation/calibration_weeks", "0")):
+            with self.subTest(path=path):
+                errors = params.save("parameters", {path: value})
+                self.assertIn("the simulation fails", errors[path])
+        self.assertEqual(params.changes("parameters"), {})
+
+    def test_the_page_shows_why(self):
+        response = self.client.post("/parameters/risk/", {f"p:{self.RATE}": "1"}, headers={"X-Toxage-Fetch": "1"})
+        self.assertContains(response, "not saved: the model")
+        self.assertContains(response, 'value="1"')        # the refused value is shown again
+
+    def test_stored_values_that_break_the_models_give_a_clear_page(self):
+        rate = f"severe_toxicity_90d/regimen_rates/{self.rows[0]['regimen']}/rate"   # a regimen of the cohort
+        Setting.objects.create(pk="risk", value={rate: 1})
+        cohort.clear_cache()
+        with self.assertLogs("explorer.views", "ERROR"):
+            response = self.client.get("/")
+        self.assertEqual(response.status_code, 500)
+        self.assertContains(response, "The risk models cannot be computed", status_code=500)
+        self.assertContains(response, 'href="/parameters/risk/"', status_code=500)
+
+    def test_an_archive_with_broken_parameters_is_refused(self):
+        import gzip
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from explorer import archive
+        lines = [line for line in archive.lines()]
+        lines[1] = '{"type":"parameters","changes":{"risk":{"%s":1}}}\n' % self.RATE
+        upload = SimpleUploadedFile("a.jsonl.gz", gzip.compress("".join(lines).encode()))
+        response = self.client.post("/data/import/", {"archive": upload, "mode": "replace"})
+        self.assertContains(response, "do not work in this app")
+        self.assertEqual(params.all_changes(), {})
+        self.assertEqual(Dataset.objects.count(), 1)

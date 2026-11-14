@@ -7,6 +7,7 @@ by "/". Removing a stored value brings the default back.
 """
 import copy
 import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -152,6 +153,7 @@ def save(key, posted):
     the default are not stored. Returns {path: error message}."""
     default = dict((SEP.join(p), v) for p, v in leaves(SOURCES[key].default()) if not is_note(p))
     changed, errors = changes(key), {}
+    before = dict(changed)
     for path, text in posted.items():
         if path not in default:
             continue
@@ -164,8 +166,80 @@ def save(key, posted):
             changed.pop(path, None)
         else:
             changed[path] = value
+    if changed != before:
+        # A value of the right type can still break the models (e.g. a rate of 1
+        # or a negative hazard ratio). Such a change is refused as a whole.
+        problem = check(key, changed)
+        if problem:
+            missing = object()
+            for path in set(changed) | set(before):
+                if changed.get(path, missing) != before.get(path, missing):
+                    errors[path] = f"not saved: {problem}"
+            changed = before
     _store(key, changed)
     return errors
+
+
+# Checking changes --------------------------------------------------------------
+
+CHECK_PATIENTS = 300        # synthetic patients scored to check the risk models
+CHECK_COHORT = 21           # patients simulated under all scenarios to check the engine
+_SAMPLE = []
+
+
+def _sample_patients():
+    """Synthetic baseline records of all regimens, drawn once with the default
+    engine parameters, to try the risk models on."""
+    if not _SAMPLE:
+        import random
+        from engine import generate      # puts the engine folder on the path
+        import population
+        regimens, parameters = generate.load_config()
+        _SAMPLE.extend(p for p, _ in population.draw_cohort(random.Random(7), CHECK_PATIENTS, regimens, parameters))
+    return _SAMPLE
+
+
+def _valid_share(value):
+    """True for None or a finite number from 0 to 1."""
+    return value is None or (isinstance(value, (int, float)) and math.isfinite(value) and 0 <= value <= 1)
+
+
+def check_risk_models(cfg):
+    """Why the risk models fail with the configuration cfg, or None if every
+    model gives a risk from 0 to 1 for every sample patient."""
+    import toxage_risk
+    try:
+        models = toxage_risk.load(cfg)
+        for patient in _sample_patients():
+            for m in models:
+                for what, value in (("risk", m.risk(patient)), ("reference risk", m.reference_risk(patient))):
+                    if not _valid_share(value):
+                        return (f"the model “{m.name}” would give a {what} of {value!r} for a patient on "
+                                f"{patient['regimen'].replace('_', ' ')}; risks must lie between 0 and 1")
+    except Exception as error:      # any failure of the models is a reason to refuse
+        return f"the model computation fails ({type(error).__name__}: {error})"
+    return None
+
+
+def check_engine(config):
+    """Why the engine fails with the configuration, or None if a small cohort
+    can be simulated under all scenarios and gives records that fit the schema."""
+    from engine import generate
+    try:
+        generate.generate(CHECK_COHORT, 1, validate=True, config=config)
+    except Exception as error:      # any failure of the engine is a reason to refuse
+        return f"the simulation fails ({type(error).__name__}: {error})"
+    return None
+
+
+def check(key, changed):
+    """Why the changes {path: value} of one parameter file would break the
+    models, or None if they work."""
+    if key == "risk":
+        return check_risk_models(apply(SOURCES["risk"].default(), changed))
+    if key in ENGINE:
+        return check_engine(engine_config({**all_changes(), key: changed}))
+    return None
 
 
 def reset(key=None, path=None):

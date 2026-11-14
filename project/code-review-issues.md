@@ -15,23 +15,6 @@ What remains needs a decision of the author.
 
 ## Major
 
-### M1. Changed parameters are not checked; one wrong value breaks the explorer for everyone
-
-- Where: `app/explorer/params.py` (`save`), `app/explorer/views.py`, engine and risk models.
-- What: the parameters page accepts every value of the right type. A regimen
-  rate of 0, 1 or 2 in the risk models is saved, and from then on every page
-  of the explorer answers with a server error (500), for all users, until the
-  value is reset (math domain error in the logit, or a negative base). A
-  negative hazard ratio is saved and silently gives risks below 0 or above 1.
-  Engine values such as a probability above 1 or a calibration window of 0
-  make every generation fail.
-- Fix: check a change before it is kept. Risk model values: score a small
-  synthetic cohort with the new configuration; every risk must be a number
-  from 0 to 1. Engine values: generate a small cohort under all scenarios
-  and check the records against the schema. A change that fails is refused
-  with the reason, the stored values stay. The explorer shows a clear page
-  instead of a 500 if stored values break the risk models anyway.
-
 ### M2. Background generation is not coordinated
 
 - Where: `app/explorer/store.py`, `app/explorer/pages.py`, `app/explorer/tour.py`.
@@ -76,8 +59,8 @@ What remains needs a decision of the author.
 - Where: `app/explorer/params.py` (`parse`).
 - What: a value keeps the type of its default, but a fraction is accepted
   where the default is a whole number: 2.5 for `simulation/weeks` is saved
-  and fails only when a data set is generated (with a clear message since
-  M1). A whole number in the parameter files does not always mean "only
+  and fails only when a data set is generated (with a clear message, as the
+  parameters page now tries every change on a small cohort). A whole number in the parameter files does not always mean "only
   whole numbers", though: costs such as 800 euros per hospital day may well
   get cents, so a general rule would be wrong.
 - Options: mark the parameters that must be whole numbers (weeks, days,

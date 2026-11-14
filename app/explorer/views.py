@@ -1,3 +1,4 @@
+import logging
 import random
 
 from django.conf import settings
@@ -7,7 +8,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from . import charts, cohort, docs, filters, timeline
+from . import charts, cohort, docs, filters, params, timeline
 from .middleware import accepted
 from .models import Dataset
 
@@ -17,6 +18,7 @@ VIEWS = [("risk", "Risk"), ("characteristics", "Patient characteristics"),
 MODEL_GROUPS = {"severe90": "severe_toxicity_90d", "ild": "ild", "cv": "cardiovascular"}
 # Fields that sum up a patient at a glance, in the header of the patient card.
 KEY_FACTS = ("tumour_type", "regimen", "age_years", "sex", "ecog")
+log = logging.getLogger(__name__)
 # Query parameters that are not filters.
 STATE = ("patient", "model", "view", "scenario", "compare", "dataset")
 
@@ -118,7 +120,20 @@ def _intervention_sections(dataset, scenario, ids, models):
 
 def explorer(request):
     """The explorer: cohort, filters, patient and the four views, all from the query
-    string."""
+    string. If stored parameters break the risk models, a page says so and
+    leads to them, instead of an error 500 on every page."""
+    try:
+        return _explorer(request)
+    except Exception:
+        problem = params.check_risk_models(params.effective("risk"))
+        if problem is None:
+            raise           # another error: shown and logged as usual
+        log.exception("The risk models fail with the stored parameters")
+        return render(request, "explorer/broken.html", {"section": "explore", "problem": problem}, status=500)
+
+
+def _explorer(request):
+    """The explorer page itself, see explorer()."""
     data = _load(request)
     if data is None:
         return render(request, "explorer/empty.html", {"section": "explore"})

@@ -163,6 +163,7 @@ The defaults are the JSON files of the repository: `engine/config/regimens.json`
 - Risk model parameters apply to the risks in the explorer at once.
 - Texts that explain a value, such as its source, are shown and cannot be changed.
 - A value keeps the type of its default: number, true or false, text, or a list in JSON notation.
+- A change is tried before it is kept: the risk models score 300 synthetic patients, the engine simulates 21 patients under all scenarios. A value that makes them fail, such as a regimen rate of 1 or a negative hazard ratio, is refused with the reason, and the stored values stay. If stored values break the risk models anyway, e.g. from an older version, the explorer says so and links to the parameters.
 
 ### Storage
 
