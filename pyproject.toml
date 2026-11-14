@@ -1,6 +1,6 @@
 [project]
 name = "toxage-sim"
-version = "0.2.0"
+version = "0.2.1"
 description = "Synthetic data engine, risk models and app for toxicity of systemic cancer therapy"
 readme = "README.md"
 requires-python = ">=3.12"

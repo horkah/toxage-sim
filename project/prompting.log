@@ -226,3 +226,8 @@ for the open issues:
 2026-11-14 02:00 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 when readonly is 1, the demo should still have special permission to have scripted create and delete and parameter change and revert options as always have been. is that already implemented? if yes, then dont do anything, otherwises fix.
+
+================================================================================
+2026-11-14 02:04 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+this is now version 0.2.1 - please upate version number
