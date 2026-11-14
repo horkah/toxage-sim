@@ -74,7 +74,7 @@ migrate:
 
 # Start the app for development at http://localhost:8000
 serve port="8000": migrate
-    {{manage}} runserver {{port}}
+    TOXAGE_DEBUG=1 {{manage}} runserver {{port}}
 
 # Generate a data set for the app from the command line, e.g.: just load 1500 1
 load n="1500" seed="1" *args="":

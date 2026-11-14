@@ -19,7 +19,7 @@ Then open http://localhost:8000, accept the terms, and generate a first data set
 | `TOXAGE_READ_ONLY` | `1`: data and parameters can be viewed but not changed | `0` |
 | `TOXAGE_SECRET_KEY` | Secret key; without it one is created once and kept in the data folder | created |
 | `TOXAGE_DATA_DIR` | Folder of the database and the secret key | `/data` |
-| `TOXAGE_DEBUG` | `1` for development | `0` |
+| `TOXAGE_DEBUG` | `1` for development (`just serve` sets it); off by default | `0` |
 | `TOXAGE_DISK_LIMIT_MB` | Limit of the database on disk in MB, over all data sets; a data set that would not fit is not generated | `500` |
 | `TOXAGE_CACHE_PATIENTS` | Patients whose rows and events are kept in memory, over all data sets and scenarios; about 400 MB for 60 000 | `60000` |
 | `TZ` | Time zone of the server; the app shows all times in it: build, data sets, archives | `Europe/Berlin` (set in `docker-compose.yml`) |

@@ -11,7 +11,9 @@ for path in (REPO_DIR, REPO_DIR / "risk-model"):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-DEBUG = os.environ.get("TOXAGE_DEBUG", "1") == "1"
+# Off unless TOXAGE_DEBUG=1: debug pages show code and settings on errors.
+# "just serve" switches it on for development.
+DEBUG = os.environ.get("TOXAGE_DEBUG", "0") == "1"
 # Folder for the database and the secret key. In the container this is the
 # volume /data, so both survive a new container.
 DATA_DIR = Path(os.environ.get("TOXAGE_DATA_DIR", BASE_DIR))

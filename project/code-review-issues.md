@@ -26,7 +26,8 @@ What remains needs a decision of the author.
   only on a private one; or protect the changing actions (generate, import,
   delete, parameters) with a password or the login of the reverse proxy
   (e.g. basic auth in Caddy); or add user accounts.
-- Status: open, decision of the author.
+- Decision of the author: keep as is. The README names the missing login as
+  a limit; a public installation can run with `TOXAGE_READ_ONLY=1`.
 
 ## Minor
 
@@ -43,15 +44,6 @@ What remains needs a decision of the author.
   counts) in the parameter files, e.g. with a key "integer": true next to the
   value, and refuse fractions there; or rely on the check that every change
   now gets on a small cohort.
-- Status: open, decision of the author.
-
-### m8. DEBUG is on unless it is switched off (needs a decision)
-
-- Where: `app/toxage_app/settings.py`.
-- What: without `TOXAGE_DEBUG` the app runs in debug mode, which shows
-  details of the code on errors. The Dockerfile and `just serve-prod` switch
-  it off, so only other ways of running the app are affected.
-- Options: default off and `TOXAGE_DEBUG=1` in `just serve`; or leave as is.
 - Status: open, decision of the author.
 
 ### m9. Thresholds of risk factors are fixed in the code (needs a decision)

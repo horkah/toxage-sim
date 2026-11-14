@@ -210,3 +210,14 @@ limit the aggregate sum of all databases to 500 MB on disk (default). that param
 2026-11-14 01:34 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 yes, apply the limit to archive imports too
+
+================================================================================
+2026-11-14 01:37 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+for the open issues:
+
+* M4: keep as is.
+* m4: fix as proposed with marking of integer
+* m8: DEBUG shall be off by default, so please fix
+* m9: please fix and move to the parameters
+* m10: fix as proposed, dont care about saved data or stored seeds. we can wipe the database easily.
