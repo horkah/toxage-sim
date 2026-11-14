@@ -469,10 +469,11 @@ class DiskLimitTest(CohortTestCase):
         self.client.cookies[COOKIE] = settings.DISCLAIMER_VERSION
 
     def test_a_data_set_that_would_not_fit_is_not_generated(self):
-        # 90 MB used, 10 MB free; 1500 patients x 7 scenarios need about 58 MB.
+        # 90 MB used, 10 MB free; 1500 patients under 7 scenarios need about 25 MB
+        # (5.5 KB for usual care and 11 KB for what the other six add).
         with mock.patch.object(store, "used_bytes", return_value=90e6):
             response = self.client.post("/data/generate/", {"n": "1500", "seed": "4"})
-            self.assertContains(response, "Not generated: the new data set would need about 58 MB, "
+            self.assertContains(response, "Not generated: the new data set would need about 25 MB, "
                                           "but only 10 MB of the limit of 100 MB are free")
             self.assertContains(response, "Delete other data sets, or choose fewer patients or scenarios.")
             self.assertFalse(Dataset.objects.filter(seed=4).exists())
@@ -499,4 +500,5 @@ class DiskLimitTest(CohortTestCase):
             response = self.client.get("/data/")
         self.assertContains(response, "The database uses 21.7 MB of 100 MB on disk.")
         self.assertContains(response, 'data-free-bytes="78300000"')
-        self.assertContains(response, f'data-course-bytes="{store.BYTES_PER_COURSE}"')
+        self.assertContains(response, f'data-full-bytes="{store.BYTES_PER_COURSE}"')
+        self.assertContains(response, 'value="lung_monitoring" data-extra-bytes="200"')

@@ -28,6 +28,7 @@ from schema import toxage_schema
 from toxage_app.version import BUILD, VERSION
 
 from . import cohort, params, store
+from . import courses as stored
 from .models import Course, Dataset, Patient, Setting
 
 FORMAT = "toxage-sim-archive"
@@ -68,7 +69,9 @@ def lines(datasets=None):
             "settings": d.settings, "calibrated": d.calibrated,
         })
         courses = {}
-        for pid, sid, outcome, events, alerts, obs in Course.objects.filter(patient__dataset=d).values_list(
+        # Archives hold complete courses: readable without the app and by older versions.
+        for pid, sid, outcome, events, alerts, obs in stored.full_values(
+                Course.objects.filter(patient__dataset=d), d,
                 "patient_id", "scenario_id", "outcome", "events", "alerts", "observations").iterator():
             courses.setdefault(pid, []).append({"scenario_id": sid, "outcome": outcome, "events": events,
                                                 "alerts": alerts, "observations": obs})
@@ -133,32 +136,33 @@ def _records(fileobj):
         raise ArchiveError(f"The file cannot be read: {error}") from None
 
 
-def _courses_in(fileobj):
-    """Number of courses (patients x scenarios) that the data sets of an
-    archive announce, from its data set lines only; the file is read once more
+def _bytes_in(fileobj):
+    """Estimated disk space of the data sets that an archive announces, from its
+    data set lines only (patients and scenarios); the file is read once more
     from its start afterwards. Unreadable files give 0: the import itself then
     reports the problem."""
-    courses = 0
+    need = 0
     try:
         for text in _reader(fileobj):
             # Data set lines are short; the long patient lines are not parsed.
             if text.startswith('{"type":"dataset"'):
                 rec = json.loads(text)
-                courses += int(rec.get("n", 0)) * len(rec.get("scenarios") or [])
+                ids = [s["scenario_id"] for s in rec.get("scenarios") or []]
+                need += store.estimate_bytes(int(rec.get("n", 0)), ids)
     except (OSError, EOFError, UnicodeDecodeError, ValueError, TypeError):
         pass
     fileobj.seek(0)
-    return courses
+    return need
 
 
-def _check_room(courses, replace):
+def _check_room(need, replace):
     """Raise ArchiveError if the data sets of the archive would not fit into
     the limit of the database on disk, next to the stored ones unless they are
     replaced."""
     used = 0.0 if replace else store.used_bytes()
     if used is None:
         return
-    need, limit = courses * store.BYTES_PER_COURSE, store.limit_bytes()
+    limit = store.limit_bytes()
     if used + need > limit:
         where = (f"the limit is {store.mb(limit)}" if replace else
                  f"only {store.mb(max(0.0, limit - used))} of the limit of {store.mb(limit)} are free "
@@ -194,7 +198,9 @@ class _Importer:
         try:
             d = Dataset.objects.create(
                 name=str(rec["name"])[:80], n=int(rec["n"]), seed=int(rec["seed"]), status=Dataset.READY,
-                progress=1, metadata=rec["metadata"], scenarios=rec["scenarios"],
+                progress=1, metadata={**rec["metadata"],
+                                      "base": stored.choose_base([s["scenario_id"] for s in rec["scenarios"]])},
+                scenarios=rec["scenarios"],
                 settings=rec.get("settings", {}), calibrated=bool(rec.get("calibrated")))
         except (KeyError, TypeError, ValueError) as error:
             raise ArchiveError(f"Line {number}: incomplete data set ({error}).") from None
@@ -228,10 +234,13 @@ class _Importer:
         if not self.patients:
             return
         created = Patient.objects.bulk_create([p for p, _ in self.patients])
-        Course.objects.bulk_create([
-            Course(patient=p, scenario_id=c["scenario_id"], outcome=c["outcome"], events=c.get("events", []),
-                   alerts=c.get("alerts", []), observations=c.get("observations", {}))
-            for p, (_, courses) in zip(created, self.patients) for c in courses])
+        rows = []
+        for p, (_, courses) in zip(created, self.patients):
+            found = [{"scenario_id": c["scenario_id"], "outcome": c["outcome"], "events": c.get("events", []),
+                      "alerts": c.get("alerts", []), "observations": c.get("observations", {})} for c in courses]
+            # Fields identical to those of the base scenario are stored once (courses.py).
+            rows += [Course(patient=p, **c) for c in stored.deduplicate(found, stored.base_of(p.dataset))]
+        Course.objects.bulk_create(rows)
         self.patients = []
 
 
@@ -252,7 +261,7 @@ def load(fileobj, replace=False):
     if not isinstance(header.get("format_version"), int) or header["format_version"] > FORMAT_VERSION:
         raise ArchiveError(f"The archive has format version {header.get('format_version')}; "
                            f"this app reads up to version {FORMAT_VERSION}. Please update the app.")
-    _check_room(_courses_in(fileobj), replace)
+    _check_room(_bytes_in(fileobj), replace)
     records = _records(fileobj)
     next(records)                   # the header, checked above
     importer = _Importer()

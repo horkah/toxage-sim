@@ -17,7 +17,7 @@ from engine import calibrate
 from engine import generate as engine
 from schema import toxage_schema
 
-from . import cohort, params
+from . import cohort, courses, params
 from .models import Course, Dataset, Patient
 
 KEYS = ("scenario_id", "patient_id")
@@ -72,10 +72,15 @@ class TooLarge(Exception):
     """A new data set would not fit into the limit of the database on disk."""
 
 
-# Disk space of one patient under one scenario, with its share of the baseline
-# record and the indexes. Measured: 4.9 to 5.5 KB; the upper value is used, so
-# that the estimate is rather too high than too low.
+# Disk space per patient, with the share of the baseline record and the
+# indexes. A complete course (the base scenario, usual care) needs about 5.2 KB.
+# The other scenarios store only what differs from usual care (courses.py);
+# measured with 1500 patients next to usual care, plus about 10% for safety.
+# A scenario not listed, or any scenario without usual care as base, counts as
+# a complete course.
 BYTES_PER_COURSE = 5500
+EXTRA_BYTES = {"risk_adapted_start": 1600, "symptom_monitoring": 1600, "lung_monitoring": 200,
+               "cardiovascular_monitoring": 600, "combined": 2500, "perfect_detection": 4500}
 
 
 def limit_bytes():
@@ -93,9 +98,20 @@ def used_bytes():
     return database_size()
 
 
-def estimate_bytes(n, scenario_count):
+def bytes_per_patient(scenario_ids):
+    """Estimated disk space of one patient under the scenarios: a complete
+    course for the base and, next to usual care, what the others add."""
+    ids = list(scenario_ids)
+    if not ids:
+        return 0
+    if courses.choose_base(ids) != courses.USUAL_CARE:
+        return len(ids) * BYTES_PER_COURSE
+    return BYTES_PER_COURSE + sum(EXTRA_BYTES.get(s, BYTES_PER_COURSE) for s in ids if s != courses.USUAL_CARE)
+
+
+def estimate_bytes(n, scenario_ids):
     """Estimated disk space of a data set of n patients under the scenarios."""
-    return n * scenario_count * BYTES_PER_COURSE
+    return n * bytes_per_patient(scenario_ids)
 
 
 def mb(size):
@@ -103,13 +119,13 @@ def mb(size):
     return f"{size / 1e6:.0f} MB" if size >= 10e6 else f"{size / 1e6:.1f} MB"
 
 
-def check_room(n, scenario_count):
+def check_room(n, scenario_ids):
     """Raise TooLarge if a data set of this size would not fit next to the
     stored ones."""
     used = used_bytes()
     if used is None:
         return
-    need, limit = estimate_bytes(n, scenario_count), limit_bytes()
+    need, limit = estimate_bytes(n, scenario_ids), limit_bytes()
     if used + need > limit:
         raise TooLarge(
             f"Not generated: the new data set would need about {mb(need)}, but only "
@@ -149,19 +165,20 @@ def _fill(dataset, scenarios, recalibrate, config):
             [Patient(dataset=dataset, patient_id=b["patient_id"], baseline=b) for b in data["baseline"]],
             batch_size=500)
         keys = dict(dataset.patients.values_list("patient_id", "pk"))
+        base = courses.choose_base([s["scenario_id"] for s in data["scenario"]])
+        by_patient = {}
+        for o in data["outcome"]:
+            key = (o["scenario_id"], o["patient_id"])
+            by_patient.setdefault(o["patient_id"], []).append({
+                "scenario_id": o["scenario_id"], "outcome": _strip(o), "events": events.get(key, []),
+                "alerts": alerts.get(key, []), "observations": columns(observations.get(key, []))})
+        # Fields identical to those of the base scenario are stored once (courses.py).
         Course.objects.bulk_create((
-            Course(
-                patient_id=keys[o["patient_id"]],
-                scenario_id=o["scenario_id"],
-                outcome=_strip(o),
-                events=events.get((o["scenario_id"], o["patient_id"]), []),
-                alerts=alerts.get((o["scenario_id"], o["patient_id"]), []),
-                observations=columns(observations.get((o["scenario_id"], o["patient_id"]), [])),
-            )
-            for o in data["outcome"]), batch_size=200)
+            Course(patient_id=keys[pid], **c)
+            for pid, found in by_patient.items() for c in courses.deduplicate(found, base)), batch_size=200)
         Dataset.objects.filter(pk=pk).update(
             status=Dataset.READY, progress=1, message="", scenarios=data["scenario"],
-            metadata={**data["metadata"], "records": _counts(data)}, calibrated=recalibrate)
+            metadata={**data["metadata"], "records": _counts(data), "base": base}, calibrated=recalibrate)
     after = used_bytes()
     if before is not None and after is not None and after > limit_bytes():
         # The estimate was too low: take the data set out again.
@@ -214,7 +231,7 @@ def generate(n, seed, scenarios=None, name="", recalibrate=None, replace=False, 
         recalibrate = params.needs_calibration(changed)
     if replace:
         delete_all()
-    check_room(n, len(scenarios or config["interventions"]["scenarios"]))
+    check_room(n, scenarios or list(config["interventions"]["scenarios"]))
     with _LOCK:
         if _RUNNING:
             raise Busy("A data set is being generated. Please wait until it is ready.")
@@ -272,7 +289,9 @@ def delete_scenario(dataset, scenario_id):
     if not left or len(left) == len(dataset.scenarios):
         return False
     with transaction.atomic():
-        Course.objects.filter(patient__dataset=dataset, scenario_id=scenario_id).delete()
+        # Deleting the base scenario first gives its fields to the courses that refer to them.
+        base = courses.delete_scenario(dataset, scenario_id, [s["scenario_id"] for s in left])
+        dataset.metadata["base"] = base
         dataset.scenarios = left
         dataset.metadata.get("records", {}).pop(scenario_id, None)
         dataset.metadata["scenarios"] = [s["scenario_id"] for s in left]
@@ -322,6 +341,12 @@ def _courses(dataset, scenario_id, patient_id=None):
     return found.filter(patient__patient_id=patient_id) if patient_id else found
 
 
+def _values(dataset, scenario_id, patient_id, field):
+    """(patient id, complete field) of the courses of one scenario."""
+    return courses.full_values(_courses(dataset, scenario_id, patient_id), dataset,
+                               "patient__patient_id", field).iterator()
+
+
 def records(dataset, table, scenario_id=None, patient_id=None):
     """Records of one table of the central schema, as an iterator.
 
@@ -336,17 +361,14 @@ def records(dataset, table, scenario_id=None, patient_id=None):
             found = found.filter(patient_id=patient_id)
         yield from found.values_list("baseline", flat=True).iterator()
     elif table == "outcome":
-        for pid, outcome in _courses(dataset, scenario_id, patient_id).values_list(
-                "patient__patient_id", "outcome").iterator():
+        for pid, outcome in _values(dataset, scenario_id, patient_id, "outcome"):
             yield {"scenario_id": scenario_id, "patient_id": pid, **outcome}
     elif table in ("event", "alert"):
-        for pid, found in _courses(dataset, scenario_id, patient_id).values_list(
-                "patient__patient_id", f"{table}s").iterator():
+        for pid, found in _values(dataset, scenario_id, patient_id, f"{table}s"):
             for r in found:
                 yield {"scenario_id": scenario_id, "patient_id": pid, **r}
     elif table == "observation":
-        for pid, obs in _courses(dataset, scenario_id, patient_id).values_list(
-                "patient__patient_id", "observations").iterator():
+        for pid, obs in _values(dataset, scenario_id, patient_id, "observations"):
             names = list(obs)
             for values in zip(*obs.values()):
                 yield {"scenario_id": scenario_id, "patient_id": pid, **dict(zip(names, values))}

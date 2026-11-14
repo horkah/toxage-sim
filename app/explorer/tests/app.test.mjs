@@ -36,8 +36,10 @@ test("afterFailure never repeats a sent form as a page load", () => {
   assert.equal(afterFailure("GET", true, false), "ignore");        // update of a part of the page
 });
 
-test("estimateMb: patients x scenarios x bytes per course", () => {
-  assert.equal(estimateMb(1500, 7, 5500), 57.75);
-  assert.equal(estimateMb(0, 7, 5500), 0);
-  assert.equal(estimateMb(-5, 7, 5500), 0);
+test("estimateMb: a complete base and what the other scenarios add", () => {
+  const usual = { id: "usual_care", extra: 5500 }, lung = { id: "lung_monitoring", extra: 200 };
+  assert.equal(estimateMb(1000, [usual, lung], 5500), 5.7);       // 5500 + 200 bytes per patient
+  assert.equal(estimateMb(1000, [lung], 5500), 5.5);              // without usual care: complete
+  assert.equal(estimateMb(1000, [], 5500), 0);
+  assert.equal(estimateMb(-5, [usual], 5500), 0);
 });

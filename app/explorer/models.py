@@ -64,13 +64,15 @@ class Patient(models.Model):
 
 class Course(models.Model):
     """events and alerts are lists of records; observations holds one list
-    per field, in week order."""
+    per field, in week order. In a scenario other than the base scenario of
+    the data set, a field is NULL where it is identical to the base (see
+    courses.py); read courses only through courses.full()."""
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="courses")
     scenario_id = models.CharField(max_length=64)
-    outcome = models.JSONField()
-    events = models.JSONField(default=list)
-    alerts = models.JSONField(default=list)
-    observations = models.JSONField(default=dict)
+    outcome = models.JSONField(null=True)
+    events = models.JSONField(null=True, default=list)
+    alerts = models.JSONField(null=True, default=list)
+    observations = models.JSONField(null=True, default=dict)
 
     class Meta:
         """One course per patient and scenario; scenario_id is indexed for the views

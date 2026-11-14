@@ -346,19 +346,28 @@ function find(input) {
   }
 }
 
-// Estimated disk space of a data set in MB: patients x scenarios x bytes per course.
-export function estimateMb(patients, scenarios, courseBytes) {
-  return (Math.max(0, patients) * Math.max(0, scenarios) * courseBytes) / 1e6;
+// Estimated disk space of a data set in MB, as store.bytes_per_patient() on the
+// server: a complete course for the base and, next to usual care, what each
+// other scenario adds; without usual care every scenario counts as complete.
+// scenarios: [{id, extra}] of the chosen scenarios.
+export function estimateMb(patients, scenarios, fullBytes) {
+  if (!scenarios.length) return 0;
+  const withUsual = scenarios.some((s) => s.id === "usual_care");
+  const perPatient = withUsual
+    ? fullBytes + scenarios.filter((s) => s.id !== "usual_care").reduce((sum, s) => sum + s.extra, 0)
+    : scenarios.length * fullBytes;
+  return (Math.max(0, patients) * perPatient) / 1e6;
 }
 
 // The estimate below the form "Generate a data set", updated as the size or
 // the scenarios change; it says when the data set would not fit.
 function showEstimate(form) {
   const note = form?.querySelector("[data-estimate]");
-  if (!note || !form.getAttribute("data-course-bytes")) return;
+  if (!note || !form.getAttribute("data-full-bytes")) return;
   const patients = Number(form.querySelector('[name="n"]')?.value) || 0;
-  const scenarios = form.querySelectorAll('[name="scenarios"]:checked').length;
-  const need = estimateMb(patients, scenarios, Number(form.getAttribute("data-course-bytes")));
+  const scenarios = [...form.querySelectorAll('[name="scenarios"]:checked')]
+    .map((box) => ({ id: box.value, extra: Number(box.getAttribute("data-extra-bytes")) }));
+  const need = estimateMb(patients, scenarios, Number(form.getAttribute("data-full-bytes")));
   const free = Number(form.getAttribute("data-free-bytes")) / 1e6;
   const round = (mb) => (mb >= 10 ? Math.round(mb) : mb.toFixed(1));
   note.textContent = need <= free

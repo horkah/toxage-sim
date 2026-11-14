@@ -97,7 +97,7 @@
       <section class="panel">
         <h2>Generate a data set</h2>
         <form method="post" action="{% url 'data_generate' %}" class="form" id="generate"
-              {% if free_bytes is not None %}data-course-bytes="{{ course_bytes }}" data-free-bytes="{{ free_bytes|floatformat:'0' }}"{% endif %}>{% csrf_token %}
+              {% if free_bytes is not None %}data-full-bytes="{{ full_bytes }}" data-free-bytes="{{ free_bytes|floatformat:'0' }}"{% endif %}>{% csrf_token %}
           <label>Name <input type="text" name="name" maxlength="80" placeholder="optional" value="{{ form.name }}"></label>
           <div class="row2">
             <label>Patients <input type="number" name="n" value="{{ form.n }}" min="3" max="{{ max_patients }}" required></label>
@@ -107,8 +107,8 @@
             The same seed and parameters give the same patients.</p>
           <fieldset>
             <legend>Scenarios</legend>
-            {% for sid, s in scenarios.items %}
-            <label class="check" title="{{ s.description }}"><input type="checkbox" name="scenarios" value="{{ sid }}"{% if form.scenarios is None or sid in form.scenarios %} checked{% endif %}> {{ s.title }}</label>
+            {% for sid, s, extra in scenario_choices %}
+            <label class="check" title="{{ s.description }}"><input type="checkbox" name="scenarios" value="{{ sid }}" data-extra-bytes="{{ extra }}"{% if form.scenarios is None or sid in form.scenarios %} checked{% endif %}> {{ s.title }}</label>
             {% endfor %}
           </fieldset>
           <fieldset>

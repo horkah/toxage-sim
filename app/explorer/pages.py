@@ -93,7 +93,10 @@ def data(request, message=None, error=None, posted=None):
         "size_mb": None if size is None else size / 1e6,
         "limit_mb": settings.DISK_LIMIT_MB,
         "free_bytes": None if size is None else max(0, store.limit_bytes() - size),
-        "course_bytes": store.BYTES_PER_COURSE,
+        "full_bytes": store.BYTES_PER_COURSE,
+        # Each scenario of the form with the disk space it adds next to usual care.
+        "scenario_choices": [(sid, s, store.EXTRA_BYTES.get(sid, store.BYTES_PER_COURSE))
+                             for sid, s in params.effective("interventions")["scenarios"].items()],
         "max_patients": MAX_PATIENTS,
         "read_only": tour.read_only(request),
         "message": message,

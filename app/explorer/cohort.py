@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import toxage_risk
 from schema import toxage_schema
 
-from . import params
+from . import courses, params
 from .models import Course, Dataset
 
 USUAL_CARE = "usual_care"
@@ -147,22 +147,25 @@ def rows(dataset, scenario_id, models):
     """Baseline, outcome and risks of all patients in one scenario."""
     def compute():
         """Read baseline and outcome of every patient and add the risks."""
-        pairs = Course.objects.filter(patient__dataset=dataset, scenario_id=scenario_id).order_by(
-            "patient__patient_id").values_list("patient__baseline", "outcome")
+        pairs = courses.full_values(Course.objects.filter(patient__dataset=dataset, scenario_id=scenario_id).order_by(
+            "patient__patient_id"), dataset, "patient__baseline", "outcome")
         return score([{**b, **o} for b, o in pairs], models)
     return _cached((dataset.pk, scenario_id, "rows"), dataset.n, compute)
 
 
 def events(dataset, scenario_id):
     """Adverse events of one scenario as {patient_id: [event records]}."""
-    return _cached((dataset.pk, scenario_id, "events"), dataset.n, lambda: dict(Course.objects.filter(
-        patient__dataset=dataset, scenario_id=scenario_id).values_list("patient__patient_id", "events")))
+    return _cached((dataset.pk, scenario_id, "events"), dataset.n, lambda: dict(courses.full_values(
+        Course.objects.filter(patient__dataset=dataset, scenario_id=scenario_id), dataset,
+        "patient__patient_id", "events")))
 
 
 def course(dataset, scenario_id, patient_id):
     """Events, alerts and weekly observations of one patient in one scenario, or None."""
-    return Course.objects.filter(patient__dataset=dataset, patient__patient_id=patient_id,
-                                 scenario_id=scenario_id).values("events", "alerts", "observations").first()
+    found = courses.full_values(Course.objects.filter(patient__dataset=dataset, patient__patient_id=patient_id,
+                                                      scenario_id=scenario_id), dataset,
+                                "events", "alerts", "observations").first()
+    return dict(zip(("events", "alerts", "observations"), found)) if found else None
 
 
 def current(scenario_id=USUAL_CARE):
