@@ -286,3 +286,8 @@ Save and commit all the generated screenshots from any Claude session for this p
 2026-11-14 13:33 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 Just git mv rename the other six screenshots in that folder with the same name convention
+
+================================================================================
+2026-11-14 13:37 (+01:00) | model: claude-fable-5-2 | attachments: none
+--------------------------------------------------------------------------------
+This is about expanding the research report as well as all models of our project for realistic patient course and cohort microsimulation data generation, interventions, risk models etc. Wait for the next pdfs to arrive before we start
