@@ -253,7 +253,7 @@ function show(step, note = "", free = false) {
   }
   const demo = state.mode === "demo";
   // Count the steps of this mode; those that depend on an earlier step count too.
-  const shown = steps().filter((s) => applies({ ...s, needs: null }, state.mode, api.readOnly, state.mem));
+  const shown = steps().filter((s) => applies({ ...s, needs: null }, state.mode, noChanges(), state.mem));
   const number = shown.indexOf(step) + 1;
   const task = step.do ? `<p class="tour-do"><b>${demo ? "The demo does this next:" : "Your turn:"}</b> ${step.do}</p>` : "";
   let buttons;
@@ -376,7 +376,7 @@ async function pausing() {
 function move(by) {
   // Go to the next (or previous) step that applies.
   let i = state.i + by;
-  while (steps()[i] && !applies(steps()[i], state.mode, api.readOnly, state.mem)) i += by;
+  while (steps()[i] && !applies(steps()[i], state.mode, noChanges(), state.mem)) i += by;
   state.i = Math.max(0, i);
   state.acted = false;
   state.shownAt = state.doneAt = null;
@@ -439,7 +439,7 @@ async function play() {
   clearTimeout(timer);
   const step = steps()[state.i];
   if (!step) return finish();
-  if (!applies(step, state.mode, api.readOnly, state.mem)) { move(1); return play(); }
+  if (!applies(step, state.mode, noChanges(), state.mem)) { move(1); return play(); }
   const demo = state.mode === "demo";
   document.documentElement.dataset.tourAuto = demo ? "1" : "0";
 
@@ -490,7 +490,7 @@ async function play() {
 async function finish(stopped = false) {
   run++;
   const demo = state.mode === "demo";
-  const needsRestore = demo && !api.readOnly;
+  const needsRestore = demo && Boolean(state.mem.owner);
   if (demo && !stopped) {
     // The demo runs in a loop: bring the state before the demo back and start again.
     const round = (state.round || 1) + 1;
@@ -552,14 +552,29 @@ async function onPanelClick(event) {
 }
 
 // Note the state before a tour and set the tour to its first step.
+// The demo notes the state on the server and gets a token that lets it change
+// things, also in read-only mode; the server restores an earlier snapshot of
+// this browser or an abandoned one first. If another demo is running, this one
+// leaves out the steps that change something (owner false).
 async function begin(mode, round = 1) {
+  let owner = false;
+  if (mode === "demo") {
+    owner = Boolean((await post("/tour/snapshot/")).taken);
+    // The page was drawn before the permission: its controls follow with the next page.
+    if (owner) document.body.dataset.readOnly = "0";
+  }
   const before = await api.state();
-  if (before.snapshot) await post("/tour/restore/");     // an earlier demo did not finish
-  if (mode === "demo" && !before.read_only) await post("/tour/snapshot/");
   state = { mode, i: 0, acted: false, shownAt: null, doneAt: null, paused: false, round,
             controls: undefined, holdUntil: 0, skip: false,
-            mem: { known: before.datasets.map((d) => d.id) } };
+            mem: { known: before.datasets.map((d) => d.id), owner, readOnly: before.read_only } };
   save();
+}
+
+// True if the tour must leave out the steps that change something: read-only
+// mode without the demo's permission, or another demo is running.
+function noChanges() {
+  if (state?.mode === "demo") return !state.mem.owner;
+  return api.readOnly;
 }
 
 // Start a tour from its first step.

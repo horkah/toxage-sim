@@ -9,22 +9,35 @@ from django.views.decorators.http import require_POST
 
 from schema import toxage_schema
 
-from . import archive, cohort, docs, params, store
+from . import archive, cohort, docs, params, store, tour
 from .models import Dataset
 
 PAGE = 50
 MAX_PATIENTS = 20000
 
 
-def changes_data(view):
-    """Views that change data or parameters are closed in read-only mode."""
+READ_ONLY_TEXT = "The app runs in read-only mode."
+
+
+def changes_data(view=None, demo=False):
+    """Views that change data or parameters are closed in read-only mode. With
+    demo=True the running demo may use them anyway (tour.demo_may_change);
+    the view then checks the limits of the demo itself."""
+    if view is None:
+        return lambda v: changes_data(v, demo)
+
     @wraps(view)
     def wrapped(request, *args, **kwargs):
         """The view itself, or 403 in read-only mode."""
-        if settings.READ_ONLY:
-            return HttpResponseForbidden("The app runs in read-only mode.")
+        if settings.READ_ONLY and not (demo and tour.demo_may_change(request)):
+            return HttpResponseForbidden(READ_ONLY_TEXT)
         return view(request, *args, **kwargs)
     return wrapped
+
+
+def _demo_limited(request):
+    """True if the request may change things only as the demo in read-only mode."""
+    return settings.READ_ONLY
 
 
 def fetched(request):
@@ -82,7 +95,7 @@ def data(request, message=None, error=None, posted=None):
         "free_bytes": None if size is None else max(0, store.limit_bytes() - size),
         "course_bytes": store.BYTES_PER_COURSE,
         "max_patients": MAX_PATIENTS,
-        "read_only": settings.READ_ONLY,
+        "read_only": tour.read_only(request),
         "message": message,
         "error": error,
         # The form keeps what was entered when a data set was refused.
@@ -93,10 +106,13 @@ def data(request, message=None, error=None, posted=None):
 
 
 @require_POST
-@changes_data
+@changes_data(demo=True)
 def data_generate(request):
-    """Start generating a data set from the form; the page then follows the progress."""
+    """Start generating a data set from the form; the page then follows the progress.
+    The demo in read-only mode generates at most tour.DEMO_MAX_PATIENTS patients."""
     n = _int(request.POST.get("n"), 1500, 3, MAX_PATIENTS)
+    if _demo_limited(request) and n > tour.DEMO_MAX_PATIENTS:
+        return HttpResponseForbidden(f"In read-only mode the demo generates at most {tour.DEMO_MAX_PATIENTS} patients.")
     seed = _int(request.POST.get("seed"), 1, 0, 2**31 - 1)
     try:
         store.generate(n, seed, request.POST.getlist("scenarios"), request.POST.get("name", ""),
@@ -107,13 +123,19 @@ def data_generate(request):
 
 
 @require_POST
-@changes_data
+@changes_data(demo=True)
 def data_delete(request):
-    """Delete one data set, one scenario of it, or all data sets."""
+    """Delete one data set, one scenario of it, or all data sets. The demo in
+    read-only mode deletes only what it created."""
+    limited = _demo_limited(request)
     if request.POST.get("all") == "yes":
+        if limited:
+            return HttpResponseForbidden(READ_ONLY_TEXT)
         store.delete_all()
         return redirect("data")
     dataset = get_object_or_404(Dataset, pk=_int(request.POST.get("dataset"), 0, 0, 2**31))
+    if limited and dataset.pk not in tour.demo_datasets(request):
+        return HttpResponseForbidden(f"{READ_ONLY_TEXT} The demo deletes only the data sets it created.")
     scenario_id = request.POST.get("scenario")
     if scenario_id:
         store.delete_scenario(dataset, scenario_id)
@@ -238,8 +260,8 @@ def parameters(request, key="parameters"):
     source = _source(key)
     posted, errors, saved = None, {}, False
     if request.method == "POST":
-        if settings.READ_ONLY:
-            return HttpResponseForbidden("The app runs in read-only mode.")
+        if tour.read_only(request):          # the running demo may change parameters
+            return HttpResponseForbidden(READ_ONLY_TEXT)
         action = request.POST.get("action", "save")
         if action == "reset_all":
             params.reset()
@@ -265,7 +287,7 @@ def parameters(request, key="parameters"):
         "changed_here": len(changed.get(key, {})),
         "changed_total": sum(len(v) for v in changed.values()),
         "is_engine": key in params.ENGINE,
-        "read_only": settings.READ_ONLY,
+        "read_only": tour.read_only(request),
     })
 
 

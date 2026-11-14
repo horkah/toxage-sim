@@ -16,7 +16,7 @@ Then open http://localhost:8000, accept the terms, and generate a first data set
 |---|---|---|
 | `TOXAGE_ALLOWED_HOSTS` | Host names under which the app is reached, separated by commas | `*` |
 | `TOXAGE_CSRF_TRUSTED_ORIGINS` | Addresses with scheme from which forms may be sent; needed behind a proxy with HTTPS | empty |
-| `TOXAGE_READ_ONLY` | `1`: data and parameters can be viewed but not changed | `0` |
+| `TOXAGE_READ_ONLY` | `1`: data and parameters can be viewed but not changed; only the demo makes its changes and takes them back | `0` |
 | `TOXAGE_SECRET_KEY` | Secret key; without it one is created once and kept in the data folder | created |
 | `TOXAGE_DATA_DIR` | Folder of the database and the secret key | `/data` |
 | `TOXAGE_DEBUG` | `1` for development (`just serve` sets it); off by default | `0` |
@@ -197,7 +197,9 @@ The demo leaves the app exactly as it was. At its start the server notes the cha
 
 The app offers both tours once per browser session after the disclaimer. This offer can be turned off in the offer itself and turned on and off in the settings. Both tours can be started under "Help" at any time.
 
-In read-only mode the tours leave out all steps that change data or parameters.
+In read-only mode the demo keeps all its steps. When it starts, the server notes the state and gives this browser a token in a cookie; with it, and only while this demo runs, the browser may do what the demo does: generate data sets of at most 300 patients, delete the data sets the demo created, and change and reset parameters. It may not delete data sets that were there before, delete everything or import archives. The end of each round and "Stop the demo" bring the state back and end the permission. A demo that has not started a new round for 60 minutes counts as abandoned; the next page view of anyone brings the state before it back.
+
+Only one demo changes the app at a time. While it runs, a demo started in another browser leaves out the steps that change something and does not touch the running one. The tutorial follows the user, so in read-only mode it leaves out the steps that change data or parameters.
 
 ### Settings
 
