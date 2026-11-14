@@ -55,14 +55,14 @@ def _changed_list(changes):
     return found
 
 
-def data(request, message=None, error=None):
+def data(request, message=None, error=None, posted=None):
     """Page Data: stored data sets, the form to generate one, the archive. message
     and error come from an import."""
     store.mark_interrupted()
     datasets = list(Dataset.objects.all())
     active = cohort.active(request)
     changed = params.all_changes()
-    size = store.database_size()
+    size = store.used_bytes()
     for d in datasets:
         d.record_counts = [(s["scenario_id"], s["title"], d.metadata.get("records", {}).get(s["scenario_id"], {}))
                            for s in d.scenarios]
@@ -78,10 +78,17 @@ def data(request, message=None, error=None):
         "changed": [(params.SOURCES[k].title, k, len(v)) for k, v in changed.items() if k in params.ENGINE],
         "needs_calibration": params.needs_calibration(changed),
         "size_mb": None if size is None else size / 1e6,
+        "limit_mb": settings.DISK_LIMIT_MB,
+        "free_bytes": None if size is None else max(0, store.limit_bytes() - size),
+        "course_bytes": store.BYTES_PER_COURSE,
         "max_patients": MAX_PATIENTS,
         "read_only": settings.READ_ONLY,
         "message": message,
         "error": error,
+        # The form keeps what was entered when a data set was refused.
+        "form": {"name": posted.get("name", ""), "n": posted.get("n", "1500"), "seed": posted.get("seed", "1"),
+                 "scenarios": posted.getlist("scenarios")} if posted
+                else {"name": "", "n": "1500", "seed": "1", "scenarios": None},
     })
 
 
@@ -94,8 +101,8 @@ def data_generate(request):
     try:
         store.generate(n, seed, request.POST.getlist("scenarios"), request.POST.get("name", ""),
                        recalibrate=request.POST.get("recalibrate") == "yes")
-    except store.Busy as busy:
-        return _data_page(request, error=str(busy))
+    except (store.Busy, store.TooLarge) as refused:
+        return _data_page(request, error=str(refused), posted=request.POST)
     return redirect("data")
 
 

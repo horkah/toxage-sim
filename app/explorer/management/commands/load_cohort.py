@@ -20,7 +20,10 @@ class Command(BaseCommand):
     def handle(self, *args, n, seed, scenarios, keep, **options):
         """Generate the data set in this process and report the result, or fail with
         the engine's message."""
-        dataset = store.generate(n, seed, scenarios, replace=not keep, wait=True)
+        try:
+            dataset = store.generate(n, seed, scenarios, replace=not keep, wait=True)
+        except store.TooLarge as refused:
+            raise CommandError(str(refused)) from None
         if not dataset.ready:
             raise CommandError(dataset.message)
         self.stdout.write(f"{n} patients stored under {len(dataset.scenarios)} scenarios (seed {seed})")

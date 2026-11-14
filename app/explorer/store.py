@@ -68,6 +68,55 @@ class Deleted(Exception):
     """The data set was deleted while it was generated; its thread ends."""
 
 
+class TooLarge(Exception):
+    """A new data set would not fit into the limit of the database on disk."""
+
+
+# Disk space of one patient under one scenario, with its share of the baseline
+# record and the indexes. Measured: 4.9 to 5.5 KB; the upper value is used, so
+# that the estimate is rather too high than too low.
+BYTES_PER_COURSE = 5500
+
+
+def limit_bytes():
+    """The limit of the database on disk in bytes (TOXAGE_DISK_LIMIT_MB)."""
+    return settings.DISK_LIMIT_MB * 1e6
+
+
+def used_bytes():
+    """Size of the database on disk in bytes, None if it is not a file. Pending
+    changes are first moved from the write-ahead log into the file, so that a
+    large log of earlier writes does not count."""
+    if connection.vendor == "sqlite" and not connection.in_atomic_block:
+        with connection.cursor() as cursor:
+            cursor.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    return database_size()
+
+
+def estimate_bytes(n, scenario_count):
+    """Estimated disk space of a data set of n patients under the scenarios."""
+    return n * scenario_count * BYTES_PER_COURSE
+
+
+def _mb(size):
+    """A size in bytes as text in MB, with one decimal below 10 MB."""
+    return f"{size / 1e6:.0f} MB" if size >= 10e6 else f"{size / 1e6:.1f} MB"
+
+
+def check_room(n, scenario_count):
+    """Raise TooLarge if a data set of this size would not fit next to the
+    stored ones."""
+    used = used_bytes()
+    if used is None:
+        return
+    need, limit = estimate_bytes(n, scenario_count), limit_bytes()
+    if used + need > limit:
+        raise TooLarge(
+            f"Not generated: the new data set would need about {_mb(need)}, but only "
+            f"{_mb(max(0.0, limit - used))} of the limit of {_mb(limit)} are free (the stored data sets "
+            f"use {_mb(used)}). Delete other data sets, or choose fewer patients or scenarios.")
+
+
 def _progress(pk, share, message):
     """Write the progress of a data set; the data page shows it. Raises
     Deleted if the data set no longer exists, so that its generation stops
@@ -77,8 +126,11 @@ def _progress(pk, share, message):
 
 
 def _fill(dataset, scenarios, recalibrate, config):
-    """Generate the data of a data set and store them."""
+    """Generate the data of a data set and store them. If the database is then
+    larger than its limit, the data of the new data set are deleted again and
+    it is marked as failed with the reason."""
     pk = dataset.pk
+    before = used_bytes()
     if recalibrate:
         result = calibrate.calibrate(config, write=False, progress=lambda done, total: _progress(
             pk, 0.4 * done / total, f"Calibrating the event rates, round {done} of {total}"))
@@ -110,6 +162,17 @@ def _fill(dataset, scenarios, recalibrate, config):
         Dataset.objects.filter(pk=pk).update(
             status=Dataset.READY, progress=1, message="", scenarios=data["scenario"],
             metadata={**data["metadata"], "records": _counts(data)}, calibrated=recalibrate)
+    after = used_bytes()
+    if before is not None and after is not None and after > limit_bytes():
+        # The estimate was too low: take the data set out again.
+        Patient.objects.filter(dataset_id=pk).delete()
+        cohort.clear_cache()
+        compact()
+        Dataset.objects.filter(pk=pk).update(
+            status=Dataset.FAILED, progress=0, message=(
+                f"Deleted again: the data set needed {_mb(after - before)}, more than the "
+                f"{_mb(max(0.0, limit_bytes() - before))} that were free of the limit of {_mb(limit_bytes())}. "
+                "Delete other data sets, or generate a smaller one."))
 
 
 def _run(dataset, scenarios, recalibrate, config, in_thread):
@@ -141,7 +204,8 @@ def generate(n, seed, scenarios=None, name="", recalibrate=None, replace=False, 
 
     recalibrate=None calibrates the event rates again if parameters that
     affect them differ from the defaults. Raises Busy while another data set
-    is being generated in this process.
+    is being generated in this process, and TooLarge if the estimated size
+    would exceed the limit of the database on disk.
     """
     changed = params.all_changes()
     config = params.engine_config(changed)
@@ -150,6 +214,7 @@ def generate(n, seed, scenarios=None, name="", recalibrate=None, replace=False, 
         recalibrate = params.needs_calibration(changed)
     if replace:
         delete_all()
+    check_room(n, len(scenarios or config["interventions"]["scenarios"]))
     with _LOCK:
         if _RUNNING:
             raise Busy("A data set is being generated. Please wait until it is ready.")

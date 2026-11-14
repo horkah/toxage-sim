@@ -200,3 +200,8 @@ please perform a full code review, thereby:
 * each commit shall contain detailed information about the issue and the fix
 * after this, only a couple of (if any) issues are left in the .md file that require decisions. 
 * then push
+
+================================================================================
+2026-11-14 01:26 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+limit the aggregate sum of all databases to 500 MB on disk (default). that parameter can be modified in .env - if a new dataset is generated, estimate its size and reject if too large. afterwards check again and delete if it was too large with the appropriate message. users can then delete manually other datasets or specify a smaller size before generating again.

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { afterFailure, formUrl, matches, swappable } from "../static/explorer/app.js";
+import { afterFailure, estimateMb, formUrl, matches, swappable } from "../static/explorer/app.js";
 
 test("formUrl keeps the non-empty values of a form", () => {
   const url = formUrl("http://h/?old=1", [["tumour_type", "breast"], ["tumour_type", "prostate"], ["age_min", ""], ["view", "time"]]);
@@ -34,4 +34,10 @@ test("afterFailure never repeats a sent form as a page load", () => {
   assert.equal(afterFailure("GET", false, false), "load");
   assert.equal(afterFailure("GET", false, true), "ignore");
   assert.equal(afterFailure("GET", true, false), "ignore");        // update of a part of the page
+});
+
+test("estimateMb: patients x scenarios x bytes per course", () => {
+  assert.equal(estimateMb(1500, 7, 5500), 57.75);
+  assert.equal(estimateMb(0, 7, 5500), 0);
+  assert.equal(estimateMb(-5, 7, 5500), 0);
 });

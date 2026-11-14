@@ -88,6 +88,10 @@ DISCLAIMER_VERSION = "1"
 DISCLAIMER_COOKIE = "toxage_disclaimer"
 DISCLAIMER_REMEMBER_DAYS = 365
 
+# Limit of the database on disk in MB (file and write-ahead log): a data set
+# that would not fit is not generated, and one that did not fit is deleted.
+DISK_LIMIT_MB = float(os.environ.get("TOXAGE_DISK_LIMIT_MB") or 500)
+
 # Data sets are generated in a thread of the server process. Tests switch
 # this off, so that generating finishes within the call.
 ASYNC_JOBS = True

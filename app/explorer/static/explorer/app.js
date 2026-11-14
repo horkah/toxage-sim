@@ -324,6 +324,7 @@ function onChange(event) {
 // Typing: narrow the parameter list, or send a search field after a short pause.
 function onInput(event) {
   const el = event.target;
+  if (el.form?.id === "generate") showEstimate(el.form);
   if (el.matches("[data-find]")) return find(el);
   // Patient search fields of GET forms apply after a pause in typing.
   if (el.form?.hasAttribute("data-auto") && el.type === "search" && el.form.getAttribute("method") === "get") {
@@ -343,6 +344,27 @@ function find(input) {
     group.hidden = query !== "" && hits === 0;
     if (query && hits) group.open = true;
   }
+}
+
+// Estimated disk space of a data set in MB: patients x scenarios x bytes per course.
+export function estimateMb(patients, scenarios, courseBytes) {
+  return (Math.max(0, patients) * Math.max(0, scenarios) * courseBytes) / 1e6;
+}
+
+// The estimate below the form "Generate a data set", updated as the size or
+// the scenarios change; it says when the data set would not fit.
+function showEstimate(form) {
+  const note = form?.querySelector("[data-estimate]");
+  if (!note || !form.getAttribute("data-course-bytes")) return;
+  const patients = Number(form.querySelector('[name="n"]')?.value) || 0;
+  const scenarios = form.querySelectorAll('[name="scenarios"]:checked').length;
+  const need = estimateMb(patients, scenarios, Number(form.getAttribute("data-course-bytes")));
+  const free = Number(form.getAttribute("data-free-bytes")) / 1e6;
+  const round = (mb) => (mb >= 10 ? Math.round(mb) : mb.toFixed(1));
+  note.textContent = need <= free
+    ? `About ${round(need)} MB on disk; ${round(free)} MB are free.`
+    : `About ${round(need)} MB on disk, but only ${round(free)} MB are free: delete other data sets, or choose fewer patients or scenarios.`;
+  note.classList.toggle("error", need > free);
 }
 
 // After every load or swap ----------------------------------------------------------------
@@ -381,6 +403,7 @@ function settle(root) {
       if (location.href === page && !document.querySelector("[data-poll]")) visit(page, { push: false, keepScroll: true });
     }, POLL);
   }
+  showEstimate(root.querySelector("#generate"));
   const search = root.querySelector("[data-find]");
   if (search?.value) find(search);
 }

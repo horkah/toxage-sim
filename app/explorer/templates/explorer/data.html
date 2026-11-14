@@ -84,7 +84,7 @@
         <p>Generate one with the form{% if not read_only %} or import an archive{% endif %}.</p>
       </div>
       {% endfor %}
-      <div class="datasets-foot muted small">{% if size_mb is not None %}<span>The database uses {{ size_mb|num:1 }} MB on disk.</span>{% endif %}
+      <div class="datasets-foot muted small">{% if size_mb is not None %}<span>The database uses {{ size_mb|num:1 }} MB of {{ limit_mb|num:0 }} MB on disk.</span>{% endif %}
         {% if datasets|length > 1 and not read_only and not running %}
         <form method="post" action="{% url 'data_delete' %}" class="inline" data-confirm="All {{ datasets|length }} data sets will be deleted with all their patients. Parameter changes stay." data-confirm-title="Delete all data sets?">{% csrf_token %}
           <input type="hidden" name="all" value="yes">
@@ -96,18 +96,19 @@
       {% if not read_only %}
       <section class="panel">
         <h2>Generate a data set</h2>
-        <form method="post" action="{% url 'data_generate' %}" class="form" id="generate">{% csrf_token %}
-          <label>Name <input type="text" name="name" maxlength="80" placeholder="optional"></label>
+        <form method="post" action="{% url 'data_generate' %}" class="form" id="generate"
+              {% if free_bytes is not None %}data-course-bytes="{{ course_bytes }}" data-free-bytes="{{ free_bytes|floatformat:'0' }}"{% endif %}>{% csrf_token %}
+          <label>Name <input type="text" name="name" maxlength="80" placeholder="optional" value="{{ form.name }}"></label>
           <div class="row2">
-            <label>Patients <input type="number" name="n" value="1500" min="3" max="{{ max_patients }}" required></label>
-            <label>Seed <input type="number" name="seed" value="1" min="0" required></label>
+            <label>Patients <input type="number" name="n" value="{{ form.n }}" min="3" max="{{ max_patients }}" required></label>
+            <label>Seed <input type="number" name="seed" value="{{ form.seed }}" min="0" required></label>
           </div>
           <p class="hint">Split equally over the three tumour types. 1500 patients under all scenarios take about 20 seconds.
             The same seed and parameters give the same patients.</p>
           <fieldset>
             <legend>Scenarios</legend>
             {% for sid, s in scenarios.items %}
-            <label class="check" title="{{ s.description }}"><input type="checkbox" name="scenarios" value="{{ sid }}" checked> {{ s.title }}</label>
+            <label class="check" title="{{ s.description }}"><input type="checkbox" name="scenarios" value="{{ sid }}"{% if form.scenarios is None or sid in form.scenarios %} checked{% endif %}> {{ s.title }}</label>
             {% endfor %}
           </fieldset>
           <fieldset>
@@ -121,6 +122,7 @@
               <small>Matches usual care to the published rates with the current parameters. About a minute.
                 Needed after changes of regimens or simulation parameters.</small></label>
           </fieldset>
+          {% if free_bytes is not None %}<p class="hint" data-estimate>{{ size_mb|num:0 }} of {{ limit_mb|num:0 }} MB on disk are used.</p>{% endif %}
           <button type="submit" class="primary"{% if running %} disabled{% endif %}>Generate</button>
           {% if running %}<span class="muted small">A data set is being generated.</span>{% endif %}
         </form>

@@ -457,3 +457,46 @@ class GenerationTest(CohortTestCase):
             store.generate(6, 3, ["usual_care"], name="Doomed", wait=True)
         self.assertFalse(Dataset.objects.filter(name="Doomed").exists())
         self.assertFalse(store._RUNNING)
+
+
+@override_settings(ASYNC_JOBS=False, DISK_LIMIT_MB=100)
+class DiskLimitTest(CohortTestCase):
+    """The database stays within its limit on disk (TOXAGE_DISK_LIMIT_MB)."""
+    n = 6
+
+    def setUp(self):
+        super().setUp()
+        self.client.cookies[COOKIE] = settings.DISCLAIMER_VERSION
+
+    def test_a_data_set_that_would_not_fit_is_not_generated(self):
+        # 90 MB used, 10 MB free; 1500 patients x 7 scenarios need about 58 MB.
+        with mock.patch.object(store, "used_bytes", return_value=90e6):
+            response = self.client.post("/data/generate/", {"n": "1500", "seed": "4"})
+            self.assertContains(response, "Not generated: the new data set would need about 58 MB, "
+                                          "but only 10 MB of the limit of 100 MB are free")
+            self.assertContains(response, "Delete other data sets, or choose fewer patients or scenarios.")
+            self.assertFalse(Dataset.objects.filter(seed=4).exists())
+            self.assertContains(response, 'name="n" value="1500"')     # the form keeps what was entered
+            self.assertContains(response, 'name="seed" value="4"')
+            # One scenario of 300 patients (1.7 MB) fits.
+            self.client.post("/data/generate/", {"n": "300", "seed": "4", "scenarios": ["usual_care"]})
+        self.assertEqual(Dataset.objects.get(seed=4).status, Dataset.READY)
+
+    def test_a_data_set_that_did_not_fit_is_deleted_again(self):
+        # The estimate fits, but afterwards the database is larger than the limit.
+        sizes = iter([20e6, 20e6, 130e6, 20e6])     # check, before filling, after filling, page
+        with mock.patch.object(store, "used_bytes", side_effect=lambda: next(sizes)):
+            dataset = store.generate(6, 4, ["usual_care"], name="Too big", wait=True)
+        self.assertEqual(dataset.status, Dataset.FAILED)
+        self.assertEqual(dataset.message, "Deleted again: the data set needed 110 MB, more than the 80 MB "
+                                          "that were free of the limit of 100 MB. Delete other data sets, "
+                                          "or generate a smaller one.")
+        self.assertFalse(Patient.objects.filter(dataset=dataset).exists())
+        self.assertFalse(Course.objects.filter(patient__dataset=dataset).exists())
+
+    def test_the_data_page_shows_the_limit(self):
+        with mock.patch.object(store, "used_bytes", return_value=21.7e6):
+            response = self.client.get("/data/")
+        self.assertContains(response, "The database uses 21.7 MB of 100 MB on disk.")
+        self.assertContains(response, 'data-free-bytes="78300000"')
+        self.assertContains(response, f'data-course-bytes="{store.BYTES_PER_COURSE}"')
