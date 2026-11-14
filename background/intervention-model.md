@@ -50,7 +50,7 @@ Anchor: in PRO-TECT, 1066 of 1191 patients (89.5%) completed the three-month fol
 
 ### 3.2 Detector and risk model
 
-The real risk model will be added later. Until then the simulation needs a stand-in with adjustable performance. Both use the same interface, so that the stand-in can be replaced without changing the rest.
+The simulation uses a stand-in for the risk model, with adjustable performance. Stand-in and risk model use the same interface, so that one can take the place of the other without changing the rest.
 
 **Prediction at therapy start**
 
@@ -69,7 +69,7 @@ The real risk model will be added later. Until then the simulation needs a stand
 
 ### 3.3 Natural course of a toxicity
 
-To model early treatment, a toxicity must have a course that can be interrupted. Today the engine draws the final grade of an event at once. The concept replaces this with stages:
+To model early treatment, a toxicity must have a course that can be interrupted. Each event therefore runs through stages:
 
 ```
 onset ─► mild ─► moderate ─► severe ─► life-threatening ─► fatal
@@ -81,7 +81,7 @@ onset ─► mild ─► moderate ─► severe ─► life-threatening ─► f
 - In usual care, recognition comes from regular visits and from patients who seek help when symptoms are strong enough. With an intervention it can come earlier.
 - Before a severe event there is a phase with milder signs. Detection in this phase can keep the event from becoming severe.
 
-The stage times and ceilings are set so that the scenario "usual care" gives the same event rates and grade distributions as the engine gives today. The published values stay the calibration targets.
+The stage times and ceilings are set so that the scenario "usual care" gives the published event rates and grade distributions, which are the calibration targets.
 
 For lung toxicity the published delay supports this structure directly: onset was set earlier by the adjudication committee for 53% of events, with a median difference of 43 days ([Powell et al., 2022](references.md#powell-2022)). For other event types the length of the early phase is an assumption. Cardiovascular events are a special case: only a part of them has a phase with warning signs, such as unstable angina, a transient ischaemic attack or rising blood pressure. The others come without notice, and no detection can prevent them. The engine assumes a warning phase for half of the events.
 
@@ -114,18 +114,18 @@ Anchors: in PRO-TECT, 33.9% of the weekly surveys triggered an alert, and 59.1% 
 
 ### 3.5 Consequences
 
-The engine today counts events, dose changes, stops of therapy and deaths. The comparison of interventions needs further consequences.
+The comparison of interventions needs these consequences. Section 6 shows how the engine implements them.
 
-| Consequence | Depends on | New in the engine |
+| Consequence | Depends on | In the engine |
 |---|---|---|
 | Unplanned visit | Event type, grade at recognition | Yes |
 | Hospital stay and its length | Event type, grade at recognition, frailty | Yes |
 | Intensive care | Grade 4 and 5 | Yes |
 | Duration of the event | Grade at recognition, treatment | Yes |
-| Pause, dose reduction, stop of therapy | Grade at recognition | Exists, becomes grade-dependent |
-| Death from toxicity | Grade | Exists |
+| Pause, dose reduction, stop of therapy | Grade at recognition | Yes |
+| Death from toxicity | Grade | Yes |
 | Dose received relative to the planned dose | Dose reductions, pauses, stops | Can be derived |
-| Tumour control and survival | Time on therapy and dose received | Optional link, see 3.7 |
+| Tumour control and survival | Time on therapy and dose received | Parameter exists, switched off, see 3.7 |
 | Quality of life | Health state, events and their duration | Yes |
 
 ### 3.6 Costs and health value
@@ -181,11 +181,11 @@ For a fair comparison, the scenarios must differ only through the intervention.
 
 This makes statements on the level of single patients possible, for example: "In this patient, the lung toxicity was recognised 34 days earlier and stayed at grade 1 instead of grade 3."
 
-### 4.2 First set of scenarios
+### 4.2 Scenarios
 
 | Scenario | Content | Purpose |
 |---|---|---|
-| Usual care | No intervention | Reference; equals the engine of today |
+| Usual care | No intervention | Reference |
 | Risk-adapted start | Prediction at therapy start, adapted dose, prophylaxis and supportive measures for flagged patients | Candidate 1 |
 | Symptom monitoring | Weekly reports with alerts for all event types | The intervention of PRO-TECT |
 | Lung monitoring | Oxygen saturation and symptoms at home for patients on trastuzumab deruxtecan, with a detection model | Candidate 2 |

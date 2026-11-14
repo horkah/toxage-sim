@@ -34,3 +34,15 @@
   `https://github.com/horkah/toxage-sim/blob/main/background/papers/<file>`.
 - `uv run python app/manage.py link_citations` links the citations of all
   Markdown files; the app links those of the configuration notes itself.
+
+## Current state only
+
+- Documentation, Markdown files, configuration notes and texts of the app
+  describe the current state only, consistently and without history. No
+  statements such as "added later", "first selection", "new in",
+  "today the engine …", "no longer" or "was renamed". The history is in
+  the git log; the only exception is `project/prompting.log`.
+- When something changes, rewrite every affected text so that it reads as
+  if it had always been this way, and check that counts and descriptions
+  agree everywhere (e.g. the description of the reference list and its
+  entries).

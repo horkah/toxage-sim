@@ -256,3 +256,8 @@ Did you add them to the references? If not do so of course.
 2026-11-14 12:05 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 Whenever you mention a publication like "(Name YYYY)" in a md file or elsewhere in the app, make this a hyperlink pointing to the correct anchor in the references list, where the full bib record is shown including DOI and link to pdf . The latter always and only of the pdf was uploaded to the repo, which is then the link, using the GitHub URL.
+
+================================================================================
+2026-11-14 12:20 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+Make this pdf and anchor link part of Claude.md - as well as the following: don't keep statements that relate to project history, like "added later" etc in any documentation, md file or other part of the app. Always keep the clean current state reflected consistently and without history. A contradiction was already in the references list description, which you shall fix

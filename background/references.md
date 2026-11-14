@@ -1,6 +1,6 @@
 # References
 
-Literature on toxicity of systemic therapy in advanced pancreatic, prostate and breast cancer: 20 papers from high-impact international journals, published between 2020 and 2024, and 8 further clinical guidelines from the US (ASCO) and Europe (ESMO, EAU), published between 2018 and 2024. Nine sources were added later for the next model revision: risk scores for chemotherapy toxicity, the effect, adherence and cost of symptom monitoring, cardiovascular safety of androgen deprivation, management of lung toxicity, and quality-of-life utilities (published between 2006 and 2022).
+Literature for the models of the project: toxicity of systemic therapy in advanced pancreatic, prostate and breast cancer, risk scores for chemotherapy toxicity, symptom monitoring by patients, the management of single toxicities, costs and quality-of-life utilities. The 37 sources are 23 trials, analyses and reviews and 14 clinical guidelines from the US (ASCO, IDSA), Europe (ESMO, EAU, ESC) and a multidisciplinary expert group, published between 2006 and 2024.
 Citations follow APA style (7th edition). Each entry has an anchor (e.g. `#basch-2022`) that citations in the other documents link to, and a link to its PDF in `papers/` where that is in the repository. All bibliographic data were checked against PubMed; author names with accents were cross-checked against Crossref.
 
 ## Overview by topic
@@ -142,6 +142,6 @@ PDFs are stored in `papers/`. "Read" says which text the report in `toxicity-rep
 
 Notes:
 
-- The PDFs of all 20 papers of the first selection are in `papers/`. The PDFs of the 8 added guidelines and of the 9 sources added for the next model revision are missing.
+- 20 PDFs are in `papers/`, linked from their entries in the reference list. The PDFs of the other 17 sources are missing.
 - For the long guidelines by [Lyon et al. (2022)](#lyon-2022) and [Schneider et al. (2021)](#schneider-2021), the sections on risk assessment, definitions, monitoring and the therapies of our three patient groups were read.
 - Several figures in [Haanen et al. (2022)](#haanen-2022) on baseline screening and on single organs are in the online supplement, which is not in `papers/`.

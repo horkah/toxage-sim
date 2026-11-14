@@ -49,7 +49,7 @@ just serve
 
 The scientific background is in place:
 
-- [background/references.md](background/references.md) lists 37 sources: 20 papers from high-impact journals on toxicity in the three patient groups, 8 further clinical guidelines from the US and Europe, and 9 sources for the next model revision (risk scores, symptom monitoring, costs, utilities).
+- [background/references.md](background/references.md) lists 37 sources: trials, analyses, reviews and clinical guidelines on toxicity in the three patient groups, risk scores, symptom monitoring, costs and quality of life.
 - [background/toxicity-report.md](background/toxicity-report.md) summarises their findings: how often severe toxicity occurs with which therapy, when it starts, who is at risk, and what guidelines ask for in risk assessment and monitoring.
 - The report derives ten candidates for risk models, from a general model for severe toxicity in the first three months of a therapy line to specific models for lung toxicity, neutropenia, diarrhoea, cardiovascular events and others.
 

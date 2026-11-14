@@ -25,14 +25,11 @@ Technical and organisational details that go beyond the public [README](../READM
 
 ### Selection
 
-The first 20 references cover the three patient groups and the main therapy classes: combination chemotherapy, taxanes, androgen deprivation and androgen receptor inhibitors, PARP inhibitors, radioligand therapy, antibody–drug conjugates, checkpoint inhibitors, and CDK4/6 inhibitors. They are ten phase 3 trials, two cluster-randomised trials, one pooled safety analysis, one meta-analysis, one review and five guidelines, from The New England Journal of Medicine, The Lancet, JAMA, JAMA Network Open, Journal of Clinical Oncology, Annals of Oncology, European Heart Journal, Nature Reviews Clinical Oncology and ESMO Open.
+The references have three parts:
 
-Eight further guidelines were added for the derivation of risk models:
-
-- Treatment guidelines that define the therapy settings: ASCO on metastatic pancreatic cancer, ASCO and EAU on advanced prostate cancer, ESMO on metastatic breast cancer.
-- Guidelines on risk assessment and monitoring: ASCO on older patients, ASCO on venous thromboembolism, ASCO and IDSA on febrile neutropenia, ESMO on patient-reported outcome measures.
-
-The febrile neutropenia guideline is from 2018 and so older than the six-year window of the first selection.
+- Toxicity in the three patient groups and the main therapy classes: combination chemotherapy, taxanes, androgen deprivation and androgen receptor inhibitors, PARP inhibitors, radioligand therapy, antibody–drug conjugates, checkpoint inhibitors, and CDK4/6 inhibitors. These are ten phase 3 trials, two cluster-randomised trials, one pooled safety analysis, one meta-analysis, one review and five guidelines, published between 2020 and 2024 in The New England Journal of Medicine, The Lancet, JAMA, JAMA Network Open, Journal of Clinical Oncology, Annals of Oncology, European Heart Journal, Nature Reviews Clinical Oncology and ESMO Open.
+- Eight guidelines for the derivation of risk models. Treatment guidelines that define the therapy settings: ASCO on metastatic pancreatic cancer, ASCO and EAU on advanced prostate cancer, ESMO on metastatic breast cancer. Guidelines on risk assessment and monitoring: ASCO on older patients, ASCO on venous thromboembolism, ASCO and IDSA on febrile neutropenia (from 2018), ESMO on patient-reported outcome measures.
+- Nine sources for the parameters of risk models and interventions: risk scores for chemotherapy toxicity in older patients ([Hurria 2011](../background/references.md#hurria-2011), [Hurria 2016](../background/references.md#hurria-2016), [Extermann 2012](../background/references.md#extermann-2012)) and for neutropenic complications ([Lyman 2011](../background/references.md#lyman-2011)), adherence and effect of symptom monitoring ([Absolom 2021](../background/references.md#absolom-2021)) and its costs ([Lizée 2019](../background/references.md#lizee-2019)), cardiovascular safety of androgen deprivation ([Lopes 2021](../background/references.md#lopes-2021)), management of lung toxicity under trastuzumab deruxtecan ([Swain 2022](../background/references.md#swain-2022)), and quality-of-life utilities ([Lloyd 2006](../background/references.md#lloyd-2006)).
 
 Section 9 of the report lists the topics that the references do not cover.
 
@@ -56,9 +53,9 @@ Limits of the current reading:
 
 ### PDFs
 
-All 20 PDFs of the first selection are in `background/papers/`. File names follow the pattern `<first author>-<year>-<publisher file name>.pdf`. The file of [Haanen 2022](../background/references.md#haanen-2022) is spelled `Haanan-…` .
+20 PDFs are in `background/papers/`. File names follow the pattern `<first author>-<year>-<publisher file name>.pdf`. The file of [Haanen 2022](../background/references.md#haanen-2022) is spelled `Haanan-…` .
 
-The PDFs of the eight added guidelines are missing: [Dale 2023](../background/references.md#dale-2023), [Di Maio 2022](../background/references.md#di-maio-2022), [Gennari 2021](../background/references.md#gennari-2021), [Key 2020](../background/references.md#key-2020), [Sohal 2020](../background/references.md#sohal-2020), [Taplitz 2018](../background/references.md#taplitz-2018), [Tilki 2024](../background/references.md#tilki-2024), [Virgo 2021](../background/references.md#virgo-2021).
+The PDFs of 17 references are missing: the eight guidelines [Dale 2023](../background/references.md#dale-2023), [Di Maio 2022](../background/references.md#di-maio-2022), [Gennari 2021](../background/references.md#gennari-2021), [Key 2020](../background/references.md#key-2020), [Sohal 2020](../background/references.md#sohal-2020), [Taplitz 2018](../background/references.md#taplitz-2018), [Tilki 2024](../background/references.md#tilki-2024) and [Virgo 2021](../background/references.md#virgo-2021), and the nine sources for parameters [Absolom 2021](../background/references.md#absolom-2021), [Extermann 2012](../background/references.md#extermann-2012), [Hurria 2011](../background/references.md#hurria-2011), [Hurria 2016](../background/references.md#hurria-2016), [Lizée 2019](../background/references.md#lizee-2019), [Lloyd 2006](../background/references.md#lloyd-2006), [Lopes 2021](../background/references.md#lopes-2021), [Lyman 2011](../background/references.md#lyman-2011) and [Swain 2022](../background/references.md#swain-2022).
 
 Automated download is limited because the publisher websites and the Europe PMC website block scripted access. The only automated source for PDFs is the PubMed Central article dataset on AWS (`pmc-oa-opendata`), which holds PDFs only for articles with an open licence.
 
@@ -115,7 +112,7 @@ The literature services work from scripts. The publisher hosts answer scripted r
 
 ## Open points
 
-- Add the PDFs of the eight added guidelines to `background/papers/` and read the six that are not yet covered by a full text.
+- Add the 17 missing PDFs to `background/papers/` and read the full texts of the references that are covered only by their abstract or not at all.
 - Extend the literature to the topics in section 9 of the report, first of all published prediction models and the evidence for home measurements.
 - Replace the assumed parameters of the engine by literature values where possible, see the table "Basis of the parameters" in `engine/README.md`.
 - Search the literature for the cardiovascular model: SCORE2 coefficients in place of the assumed hazard ratios, a second trial next to HERO, and data on warning signs before a cardiovascular event.
