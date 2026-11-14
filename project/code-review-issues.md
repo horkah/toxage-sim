@@ -11,15 +11,16 @@ Each finding has a level:
 - **Cosmetic**: wording, duplication, naming; no effect on results.
 
 Findings that are fixed leave this file; their commits describe issue and fix.
-What remains needs a decision of the author.
+What remains was decided by the author.
 
 ## Major
 
-### M4. No access control on a public installation (needs a decision)
+### M4. No access control on a public installation (kept as is)
 
 - Where: whole app; `docker-compose.yml` (`TOXAGE_READ_ONLY` defaults to 0).
 - What: the app has no login. On a public address everyone can generate
-  data sets (CPU and disk), import archives of any size, change parameters
+  data sets (CPU, and disk up to TOXAGE_DISK_LIMIT_MB), import archives,
+  change parameters
   and delete everything. The README names this as a limit for a trusted
   network, but the installation is public.
 - Options: set `TOXAGE_READ_ONLY=1` on the public server and change data
@@ -31,16 +32,7 @@ What remains needs a decision of the author.
 
 ## Minor
 
-### m10. Purposes of random numbers could share their numbers (needs a decision)
-
-- Where: `engine/draws.py` (`purpose`).
-- What: a purpose name is reduced to a number modulo 1 000 003. Two names
-  with the same number would get the same random numbers, so two decisions
-  would be coupled. The 103 names in use today have no collision.
-- Options: use a hash of the full name (e.g. 64 bits of SHA-256). This
-  changes every generated patient for a given seed and needs a new
-  calibration, so stored seeds give other patients than before.
-- Status: open, decision of the author.
+None open.
 
 ## Cosmetic
 

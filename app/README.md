@@ -180,7 +180,7 @@ The database is SQLite in one file, with four tables:
 | Course | One patient in one scenario: outcome, adverse events, alerts, and the weekly observations as one list per field |
 | Setting | The changed values of one parameter file |
 
-Records are stored as JSON in the layout of the schema, so the database needs no change when the schema grows. The outcome is kept apart from the bulky observations, so that cohort views read only what they need. 1500 patients under seven scenarios take about 65 MB.
+Records are stored as JSON in the layout of the schema, so the database needs no change when the schema grows. The outcome is kept apart from the bulky observations, so that cohort views read only what they need. 1500 patients under seven scenarios take about 52 MB.
 
 SQLite fits because there is one server process, the data are written once per data set and then only read, and one file in a volume is easy to keep and to back up. Write-ahead logging lets pages be read while a data set is stored and keeps disk writes low. A database server would be the choice for several server processes or many users writing at the same time; Django makes that change a matter of settings.
 

@@ -162,28 +162,28 @@ Literature configuration, evaluated on 20 000 patients under usual care from `en
 
 | | Candidate 1 | Rate only | Candidate 2 | Rate only | Candidate 5 | Rate only |
 |---|---|---|---|---|---|---|
-| Patients, events | 20 000, 13 079 | | 3994, 274 | | 6667, 430 | |
-| Observed / expected | 0.92 | 0.95 | 1.01 | 0.97 | 1.18 | 1.07 |
-| AUC | 0.702 | 0.698 | 0.783 | 0.713 | 0.738 | 0.546 |
-| Brier score | 0.205 | 0.203 | 0.060 | 0.061 | 0.056 | 0.060 |
-| Calibration slope | 0.92 | 1.09 | 0.98 | 1.00 | 1.07 | 0.96 |
+| Patients, events | 20 000, 13 134 | | 3994, 276 | | 6667, 402 | |
+| Observed / expected | 0.92 | 0.95 | 1.02 | 0.97 | 1.10 | 1.00 |
+| AUC | 0.696 | 0.693 | 0.810 | 0.723 | 0.697 | 0.547 |
+| Brier score | 0.206 | 0.203 | 0.059 | 0.061 | 0.054 | 0.057 |
+| Calibration slope | 0.87 | 1.07 | 1.20 | 1.23 | 0.90 | 1.01 |
 
-Within single regimens, the AUC of candidate 1 is between 0.51 and 0.61, the AUC of candidate 2 is 0.63 for trastuzumab deruxtecan, and the AUC of candidate 5 is between 0.70 and 0.78.
+Within single regimens, the AUC of candidate 1 is between 0.50 and 0.62, the AUC of candidate 2 is 0.66 for trastuzumab deruxtecan, and the AUC of candidate 5 is between 0.62 and 0.73.
 
 How to read this:
 
 - The engine does not generate outcomes with the models used here. Severe toxicity comes from a latent frailty, type-specific hazards, dose changes and competing events. Age, ECOG and geriatric domains predict it only because they are linked to frailty. Candidate 1 gains almost nothing over the regimen rate. This is a result, not an artefact.
 - For lung toxicity the engine uses the same published hazard ratios as candidate 2, so the ranking of patients is good by construction.
-- For cardiovascular events the engine uses the same hazard ratios from HERO and the same assumed factors as candidate 5, so the ranking is good by construction as well. The engine adds three things the model does not know: frailty, former smoking and cardiovascular disease without an earlier event. The model therefore predicts too few events (observed to expected 1.18), most clearly for the regimens with docetaxel (predicted 4.9%, observed 5.3% to 7.5%).
-- Candidate 1 overestimates the risk for olaparib and lutetium-177–PSMA-617 (predicted 60% and 61%, observed 41% and 47%). The published rates cover the whole treatment period, and with these regimens the engine places a larger share of the events after day 90. The model also raises the risk because these patients are older than the reference patient.
+- For cardiovascular events the engine uses the same hazard ratios from HERO and the same assumed factors as candidate 5, so the ranking is good by construction as well. The engine adds three things the model does not know: frailty, former smoking and cardiovascular disease without an earlier event. The model therefore predicts too few events (observed to expected 1.10), most clearly for the regimens with docetaxel (predicted 4.9%, observed 5.3% to 6.2%).
+- Candidate 1 overestimates the risk for olaparib and lutetium-177–PSMA-617 (predicted 60% and 61%, observed 43% and 45%). The published rates cover the whole treatment period, and with these regimens the engine places a larger share of the events after day 90. The model also raises the risk because these patients are older than the reference patient.
 
 Fitted on 50 000 patients from seed 1, `fit.py` gives:
 
-- Candidate 1: odds ratios of 1.17 for age, 1.34 for ECOG 2 and 1.08 per geriatric domain.
-- Candidate 2: hazard ratios close to or below the published ones, for example 2.06 for low oxygen saturation (published 2.14) and 1.86 for moderate or severe renal decrease (published 2.73).
-- Candidate 5: a hazard ratio of 4.32 for an earlier event under an agonist and 0.92 under an antagonist (95% confidence interval 0.60 to 1.40), and 1.33 for age, 1.47 for diabetes, 1.39 for hypertension, 1.48 for current smoking and 1.42 for reduced renal function.
+- Candidate 1: odds ratios of 1.16 for age, 1.29 for ECOG 2 and 1.08 per geriatric domain.
+- Candidate 2: hazard ratios near the published ones, with wide intervals because there are few events, for example 2.59 for moderate or severe renal decrease (published 2.73) and 1.27 for low oxygen saturation (published 2.14; 95% confidence interval 0.78 to 2.08, as few patients have it).
+- Candidate 5: a hazard ratio of 4.23 for an earlier event under an agonist and 1.48 under an antagonist (95% confidence interval 1.05 to 2.11), and 1.45 for age, 1.41 for diabetes, 1.45 for hypertension, 1.42 for current smoking and 1.26 for reduced renal function.
 
-On the 20 000 test patients the fitted configuration reaches an observed to expected ratio of 0.99, 1.02 and 0.99 and an AUC of 0.715, 0.781 and 0.736.
+On the 20 000 test patients the fitted configuration reaches an observed to expected ratio of 1.00, 1.10 and 0.93 and an AUC of 0.710, 0.811 and 0.696.
 
 The models describe the risk without an intervention. `data.load` therefore reads the outcomes of usual care unless another scenario is named.
 

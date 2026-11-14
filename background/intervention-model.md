@@ -255,7 +255,7 @@ The engine implements the model with the parameters in `engine/config/interventi
 | Same patients, same chance | Implemented with fixed random numbers per patient, purpose and week. |
 | Scenarios | The seven scenarios of section 4.2. |
 
-The check against GAP70+ holds: flagged patients who take part in the risk-adapted start have severe toxicity within 90 days in 56% against 72% in usual care, a relative risk of 0.78.
+The check against GAP70+ holds: flagged patients who take part in the risk-adapted start have severe toxicity within 90 days in 57% against 70% in usual care, a relative risk of 0.81.
 
 Open parts:
 

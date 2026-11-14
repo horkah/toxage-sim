@@ -156,9 +156,14 @@ class EngineTest(unittest.TestCase):
                 self.assertTrue(p["cardiovascular_disease"])
 
     def test_lung_toxicity_is_often_recognised_late(self):
-        gaps = [o["ild_diagnosis_day"] - o["ild_onset_day"] for o in self.outcome[USUAL].values()
-                if o["ild_diagnosis_day"] is not None]
-        self.assertAlmostEqual(sum(g > 7 for g in gaps) / len(gaps), 0.53, delta=0.2)
+        # A cohort of its own: the 3000 patients of the class have only about 35
+        # diagnosed lung events, too few for a share (standard error 8 points).
+        # 9000 patients give about 100 (standard error 5 points).
+        data = generate.generate(9000, seed=7, scenarios=[USUAL], validate=False)
+        gaps = [o["ild_diagnosis_day"] - o["ild_onset_day"] for o in data["outcome"]
+                if o["ild"] and o["ild_diagnosis_day"] is not None]
+        self.assertGreater(len(gaps), 80)
+        self.assertAlmostEqual(sum(g > 7 for g in gaps) / len(gaps), 0.53, delta=0.2)    # Powell et al.: 53%
 
     def test_usual_care_has_no_intervention(self):
         self.assertEqual(self.alerts[USUAL], {})

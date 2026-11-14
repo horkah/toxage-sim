@@ -6,6 +6,7 @@ changes probabilities, not the random numbers, so the same patient can be
 simulated under several scenarios and differs only where an intervention
 acts (common random numbers).
 """
+import hashlib
 from statistics import NormalDist
 
 _MASK = (1 << 64) - 1
@@ -25,9 +26,12 @@ def _mix(x):
 
 
 def purpose(name):
-    """Number of a purpose. Names are registered on first use."""
+    """Number of a purpose: the first 64 bits of the SHA-256 hash of its name.
+    Different names practically never get the same number (the chance for 1000
+    names is about 3 in 10^14), so the random numbers of two purposes are not
+    coupled. Names are hashed once and kept."""
     if name not in _PURPOSES:
-        _PURPOSES[name] = int.from_bytes(name.encode(), "big") % 1000003
+        _PURPOSES[name] = int.from_bytes(hashlib.sha256(name.encode()).digest()[:8], "big")
     return _PURPOSES[name]
 
 

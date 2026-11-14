@@ -209,16 +209,16 @@ Usual care, from a run with 9000 patients (seed 1), all ECOG levels included:
 
 | Regimen | Trial: any severe toxicity | Generated: any severe toxicity | Generated: within 90 days | Generated: stopped for toxicity |
 |---|---|---|---|---|
-| `nalirifox` | 87% | 88% | 87% | 25% |
-| `gemcitabine_nab_paclitaxel` | 86% | 84% | 83% | 23% |
-| `adt_docetaxel` | 63.5% | 71% | 62% | 12% |
-| `adt_docetaxel_abiraterone` | 63% | 69% | 56% | 11% |
-| `adt_docetaxel_darolutamide` | 66.1% | 76% | 66% | 13% |
-| `lu_psma_617` | 52.7% | 56% | 47% | 15% |
-| `olaparib` | 51% | 53% | 46% | 10% |
-| `trastuzumab_deruxtecan` | 52.6% | 58% | 53% | 16% |
-| `chemotherapy_single_agent` | 67.4% | 70% | 67% | 9% |
-| `pembrolizumab_chemotherapy` | 68.1% | 71% | 67% | 13% |
+| `nalirifox` | 87% | 88% | 86% | 24% |
+| `gemcitabine_nab_paclitaxel` | 86% | 84% | 82% | 22% |
+| `adt_docetaxel` | 63.5% | 69% | 62% | 13% |
+| `adt_docetaxel_abiraterone` | 63% | 70% | 57% | 12% |
+| `adt_docetaxel_darolutamide` | 66.1% | 73% | 64% | 15% |
+| `lu_psma_617` | 52.7% | 53% | 45% | 11% |
+| `olaparib` | 51% | 53% | 42% | 12% |
+| `trastuzumab_deruxtecan` | 52.6% | 57% | 51% | 15% |
+| `chemotherapy_single_agent` | 67.4% | 70% | 68% | 9% |
+| `pembrolizumab_chemotherapy` | 68.1% | 69% | 66% | 14% |
 
 The calibration matches each event type to the literature within 0.3 percentage points in generated patients with ECOG 0 or 1 during the first 52 weeks. The table differs from the trial rates because it includes patients with ECOG 2 and events after week 52.
 
@@ -226,35 +226,35 @@ Further checks against the literature:
 
 | Quantity | Literature | Generated |
 |---|---|---|
-| Severe toxicity within 90 days in patients aged 70 or older with at least one impaired geriatric domain, usual care | 71% (Mohile et al., 2021, usual care) | about 70% |
-| The same in flagged patients who take part in the risk-adapted start, against usual care | relative risk 0.74 (Mohile et al., 2021) | 56% against 72%, relative risk 0.78 |
-| Dose reduction with NALIRIFOX | 60% (Wainberg et al., 2023) | about 51% |
-| Therapy stopped because of adverse events with NALIRIFOX | 32% (Wainberg et al., 2023) | about 25% |
-| Lung toxicity with trastuzumab deruxtecan within 52 weeks | 10.5% (12.1% overall, 87% of events within 12 months) | about 10% |
-| Share of lung toxicity recognised late | 53% (Powell et al., 2022) | about 45% |
-| Median day of onset of lung toxicity | 129 (Modi et al., 2022) | about 93 |
-| Cardiovascular events within 48 weeks under a GnRH agonist | 6.2% (Shore et al., 2020) | 6.2% |
-| The same in men without and with an earlier event | 4.2% and 17.8% (Shore et al., 2020; 11 of 263 and 8 of 45) | 4.5% and 24% |
-| Cardiovascular events within 48 weeks under a GnRH antagonist | 2.9% (Shore et al., 2020) | 2.6% |
+| Severe toxicity within 90 days in patients aged 70 or older with at least one impaired geriatric domain, usual care | 71% (Mohile et al., 2021, usual care) | about 68% |
+| The same in flagged patients who take part in the risk-adapted start, against usual care | relative risk 0.74 (Mohile et al., 2021) | 57% against 70%, relative risk 0.81 |
+| Dose reduction with NALIRIFOX | 60% (Wainberg et al., 2023) | about 50% |
+| Therapy stopped because of adverse events with NALIRIFOX | 32% (Wainberg et al., 2023) | about 24% |
+| Lung toxicity with trastuzumab deruxtecan within 52 weeks | 10.5% (12.1% overall, 87% of events within 12 months) | about 11% |
+| Share of lung toxicity recognised late | 53% (Powell et al., 2022) | about 47% |
+| Median day of onset of lung toxicity | 129 (Modi et al., 2022) | about 108 |
+| Cardiovascular events within 48 weeks under a GnRH agonist | 6.2% (Shore et al., 2020) | 6.5% |
+| The same in men without and with an earlier event | 4.2% and 17.8% (Shore et al., 2020; 11 of 263 and 8 of 45) | 4.2% and 29% |
+| Cardiovascular events within 48 weeks under a GnRH antagonist | 2.9% (Shore et al., 2020) | 4.9% |
 | Share of men with an earlier cardiovascular event | 13.9% (Shore et al., 2020) | 12.4% |
 
 Scenarios, from the same run, per patient of the whole cohort:
 
 | Scenario | Taking part | Severe toxicity, 90 days | Severe events | Cardiovascular events | Deaths from toxicity | Hospital days | Alerts | QALY | Cost of care (€) | Cost of intervention (€) |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `usual_care` | 0% | 66.9% | 1.22 | 297 | 212 | 3.85 | 0 | 1.786 | 4006 | 0 |
-| `risk_adapted_start` | 21.1% | 63.5% | 1.11 | 296 | 198 | 3.51 | 0.64 | 1.791 | 3659 | 169 |
-| `symptom_monitoring` | 78.2% | 64.3% | 1.15 | 288 | 172 | 3.41 | 2.74 | 1.798 | 3531 | 365 |
-| `lung_monitoring` | 9.1% | 66.9% | 1.22 | 297 | 209 | 3.84 | 0.06 | 1.787 | 4017 | 55 |
-| `cardiovascular_monitoring` | 25.1% | 66.7% | 1.21 | 271 | 207 | 3.82 | 0.60 | 1.788 | 4113 | 187 |
-| `combined` | 78.2% | 61.2% | 1.05 | 276 | 164 | 3.18 | 3.40 | 1.802 | 3446 | 652 |
-| `perfect_detection` | 100% | 0.4% | 0.02 | 150 | 23 | 0.13 | 1.34 | 1.848 | 142 | 863 |
+| `usual_care` | 0% | 66.2% | 1.21 | 299 | 194 | 3.88 | 0 | 1.788 | 4092 | 0 |
+| `risk_adapted_start` | 21.2% | 62.7% | 1.11 | 298 | 169 | 3.55 | 0.60 | 1.794 | 3740 | 166 |
+| `symptom_monitoring` | 78.1% | 63.8% | 1.14 | 293 | 152 | 3.42 | 2.65 | 1.796 | 3586 | 358 |
+| `lung_monitoring` | 9.2% | 66.2% | 1.21 | 299 | 192 | 3.87 | 0.07 | 1.789 | 4105 | 59 |
+| `cardiovascular_monitoring` | 25.0% | 66.0% | 1.20 | 283 | 191 | 3.86 | 0.57 | 1.789 | 4200 | 180 |
+| `combined` | 78.1% | 60.8% | 1.05 | 283 | 145 | 3.21 | 3.28 | 1.800 | 3501 | 639 |
+| `perfect_detection` | 100% | 0.4% | 0.02 | 174 | 29 | 0.15 | 1.32 | 1.839 | 183 | 844 |
 
 Cardiovascular events and deaths from toxicity are counts among the 9000 patients, over the whole follow-up.
 
-- Lung monitoring reaches only the patients on trastuzumab deruxtecan. Among them it recognised 37 of 106 lung toxicity events early, by a median of about four weeks, and lowered the events of grade 3 or higher from 27 to 20.
-- Cardiovascular monitoring reaches only the men with prostate cancer. Of the 297 cardiovascular events of usual care, 159 had a warning phase. Monitoring recognised 51 of them early, by a median of four days, and prevented 26 major events and 5 of 44 cardiovascular deaths. It also recognised 119 of 226 hypertension events early and lowered those of grade 3 or higher from 224 to 142.
-- With perfect detection 150 cardiovascular events remain, 23 of them fatal: the events without a warning phase.
+- Lung monitoring reaches only the patients on trastuzumab deruxtecan. Among them it recognised 37 of 118 lung toxicity events early, by a median of about three weeks, and lowered the events of grade 3 or higher from 14 to 11.
+- Cardiovascular monitoring reaches only the men with prostate cancer. Of the 299 cardiovascular events of usual care, 142 had a warning phase. Monitoring recognised 47 of them early, by a median of five days, and prevented 16 major events and 3 of 38 cardiovascular deaths. It also recognised 112 of 215 hypertension events early and lowered those of grade 3 or higher from 213 to 137.
+- With perfect detection 174 cardiovascular events remain, 29 of them fatal: the events without a warning phase.
 - Symptom monitoring recognised about 14% of the events early, by a median of three days, because most event types worsen within days and a weekly report often comes too late.
 
 The effects of the scenarios follow from the assumed parameters of the intervention model. They show how the model behaves, not what an intervention achieves in patients.
