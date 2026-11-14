@@ -21,6 +21,16 @@
 - Only simple prompts such as "resume" or "continue" after a limit was
   reached may be left out. All other prompts are logged, also questions,
   short follow-ups and prompts with screenshots.
+- The date-time of an entry is the time the prompt arrived (Berlin time),
+  taken from the clock or the session transcript, not estimated.
+
+## Screenshots
+
+- Every screenshot or other image that Claude generates for this project
+  (browser checks, before/after views, design previews) is saved in
+  `project/screenshots/` and committed with the work of the same turn.
+- File name: `<YYYY-MM-DD>_<HHMM>_<short-description>.png`, Berlin time
+  of the moment it was taken, so the files sort chronologically.
 
 ## Citations
 

@@ -238,7 +238,7 @@ this is now version 0.2.1 - please upate version number
 is it straightforward and safe to optimize the database for the parallel worlds with deduplication of identical data? I am thinking of just leaving a reference "unchanged from base" binary tag for those which are identical copies. they then aren't stored but looked up from the base entry. you surely figure that out how to optimize the memory and don't compromise speed or stability. of course, deleting the base scenario is then would require remapping to acertain data integrity also after such partial deletion.
 
 ================================================================================
-2026-11-14 02:17 (+01:00) | model: claude-opus-5-5 | attachments: none
+2026-11-14 02:16 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 yes, please
 
@@ -248,31 +248,36 @@ yes, please
 You are done right? If not complete. Quick question: what are the next 5-10 publications or guidelines you need as pdf to make the modeling of synthetic data generation, risk model and intervention modeling more realistic?
 
 ================================================================================
-2026-11-14 11:52 (+01:00) | model: claude-opus-5-5 | attachments: none
+2026-11-14 11:36 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 Did you add them to the references? If not do so of course.
 
 ================================================================================
-2026-11-14 12:05 (+01:00) | model: claude-opus-5-5 | attachments: none
+2026-11-14 12:01 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 Whenever you mention a publication like "(Name YYYY)" in a md file or elsewhere in the app, make this a hyperlink pointing to the correct anchor in the references list, where the full bib record is shown including DOI and link to pdf . The latter always and only of the pdf was uploaded to the repo, which is then the link, using the GitHub URL.
 
 ================================================================================
-2026-11-14 12:20 (+01:00) | model: claude-opus-5-5 | attachments: none
+2026-11-14 12:07 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 Make this pdf and anchor link part of Claude.md - as well as the following: don't keep statements that relate to project history, like "added later" etc in any documentation, md file or other part of the app. Always keep the clean current state reflected consistently and without history. A contradiction was already in the references list description, which you shall fix
 
 ================================================================================
-2026-11-14 12:40 (+01:00) | model: claude-opus-5-5 | attachments: none
+2026-11-14 12:18 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 I need in the demo and tutorial the hint box be with a very subtle yellow background (of course adapted for bright and dark design) and also the hint box borders (two boxes, one containing the text and the other pointing to the UI element) be colored in some matching yellowish tone, to be elegantly different from the regular app design.
 
 ================================================================================
-2026-11-14 13:05 (+01:00) | model: claude-opus-5-5 | attachments: none
+2026-11-14 12:29 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 The anchor was not reached or found from the first reference link in the toxicity report. From the references.md section it worked fine. Please fix for any other location from where we can invoke such hyperlinks. // next, I want you to add to the papers folder in the repo and to the references file a clear statement that that the PDFs are for personal scientific use within the project context only and not for any other use. Please use a better appropriate formulation. Background is that the pdfs were downloaded by the author within his university work in an academic project. Make the formulation short but precise, yet generic such that other group members can also store their PDFs there
 
 ================================================================================
-2026-11-14 13:25 (+01:00) | model: claude-opus-5-5 | attachments: screenshot (Data page on a phone, zoomed out)
+2026-11-14 12:48 (+01:00) | model: claude-opus-5-5 | attachments: screenshot (Data page on a phone, zoomed out)
 --------------------------------------------------------------------------------
 When I switch on my phone to data , the screen shrinks probably because the browser or app thinks there is more to show, even though the table is nicely scrollable within the box. Please fix that the app does not behave unwanted like this on all sorts of devices and browsers. I am sure you have a generic solution for this
+
+================================================================================
+2026-11-14 13:30 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+Save and commit all the generated screenshots from any Claude session for this project (rule to CLAUDE.md) in project/screenshots
