@@ -207,7 +207,7 @@ class DataTest(CohortTestCase):
 
 
 class ParameterPageTest(TestCase):
-    PATH = "ild/hazard_ratios/spo2_below_95/value"
+    PATH = "ild/hazard_ratios/low_spo2/value"
 
     def setUp(self):
         self.client.cookies[COOKIE] = settings.DISCLAIMER_VERSION
@@ -378,7 +378,7 @@ class ParameterCheckTest(CohortTestCase):
 
     def test_values_that_break_the_risk_models_are_refused(self):
         for path, value in ((self.RATE, "1"), (self.RATE, "0"), (self.RATE, "2"),
-                            ("ild/hazard_ratios/spo2_below_95/value", "-1")):
+                            ("ild/hazard_ratios/low_spo2/value", "-1")):
             with self.subTest(path=path, value=value):
                 errors = params.save("risk", {path: value})
                 self.assertIn("not saved", errors[path])

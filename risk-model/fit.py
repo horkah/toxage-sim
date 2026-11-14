@@ -74,12 +74,13 @@ def fit_ild(baseline, outcomes, cfg):
     one intercept per regimen, then the log hazard ratios."""
     regimens = [r for r in cfg["ild"]["regimen_rates"] if any(p["regimen"] == r for p in baseline)]
     factors = list(models.ILD_FACTORS)
+    tests = models.ild_tests(cfg)
     x, y = [], []
     for p in baseline:
         if p["regimen"] not in regimens:
             continue
         row = [1.0 if p["regimen"] == r else 0.0 for r in regimens]
-        row += [1.0 if models.ILD_FACTORS[f](p) else 0.0 for f in factors]
+        row += [1.0 if tests[f](p) else 0.0 for f in factors]
         x.append(row)
         y.append(int(outcomes[p["patient_id"]]["ild"]))
     rates = []

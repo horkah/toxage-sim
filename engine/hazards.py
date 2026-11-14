@@ -78,34 +78,35 @@ def multipliers(patient, latent, params):
         if patient["gcsf_prophylaxis"]:
             result[name] *= m["gcsf"]
     m = sp["anaemia"]
-    result["anaemia"] *= math.exp(m["log_hazard_ratio_per_g_dl_below_12_5"] * (12.5 - patient["haemoglobin_g_dl"]))
+    result["anaemia"] *= math.exp(m["log_hazard_ratio_per_g_dl_below_reference"]
+                                  * (m["reference_haemoglobin_g_dl"] - patient["haemoglobin_g_dl"]))
     if patient["renal_function"] == "moderate_severe_decrease":
         result["anaemia"] *= m["renal_moderate_severe"]
     m = sp["thrombocytopenia"]
     result["thrombocytopenia"] *= (m["reference_platelets"] / patient["platelets_10e9_l"]) ** m["baseline_platelets_exponent"]
     if pretreated:
         result["thrombocytopenia"] *= m["pretreated"]
-    if patient["age_years"] >= 70:
-        result["diarrhoea"] *= sp["diarrhoea"]["age_70_or_older"]
+    if patient["age_years"] >= sp["diarrhoea"]["older_from_age"]:
+        result["diarrhoea"] *= sp["diarrhoea"]["older_age"]
     if patient["diabetes"]:
         result["peripheral_neuropathy"] *= sp["peripheral_neuropathy"]["diabetes"]
     if patient["cardiovascular_disease"]:
         result["hypertension"] *= sp["hypertension"]["cardiovascular_disease"]
 
-    hr = hz["ild"]["hazard_ratios"]
+    hr, limit = hz["ild"]["hazard_ratios"], hz["ild"]["thresholds"]
     ild = 1.0
-    if patient["age_years"] < 65:
-        ild *= hr["age_below_65"]
+    if patient["age_years"] < limit["younger_below_age"]:
+        ild *= hr["younger_age"]
     if patient["lung_comorbidity"]:
         ild *= hr["lung_comorbidity"]
     if patient["renal_function"] == "mild_decrease":
         ild *= hr["renal_mild_decrease"]
     elif patient["renal_function"] == "moderate_severe_decrease":
         ild *= hr["renal_moderate_severe_decrease"]
-    if patient["years_since_diagnosis"] > 4:
-        ild *= hr["more_than_4_years_since_diagnosis"]
-    if patient["spo2_percent"] < 95:
-        ild *= hr["spo2_below_95"]
+    if patient["years_since_diagnosis"] > limit["long_since_diagnosis_more_than_years"]:
+        ild *= hr["long_since_diagnosis"]
+    if patient["spo2_percent"] < limit["low_spo2_below_percent"]:
+        ild *= hr["low_spo2"]
     result[ILD] = ild
     result[CV] = cardiovascular_multiplier(patient, latent, params)
     return result
@@ -199,6 +200,6 @@ def general_multiplier(patient, latent, params):
     g = params["hazards"]["general"]
     value = math.exp(g["frailty_log_hazard_ratio"] * latent["frailty"])
     value *= g["hazard_ratio_per_10_years_of_age"] ** ((patient["age_years"] - g["reference_age"]) / 10)
-    if patient["bilirubin_ratio_uln"] > 1.5:
-        value *= g["hazard_ratio_bilirubin_above_1_5"]
+    if patient["bilirubin_ratio_uln"] > g["high_bilirubin_above_uln"]:
+        value *= g["hazard_ratio_high_bilirubin"]
     return value

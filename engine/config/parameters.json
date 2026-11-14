@@ -230,7 +230,8 @@
       "intercept": 0.4,
       "frailty_slope": -0.8,
       "per_year_above_65": -0.05,
-      "bilirubin_above_1_5_shift": -1.0
+      "high_bilirubin_shift": -1.0,
+      "high_bilirubin_above_uln": 1.5
     },
     "prostate_hormone_sensitive": {
       "adt_docetaxel": 0.2,
@@ -243,7 +244,8 @@
     },
     "breast_her2_low_trastuzumab_deruxtecan": {
       "probability": 0.6,
-      "probability_with_lung_problem": 0.25
+      "probability_with_lung_problem": 0.25,
+      "lung_problem_spo2_below_percent": 95
     },
     "adt_antagonist": {
       "probability": 0.15,
@@ -318,7 +320,8 @@
       "frailty_log_hazard_ratio": 0.35,
       "hazard_ratio_per_10_years_of_age": 1.1,
       "reference_age": 65,
-      "hazard_ratio_bilirubin_above_1_5": 1.5,
+      "hazard_ratio_high_bilirubin": 1.5,
+      "high_bilirubin_above_uln": 1.5,
       "basis": "assumption; applies to all event types except interstitial lung disease and cardiovascular events"
     },
     "specific": {
@@ -335,7 +338,8 @@
         "gcsf": 0.5
       },
       "anaemia": {
-        "log_hazard_ratio_per_g_dl_below_12_5": 0.3,
+        "log_hazard_ratio_per_g_dl_below_reference": 0.3,
+        "reference_haemoglobin_g_dl": 12.5,
         "renal_moderate_severe": 1.3
       },
       "thrombocytopenia": {
@@ -344,7 +348,8 @@
         "pretreated": 1.3
       },
       "diarrhoea": {
-        "age_70_or_older": 1.3
+        "older_age": 1.3,
+        "older_from_age": 70
       },
       "peripheral_neuropathy": {
         "diabetes": 1.5
@@ -388,13 +393,19 @@
     },
     "ild": {
       "hazard_ratios": {
-        "age_below_65": 1.56,
+        "younger_age": 1.56,
         "lung_comorbidity": 1.75,
         "renal_mild_decrease": 1.24,
         "renal_moderate_severe_decrease": 2.73,
-        "more_than_4_years_since_diagnosis": 1.82,
-        "spo2_below_95": 2.14,
+        "long_since_diagnosis": 1.82,
+        "low_spo2": 2.14,
         "basis": "Powell et al. (2022), multivariable Cox model, Figure 2B"
+      },
+      "thresholds": {
+        "younger_below_age": 65,
+        "long_since_diagnosis_more_than_years": 4,
+        "low_spo2_below_percent": 95,
+        "basis": "Powell et al. (2022), Figure 2B: the cut-offs of the published risk factors"
       },
       "onset_days": {
         "median": 129,

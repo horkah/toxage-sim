@@ -85,7 +85,7 @@
       }
     },
     "hazard_ratios": {
-      "age_below_65": {
+      "younger_age": {
         "value": 1.56,
         "basis": "Powell et al. (2022), Figure 2B"
       },
@@ -101,24 +101,30 @@
         "value": 2.73,
         "basis": "Powell et al. (2022), Figure 2B"
       },
-      "more_than_4_years_since_diagnosis": {
+      "long_since_diagnosis": {
         "value": 1.82,
         "basis": "Powell et al. (2022), Figure 2B"
       },
-      "spo2_below_95": {
+      "low_spo2": {
         "value": 2.14,
         "basis": "Powell et al. (2022), Figure 2B"
       }
     },
     "reference_population": {
       "description": "Share of patients with each risk factor, used to set r0. Factors are treated as independent.",
-      "age_below_65": 0.656,
+      "younger_age": 0.656,
       "lung_comorbidity": 0.07,
       "renal_mild_decrease": 0.407,
       "renal_moderate_severe_decrease": 0.174,
-      "more_than_4_years_since_diagnosis": 0.392,
-      "spo2_below_95": 0.05,
+      "long_since_diagnosis": 0.392,
+      "low_spo2": 0.05,
       "basis": "Powell et al. (2022), Table 2 and Figure 2B: 754 of 1150 under 65, 81 of 1150 with lung comorbidity, 458 and 196 of 1124 with mild and moderate or severe renal decrease, 403 of 1027 more than 4 years since diagnosis, 57 of 1137 with SpO2 below 95%"
+    },
+    "thresholds": {
+      "younger_below_age": 65,
+      "long_since_diagnosis_more_than_years": 4,
+      "low_spo2_below_percent": 95,
+      "basis": "Powell et al. (2022), Figure 2B: the cut-offs of the published risk factors"
     },
     "grade2plus_share": {
       "value": 0.711,

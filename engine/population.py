@@ -38,8 +38,8 @@ def _regimen(rng, subgroup, frailty, age, bilirubin, lung_problem, params):
     if subgroup == "pancreas_metastatic":
         m = c["pancreas_nalirifox"]
         x = m["intercept"] + m["frailty_slope"] * frailty + m["per_year_above_65"] * (age - 65)
-        if bilirubin > 1.5:
-            x += m["bilirubin_above_1_5_shift"]
+        if bilirubin > m["high_bilirubin_above_uln"]:
+            x += m["high_bilirubin_shift"]
         return "nalirifox" if rng.random() < sigmoid(x) else "gemcitabine_nab_paclitaxel"
     if subgroup == "breast_her2_low":
         m = c["breast_her2_low_trastuzumab_deruxtecan"]
@@ -159,7 +159,8 @@ def draw_patient(rng, index, tumour, regimens, params):
 
     ysd = p["years_since_diagnosis"][subgroup]
     years_since_diagnosis = round(_lognormal(rng, ysd["median"], ysd["sigma"]), 1)
-    regimen = _regimen(rng, subgroup, frailty, age, bilirubin, lung or spo2 < 95, params)
+    low_spo2 = spo2 < params["treatment_choice"]["breast_her2_low_trastuzumab_deruxtecan"]["lung_problem_spo2_below_percent"]
+    regimen = _regimen(rng, subgroup, frailty, age, bilirubin, lung or low_spo2, params)
 
     sd = params["treatment_choice"]["starting_dose_reduction"]
     reduced = rng.random() < sigmoid(

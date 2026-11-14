@@ -32,7 +32,6 @@ FACTOR_LABELS = {
     "age": "Age",
     "ecog_2_or_higher": "ECOG 2 or higher",
     "ga_impaired_domains": "Impaired geriatric domains",
-    **{name: label[0].upper() + label[1:] for name, label in calc.ILD_LABELS.items()},
     **{name: label[0].upper() + label[1:] for name, label in calc.CV_LABELS.items()},
 }
 
@@ -85,9 +84,15 @@ class RiskModel:
             "candidate", "source")}
 
 
-def _factors(pairs):
+def _capital(label):
+    """The label with a capital first letter."""
+    return label[0].upper() + label[1:]
+
+
+def _factors(pairs, labels=None):
     """Factor records with readable labels from (name, ratio) pairs."""
-    return [Factor(name, FACTOR_LABELS.get(name, name), ratio) for name, ratio in pairs]
+    labels = labels or FACTOR_LABELS
+    return [Factor(name, labels.get(name, name), ratio) for name, ratio in pairs]
 
 
 class SevereToxicityModel(RiskModel):
@@ -160,7 +165,8 @@ class LungToxicityModel(RiskModel):
         if not self.applies(patient):
             return []
         applied = {name: ratio for name, _, ratio in calc.ild_terms(patient, self.cfg)}
-        return _factors([(name, applied.get(name, 1.0)) for name in calc.ILD_FACTORS])
+        labels = {name: _capital(label) for name, label in calc.ild_labels(self.cfg).items()}
+        return _factors([(name, applied.get(name, 1.0)) for name in calc.ILD_FACTORS], labels)
 
 
 class CardiovascularModel(RiskModel):

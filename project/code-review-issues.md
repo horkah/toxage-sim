@@ -31,19 +31,6 @@ What remains needs a decision of the author.
 
 ## Minor
 
-### m9. Thresholds of risk factors are fixed in the code (needs a decision)
-
-- Where: `engine/hazards.py` (`multipliers`, `general_multiplier`),
-  `engine/population.py`, `risk-model/models.py`.
-- What: the hazard and odds ratios are parameters, but the thresholds they
-  apply from are not: age 70 and 65, haemoglobin 12.5 g/dl, bilirubin 1.5
-  times the upper limit, SpO2 95%, more than 4 years since diagnosis. They
-  cannot be changed on the parameters page.
-- Options: move them into the parameter files (changes the files and the
-  parameter pages), or keep them in the code as part of the published
-  definitions of the risk factors.
-- Status: open, decision of the author.
-
 ### m10. Purposes of random numbers could share their numbers (needs a decision)
 
 - Where: `engine/draws.py` (`purpose`).

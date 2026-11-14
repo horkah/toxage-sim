@@ -83,24 +83,39 @@ def severe_toxicity_risk(patient, cfg):
 
 # Candidate 2 ----------------------------------------------------------------
 
-# Risk factors of candidate 2: name in the configuration, test on a patient.
-ILD_FACTORS = {
-    "age_below_65": lambda p: p["age_years"] < 65,
-    "lung_comorbidity": lambda p: p["lung_comorbidity"],
-    "renal_mild_decrease": lambda p: p["renal_function"] == "mild_decrease",
-    "renal_moderate_severe_decrease": lambda p: p["renal_function"] == "moderate_severe_decrease",
-    "more_than_4_years_since_diagnosis": lambda p: p["years_since_diagnosis"] > 4,
-    "spo2_below_95": lambda p: p["spo2_percent"] < 95,
-}
+# Risk factors of candidate 2, in the order of the configuration. The cut-offs
+# of age, years since diagnosis and oxygen saturation are parameters
+# (ild/thresholds); the published ones are 65 years, 4 years and 95%.
+ILD_FACTORS = ("younger_age", "lung_comorbidity", "renal_mild_decrease",
+               "renal_moderate_severe_decrease", "long_since_diagnosis", "low_spo2")
 
-ILD_LABELS = {
-    "age_below_65": "age below 65",
-    "lung_comorbidity": "lung comorbidity",
-    "renal_mild_decrease": "renal function mildly decreased",
-    "renal_moderate_severe_decrease": "renal function moderately or severely decreased",
-    "more_than_4_years_since_diagnosis": "more than 4 years since diagnosis",
-    "spo2_below_95": "oxygen saturation below 95%",
-}
+
+def ild_tests(cfg):
+    """Test of every risk factor of candidate 2 on a patient, with the cut-offs
+    of the configuration: {factor: function(patient) -> bool}."""
+    t = cfg["ild"]["thresholds"]
+    return {
+        "younger_age": lambda p: p["age_years"] < t["younger_below_age"],
+        "lung_comorbidity": lambda p: p["lung_comorbidity"],
+        "renal_mild_decrease": lambda p: p["renal_function"] == "mild_decrease",
+        "renal_moderate_severe_decrease": lambda p: p["renal_function"] == "moderate_severe_decrease",
+        "long_since_diagnosis": lambda p: p["years_since_diagnosis"] > t["long_since_diagnosis_more_than_years"],
+        "low_spo2": lambda p: p["spo2_percent"] < t["low_spo2_below_percent"],
+    }
+
+
+def ild_labels(cfg):
+    """Readable name of every risk factor of candidate 2, with the cut-offs of
+    the configuration, e.g. "age below 65"."""
+    t = cfg["ild"]["thresholds"]
+    return {
+        "younger_age": f"age below {t['younger_below_age']:g}",
+        "lung_comorbidity": "lung comorbidity",
+        "renal_mild_decrease": "renal function mildly decreased",
+        "renal_moderate_severe_decrease": "renal function moderately or severely decreased",
+        "long_since_diagnosis": f"more than {t['long_since_diagnosis_more_than_years']:g} years since diagnosis",
+        "low_spo2": f"oxygen saturation below {t['low_spo2_below_percent']:g}%",
+    }
 
 
 def ild_applicable(patient, cfg):
@@ -113,10 +128,10 @@ def ild_terms(patient, cfg):
 
     Each term is (factor, label, hazard ratio).
     """
-    hr = cfg["ild"]["hazard_ratios"]
+    hr, labels = cfg["ild"]["hazard_ratios"], ild_labels(cfg)
     return [
-        (name, ILD_LABELS[name], hr[name]["value"])
-        for name, test in ILD_FACTORS.items()
+        (name, labels[name], hr[name]["value"])
+        for name, test in ild_tests(cfg).items()
         if test(patient)
     ]
 
@@ -131,8 +146,7 @@ def _reference_profiles(ref):
     ]
     binary = [
         [(1 - ref[name], []), (ref[name], [name])]
-        for name in ("age_below_65", "lung_comorbidity",
-                     "more_than_4_years_since_diagnosis", "spo2_below_95")
+        for name in ("younger_age", "lung_comorbidity", "long_since_diagnosis", "low_spo2")
     ]
     for combo in itertools.product(renal, *binary):
         share = math.prod(s for s, _ in combo)
