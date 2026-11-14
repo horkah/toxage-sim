@@ -17,7 +17,6 @@ central schema, so an archive can also be read without the app. Uncompressed
 files with the same lines are accepted on import, too.
 """
 import gzip
-import io
 import json
 import zlib
 
@@ -109,11 +108,15 @@ def filename(dataset=None):
 # Import ---------------------------------------------------------------------------------
 
 def _reader(fileobj):
-    """Text lines of an uploaded file, compressed or not."""
+    """Text lines of an uploaded file, compressed or not, from its start. The
+    lines are decoded one by one: a TextIOWrapper would close the uploaded
+    file when it is cleaned up, and the file is read twice."""
+    fileobj.seek(0)
     head = fileobj.read(2)
     fileobj.seek(0)
     raw = gzip.GzipFile(fileobj=fileobj) if head == b"\x1f\x8b" else fileobj
-    return io.TextIOWrapper(raw, encoding="utf-8")
+    for line in raw:
+        yield line.decode("utf-8")
 
 
 def _records(fileobj):
@@ -128,6 +131,42 @@ def _records(fileobj):
                     raise ArchiveError(f"Line {number} is not valid JSON.") from None
     except (OSError, EOFError, UnicodeDecodeError) as error:
         raise ArchiveError(f"The file cannot be read: {error}") from None
+
+
+def _courses_in(fileobj):
+    """Number of courses (patients x scenarios) that the data sets of an
+    archive announce, from its data set lines only; the file is read once more
+    from its start afterwards. Unreadable files give 0: the import itself then
+    reports the problem."""
+    courses = 0
+    try:
+        for text in _reader(fileobj):
+            # Data set lines are short; the long patient lines are not parsed.
+            if text.startswith('{"type":"dataset"'):
+                rec = json.loads(text)
+                courses += int(rec.get("n", 0)) * len(rec.get("scenarios") or [])
+    except (OSError, EOFError, UnicodeDecodeError, ValueError, TypeError):
+        pass
+    fileobj.seek(0)
+    return courses
+
+
+def _check_room(courses, replace):
+    """Raise ArchiveError if the data sets of the archive would not fit into
+    the limit of the database on disk, next to the stored ones unless they are
+    replaced."""
+    used = 0.0 if replace else store.used_bytes()
+    if used is None:
+        return
+    need, limit = courses * store.BYTES_PER_COURSE, store.limit_bytes()
+    if used + need > limit:
+        where = (f"the limit is {store.mb(limit)}" if replace else
+                 f"only {store.mb(max(0.0, limit - used))} of the limit of {store.mb(limit)} are free "
+                 f"(the stored data sets use {store.mb(used)})")
+        hint = ("Use a smaller archive, e.g. one data set." if replace else
+                "Delete other data sets first, or import with “Replace everything”.")
+        raise ArchiveError(f"The data sets of the archive need about {store.mb(need)}, "
+                           f"but {where}. {hint}")
 
 
 def _check(table, records, where):
@@ -213,6 +252,9 @@ def load(fileobj, replace=False):
     if not isinstance(header.get("format_version"), int) or header["format_version"] > FORMAT_VERSION:
         raise ArchiveError(f"The archive has format version {header.get('format_version')}; "
                            f"this app reads up to version {FORMAT_VERSION}. Please update the app.")
+    _check_room(_courses_in(fileobj), replace)
+    records = _records(fileobj)
+    next(records)                   # the header, checked above
     importer = _Importer()
     restored = False
     complete = False
@@ -254,6 +296,14 @@ def load(fileobj, replace=False):
         for d in importer.datasets.values():
             if d.patients.count() != d.n:
                 raise ArchiveError(f"The data set “{d.name}” has {d.patients.count()} instead of {d.n} patients.")
+        # Measured inside the transaction: if the data do not fit after all, the
+        # import is rolled back and the app stays as it was, old data sets included.
+        size = store.size_in_transaction()
+        if size is not None and size > store.limit_bytes():
+            raise ArchiveError(
+                f"With the data sets of the archive the database would hold "
+                f"{store.mb(size)}, more than its limit of {store.mb(store.limit_bytes())}. "
+                "The app is unchanged. Delete other data sets first, or use a smaller archive.")
     cohort.clear_cache()
     store.compact()
     return {**importer.counts, "parameters": restored}

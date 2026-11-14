@@ -126,3 +126,47 @@ class ArchiveTest(CohortTestCase):
     def test_import_needs_post_and_unknown_data_sets_are_not_found(self):
         self.assertEqual(self.client.get("/data/import/").status_code, 405)
         self.assertEqual(self.client.get("/data/999/archive/").status_code, 404)
+
+
+@override_settings(ASYNC_JOBS=False)
+class ArchiveDiskLimitTest(CohortTestCase):
+    """Imports stay within the limit of the database on disk (TOXAGE_DISK_LIMIT_MB)."""
+    n = 12      # 12 patients x 7 scenarios = 84 courses, estimated 0.46 MB
+
+    def setUp(self):
+        super().setUp()
+        self.client.cookies[COOKIE] = settings.DISCLAIMER_VERSION
+        self.text = text_of(self.client.get("/data/archive/"))
+
+    def post(self, mode):
+        return self.client.post("/data/import/", {"archive": upload(self.text), "mode": mode})
+
+    @override_settings(DISK_LIMIT_MB=1)
+    def test_adding_beyond_the_limit_is_refused_before_importing(self):
+        from unittest import mock
+        with mock.patch.object(store, "used_bytes", return_value=0.8e6):
+            response = self.post("add")
+        self.assertContains(response, "The archive was not imported. The data sets of the archive need about 0.5 MB, "
+                                      "but only 0.2 MB of the limit of 1.0 MB are free (the stored data sets use 0.8 MB). "
+                                      "Delete other data sets first, or import with “Replace everything”.")
+        self.assertEqual(Dataset.objects.count(), 1)
+
+    @override_settings(DISK_LIMIT_MB=0.3)
+    def test_replacing_with_an_archive_larger_than_the_limit_is_refused(self):
+        response = self.post("replace")
+        self.assertContains(response, "The archive was not imported. The data sets of the archive need about 0.5 MB, "
+                                      "but the limit is 0.3 MB. Use a smaller archive, e.g. one data set.")
+        self.assertEqual(list(Dataset.objects.all()), [self.dataset])
+
+    @override_settings(DISK_LIMIT_MB=0.05)
+    def test_an_import_that_does_not_fit_after_all_is_rolled_back(self):
+        from unittest import mock
+        params.save("risk", {"ild/window_days": "365"})
+        with mock.patch.object(store, "BYTES_PER_COURSE", 1):      # the estimate lets it through
+            response = self.post("replace")
+        self.assertContains(response, "The archive was not imported. With the data sets of the archive the database would hold")
+        self.assertContains(response, "more than its limit of 0.1 MB. The app is unchanged.")
+        # Nothing replaced: the old data set and the parameter changes are still there.
+        self.assertEqual(list(Dataset.objects.all()), [self.dataset])
+        self.assertEqual(Patient.objects.count(), self.n)
+        self.assertEqual(params.changes("risk"), {"ild/window_days": 365})

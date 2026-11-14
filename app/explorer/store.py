@@ -98,7 +98,7 @@ def estimate_bytes(n, scenario_count):
     return n * scenario_count * BYTES_PER_COURSE
 
 
-def _mb(size):
+def mb(size):
     """A size in bytes as text in MB, with one decimal below 10 MB."""
     return f"{size / 1e6:.0f} MB" if size >= 10e6 else f"{size / 1e6:.1f} MB"
 
@@ -112,9 +112,9 @@ def check_room(n, scenario_count):
     need, limit = estimate_bytes(n, scenario_count), limit_bytes()
     if used + need > limit:
         raise TooLarge(
-            f"Not generated: the new data set would need about {_mb(need)}, but only "
-            f"{_mb(max(0.0, limit - used))} of the limit of {_mb(limit)} are free (the stored data sets "
-            f"use {_mb(used)}). Delete other data sets, or choose fewer patients or scenarios.")
+            f"Not generated: the new data set would need about {mb(need)}, but only "
+            f"{mb(max(0.0, limit - used))} of the limit of {mb(limit)} are free (the stored data sets "
+            f"use {mb(used)}). Delete other data sets, or choose fewer patients or scenarios.")
 
 
 def _progress(pk, share, message):
@@ -170,8 +170,8 @@ def _fill(dataset, scenarios, recalibrate, config):
         compact()
         Dataset.objects.filter(pk=pk).update(
             status=Dataset.FAILED, progress=0, message=(
-                f"Deleted again: the data set needed {_mb(after - before)}, more than the "
-                f"{_mb(max(0.0, limit_bytes() - before))} that were free of the limit of {_mb(limit_bytes())}. "
+                f"Deleted again: the data set needed {mb(after - before)}, more than the "
+                f"{mb(max(0.0, limit_bytes() - before))} that were free of the limit of {mb(limit_bytes())}. "
                 "Delete other data sets, or generate a smaller one."))
 
 
@@ -287,6 +287,21 @@ def delete_all():
     Dataset.objects.all().delete()
     cohort.clear_cache()
     compact()
+
+
+def size_in_transaction():
+    """Size of the data in bytes as the current transaction sees it, including
+    its own writes that are not committed yet; None if the database is not
+    SQLite. Free pages, e.g. of deleted rows, do not count."""
+    if connection.vendor != "sqlite":
+        return None
+    with connection.cursor() as cursor:
+        values = []
+        for pragma in ("page_count", "freelist_count", "page_size"):
+            cursor.execute(f"PRAGMA {pragma}")
+            values.append(cursor.fetchone()[0])
+    pages, free, size = values
+    return (pages - free) * size
 
 
 def database_size():
