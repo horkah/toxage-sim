@@ -271,3 +271,8 @@ I need in the demo and tutorial the hint box be with a very subtle yellow backgr
 2026-11-14 13:05 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 The anchor was not reached or found from the first reference link in the toxicity report. From the references.md section it worked fine. Please fix for any other location from where we can invoke such hyperlinks. // next, I want you to add to the papers folder in the repo and to the references file a clear statement that that the PDFs are for personal scientific use within the project context only and not for any other use. Please use a better appropriate formulation. Background is that the pdfs were downloaded by the author within his university work in an academic project. Make the formulation short but precise, yet generic such that other group members can also store their PDFs there
+
+================================================================================
+2026-11-14 13:25 (+01:00) | model: claude-opus-5-5 | attachments: screenshot (Data page on a phone, zoomed out)
+--------------------------------------------------------------------------------
+When I switch on my phone to data , the screen shrinks probably because the browser or app thinks there is more to show, even though the table is nicely scrollable within the box. Please fix that the app does not behave unwanted like this on all sorts of devices and browsers. I am sure you have a generic solution for this

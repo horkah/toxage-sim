@@ -46,7 +46,7 @@
       <details id="{{ g.anchor }}"{% if g.changed or forloop.first %} open{% endif %}>
         <summary>{{ g.title }}{% if g.changed %} <span class="count">{{ g.changed }} changed</span>{% endif %}</summary>
         {% if g.note %}<p class="basis">{{ g.note|cite }}</p>{% endif %}
-        <table class="paramtable">
+        <div class="scroll"><table class="paramtable">
           <thead><tr><th>Parameter</th><th>Value</th><th>Default</th><th><span class="sr-only">Reset</span></th></tr></thead>
           <tbody>
           {% for r in g.rows %}
@@ -70,7 +70,7 @@
           </tr>
           {% endfor %}
           </tbody>
-        </table>
+        </table></div>
       </details>
       {% endfor %}
     </form>
