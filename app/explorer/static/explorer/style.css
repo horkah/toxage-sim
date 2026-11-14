@@ -31,6 +31,10 @@
   --t3: light-dark(#104281, #184f95);
   --hl: light-dark(#0b0b0b, #ffffff);
   --hl-band: light-dark(#fff1c2, #3d3420);
+  /* Tutorial and demo: a subtle yellow, set apart from the blue of the app */
+  --tour-bg: light-dark(#fffcef, #1f1d15);
+  --tour-line: light-dark(#d4ab3b, #a3842f);
+  --tour-soft: light-dark(#fbf0c6, #39311d);
   --error: var(--danger);
   font-size: 15px;
 }
@@ -522,34 +526,35 @@ dialog { color: var(--text); }
 /* Tutorial and demo. ---------------------------------------------------------------- */
 .tour {
   position: fixed; z-index: 1000; width: min(420px, calc(100vw - 16px)); max-height: calc(100vh - 16px); overflow: auto;
-  background: var(--surface); color: var(--text); border: 2px solid var(--accent); border-radius: 12px;
+  background: var(--tour-bg); color: var(--text); border: 2px solid var(--tour-line); border-radius: 12px;
   box-shadow: var(--shadow-lg); padding: 12px 16px; font-size: .92rem;
 }
 .tour::before {
   content: ""; position: absolute; left: var(--arrow, 50%); width: 14px; height: 14px; margin-left: -7px;
-  background: var(--surface); border: 2px solid var(--accent); transform: rotate(45deg); display: none;
+  background: var(--tour-bg); border: 2px solid var(--tour-line); transform: rotate(45deg); display: none;
 }
 .tour[data-side="below"]::before { display: block; top: -9px; border-right: 0; border-bottom: 0; }
 .tour[data-side="above"]::before { display: block; bottom: -9px; border-left: 0; border-top: 0; }
 .tour header { color: var(--muted); font-size: .76rem; text-transform: uppercase; letter-spacing: .06em;
   display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .tour-toggle { min-height: 0; padding: 0 9px; line-height: 1.4; font-size: 1rem; border-radius: 999px; color: var(--muted); }
-.tour-toggle[aria-expanded="true"] { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+.tour-toggle[aria-expanded="true"] { background: var(--tour-soft); color: var(--text); border-color: var(--tour-line); }
 .tour:has(.tour-toggle) > p, .tour:has(.tour-toggle) > h2 { cursor: pointer; }
 .tour-controls { display: flex; flex-direction: column; gap: 6px; }
 .tour-controls[hidden] { display: none; }
 .tour-keys { color: var(--muted); font-size: .78rem; margin: 2px 0 0; }
 .tour h2 { margin: 2px 0 6px; font-size: 1.05rem; }
 .tour p { margin: 0 0 8px; }
-.tour-do { border-left: 3px solid var(--accent); padding-left: 8px; }
+.tour-do { border-left: 3px solid var(--tour-line); padding-left: 8px; }
 .tour-note { color: var(--muted); font-style: italic; }
 .tour-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
 .tour-speed { display: grid; gap: 4px; margin-top: 8px; font-size: .82rem; color: var(--muted); }
 .tour-speed label { display: grid; }
 .tour-speed input { padding: 0; border: 0; accent-color: var(--accent); min-height: 0; }
+.tour .tour-speed input { accent-color: var(--tour-line); }
 .tour-ring {
-  position: fixed; z-index: 999; pointer-events: none; border: 3px solid var(--accent); border-radius: 8px;
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); transition: all .15s;
+  position: fixed; z-index: 999; pointer-events: none; border: 3px solid var(--tour-line); border-radius: 8px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--tour-line) 25%, transparent); transition: all .15s;
 }
 .tour-dialog { max-width: min(560px, calc(100vw - 32px)); border: 0; border-radius: 14px;
   background: var(--surface); color: var(--text); padding: 20px 24px; box-shadow: var(--shadow-lg); }
