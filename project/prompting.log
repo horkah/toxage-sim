@@ -281,3 +281,8 @@ When I switch on my phone to data , the screen shrinks probably because the brow
 2026-11-14 13:30 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 Save and commit all the generated screenshots from any Claude session for this project (rule to CLAUDE.md) in project/screenshots
+
+================================================================================
+2026-11-14 13:37 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+Just git mv rename the other six screenshots in that folder with the same name convention
