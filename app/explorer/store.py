@@ -60,9 +60,20 @@ def _counts(data):
     return counts
 
 
+class Busy(Exception):
+    """A data set is being generated already; one is generated at a time."""
+
+
+class Deleted(Exception):
+    """The data set was deleted while it was generated; its thread ends."""
+
+
 def _progress(pk, share, message):
-    """Write the progress of a data set; the data page shows it."""
-    Dataset.objects.filter(pk=pk).update(progress=share, message=message)
+    """Write the progress of a data set; the data page shows it. Raises
+    Deleted if the data set no longer exists, so that its generation stops
+    after the scenario or calibration round in progress."""
+    if not Dataset.objects.filter(pk=pk).update(progress=share, message=message):
+        raise Deleted(pk)
 
 
 def _fill(dataset, scenarios, recalibrate, config):
@@ -106,7 +117,13 @@ def _run(dataset, scenarios, recalibrate, config, in_thread):
     waits."""
     try:
         _fill(dataset, scenarios, recalibrate, config)
+    except Deleted:
+        log.info("Data set %s was deleted while it was generated; generation stopped", dataset.pk)
     except Exception as error:     # the reason is shown to the user on the data page
+        if not Dataset.objects.filter(pk=dataset.pk).exists():
+            # Deleted while it was stored: the rows of its patients had no data set any more.
+            log.info("Data set %s was deleted while it was stored; generation stopped", dataset.pk)
+            return
         log.exception("Generating data set %s failed", dataset.pk)
         Dataset.objects.filter(pk=dataset.pk).update(
             status=Dataset.FAILED, message=f"{type(error).__name__}: {error}"[:300])
@@ -123,7 +140,8 @@ def generate(n, seed, scenarios=None, name="", recalibrate=None, replace=False, 
     so. With wait=True the call returns after the data set is filled.
 
     recalibrate=None calibrates the event rates again if parameters that
-    affect them differ from the defaults.
+    affect them differ from the defaults. Raises Busy while another data set
+    is being generated in this process.
     """
     changed = params.all_changes()
     config = params.engine_config(changed)
@@ -133,6 +151,8 @@ def generate(n, seed, scenarios=None, name="", recalibrate=None, replace=False, 
     if replace:
         delete_all()
     with _LOCK:
+        if _RUNNING:
+            raise Busy("A data set is being generated. Please wait until it is ready.")
         dataset = Dataset.objects.create(
             name=name.strip()[:80] or f"{n} patients, seed {seed}", n=n, seed=seed,
             settings={k: v for k, v in changed.items() if k in params.ENGINE}, message="Starting")
@@ -140,7 +160,8 @@ def generate(n, seed, scenarios=None, name="", recalibrate=None, replace=False, 
     wait = not settings.ASYNC_JOBS if wait is None else wait
     if wait:
         _run(dataset, scenarios, recalibrate, config, False)
-        dataset.refresh_from_db()
+        if Dataset.objects.filter(pk=dataset.pk).exists():      # not deleted meanwhile
+            dataset.refresh_from_db()
     else:
         threading.Thread(target=_run, args=(dataset, scenarios, recalibrate, config, True), daemon=True).start()
     return dataset

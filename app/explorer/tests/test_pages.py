@@ -419,3 +419,41 @@ class ParameterCheckTest(CohortTestCase):
         self.assertContains(response, "do not work in this app")
         self.assertEqual(params.all_changes(), {})
         self.assertEqual(Dataset.objects.count(), 1)
+
+
+@override_settings(ASYNC_JOBS=False)
+class GenerationTest(CohortTestCase):
+    """One generation at a time, and deleting a data set stops its generation (finding M2)."""
+    n = 6
+
+    def setUp(self):
+        super().setUp()
+        self.client.cookies[COOKIE] = settings.DISCLAIMER_VERSION
+
+    def test_a_second_generation_is_refused_while_one_runs(self):
+        with mock.patch.object(store, "_run"):          # the first one stays "running"
+            first = store.generate(6, 3, ["usual_care"], name="First", wait=False)
+        try:
+            response = self.client.post("/data/generate/", {"n": "6", "seed": "4"})
+            self.assertContains(response, "A data set is being generated. Please wait until it is ready.")
+            self.assertFalse(Dataset.objects.filter(seed=4).exists())
+            with self.assertRaises(store.Busy):
+                store.generate(6, 4, wait=True)
+        finally:
+            store._RUNNING.discard(first.pk)
+        self.assertEqual(store.generate(6, 4, ["usual_care"], wait=True).status, Dataset.READY)
+
+    def test_deleting_a_data_set_stops_its_generation_quietly(self):
+        real = store.engine.generate
+
+        def generate_and_meanwhile_delete(n, seed, scenarios, validate, config, progress):
+            data = real(n, seed, scenarios, validate=validate, config=config)
+            Dataset.objects.filter(name="Doomed").delete()      # e.g. "Stop the demo" or "Delete all"
+            progress(1, 1)
+            return data
+
+        with mock.patch.object(store.engine, "generate", generate_and_meanwhile_delete), \
+                self.assertNoLogs("explorer.store", "ERROR"):
+            store.generate(6, 3, ["usual_care"], name="Doomed", wait=True)
+        self.assertFalse(Dataset.objects.filter(name="Doomed").exists())
+        self.assertFalse(store._RUNNING)

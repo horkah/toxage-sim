@@ -91,8 +91,11 @@ def data_generate(request):
     """Start generating a data set from the form; the page then follows the progress."""
     n = _int(request.POST.get("n"), 1500, 3, MAX_PATIENTS)
     seed = _int(request.POST.get("seed"), 1, 0, 2**31 - 1)
-    store.generate(n, seed, request.POST.getlist("scenarios"), request.POST.get("name", ""),
-                   recalibrate=request.POST.get("recalibrate") == "yes")
+    try:
+        store.generate(n, seed, request.POST.getlist("scenarios"), request.POST.get("name", ""),
+                       recalibrate=request.POST.get("recalibrate") == "yes")
+    except store.Busy as busy:
+        return _data_page(request, error=str(busy))
     return redirect("data")
 
 

@@ -15,20 +15,6 @@ What remains needs a decision of the author.
 
 ## Major
 
-### M2. Background generation is not coordinated
-
-- Where: `app/explorer/store.py`, `app/explorer/pages.py`, `app/explorer/tour.py`.
-- What: the page disables "Generate" while a data set is being generated, but
-  the server does not: a second tab or a direct request starts a second
-  generation at the same time (twice the memory and CPU; the README promises
-  one at a time). A data set that is deleted while it is generated (e.g. "Stop
-  the demo" during "Progress", or "Delete all") is not stopped: its thread
-  simulates to the end and then fails with "FOREIGN KEY constraint failed"
-  and a traceback in the log.
-- Fix: the server refuses a second generation while one is running. The
-  thread checks after each scenario whether its data set still exists and
-  ends quietly if not.
-
 ### M3. The cache of rows and events has no limit
 
 - Where: `app/explorer/cohort.py` (`_CACHE`).
@@ -65,7 +51,8 @@ What remains needs a decision of the author.
   get cents, so a general rule would be wrong.
 - Options: mark the parameters that must be whole numbers (weeks, days,
   counts) in the parameter files, e.g. with a key "integer": true next to the
-  value, and refuse fractions there; or rely on the check of M1.
+  value, and refuse fractions there; or rely on the check that every change
+  now gets on a small cohort.
 - Status: open, decision of the author.
 
 ### m8. DEBUG is on unless it is switched off (needs a decision)
