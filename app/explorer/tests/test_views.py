@@ -172,7 +172,7 @@ class ExplorerTest(CohortTestCase):
 
     def test_views(self):
         for view, text in (("risk", "Distribution of predicted risk"), ("characteristics", "by patient characteristics"),
-                           ("time", "Cohort over time"), ("interventions", "Scenarios side by side")):
+                           ("time", "Course over time"), ("interventions", "Scenarios side by side")):
             response = self.client.get(f"/?view={view}&scenario=combined")
             self.assertEqual(response.context["view"], view)
             self.assertContains(response, text)
@@ -185,7 +185,7 @@ class ExplorerTest(CohortTestCase):
         self.assertContains(response, "Adverse events: Combined")
         self.assertContains(response, "Adverse events: Usual care")
         self.assertIn("patient-dose", response.context["chart_data"])
-        self.assertIn("time-survival", response.context["chart_data"])
+        self.assertContains(response, "view=interventions#survival")
 
     def test_interventions_view(self):
         response = self.client.get("/?view=interventions&scenario=lung_monitoring&tumour_type=breast")
@@ -193,6 +193,18 @@ class ExplorerTest(CohortTestCase):
         self.assertContains(response, "Early recognition: Lung monitoring")
         table = response.context["sections"][0]["table"]
         self.assertEqual(len(table), 7)
+        survival = response.context["sections"][1]
+        self.assertEqual((survival["id"], survival["title"]), ("survival", "Survival and time to event"))
+        self.assertEqual(survival["endpoint_names"], ["Lung monitoring", "Usual care"])
+        charts = dict(survival["charts"])
+        for cid in ("tte-os", "tte-sfs", "tte-severe", "tte-therapy", "tte-toxstop", "tte-reasons"):
+            self.assertIn(cid, charts)
+        self.assertNotIn("tte-heart", charts)              # no men under androgen deprivation among breast cancer
+        self.assertContains(response, "95% confidence interval")
+        # An empty selection shows empty charts and no endpoint table, without an error.
+        empty = self.client.get("/?view=interventions&age_years_min=200")
+        self.assertEqual(empty.status_code, 200)
+        self.assertEqual(empty.context["sections"][1]["endpoints"], [])
         self.assertContains(response, "<th>Cardiovascular events</th>")
         heart = self.client.get("/?view=interventions&scenario=cardiovascular_monitoring&tumour_type=prostate")
         self.assertContains(heart, "Early recognition: Cardiovascular monitoring")

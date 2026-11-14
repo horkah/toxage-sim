@@ -1,7 +1,7 @@
 // Tests of the chart helpers. Run with: node --test app/explorer/tests/
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { esc, fmt, linePath, niceStep, niceTicks, scale, withParams } from "../static/explorer/charts.js";
+import { esc, fmt, line, linePath, niceStep, niceTicks, scale, withParams } from "../static/explorer/charts.js";
 
 test("esc escapes markup", () => {
   assert.equal(esc(`<a href="x">&'`), "&#60;a href=&#34;x&#34;&#62;&#38;&#39;");
@@ -47,4 +47,18 @@ test("withParams replaces parameters and keeps the rest", () => {
   assert.equal(withParams(href, { patient: "P2" }), "/?sex=male&regimen=a&patient=P2");
   assert.equal(withParams(href, { regimen: ["b", "c"] }), "/?sex=male&patient=P1&regimen=b&regimen=c");
   assert.equal(withParams("http://host/", { risk_min: 10, risk_max: 20 }), "/?risk_min=10&risk_max=20");
+});
+
+test("a time-to-event chart uses its own ticks and shows the number at risk", () => {
+  const spec = {
+    type: "line", title: "Survival",
+    series: [{ name: "A", cls: "sa", step: true, points: [[0, 1], [1, 0.5], [2, 0.5]] }],
+    x: { label: "years", format: "num", min: 0, max: 2, ticks: [0, 1, 2] },
+    y: { label: "share alive", format: "pct", min: 0, max: 1 },
+    at_risk: { rows: [{ name: "A", cls: "sa", values: [10, 5, 3] }] },
+  };
+  const { height, svg } = line(spec);
+  assert.ok(height > 270);
+  assert.match(svg, /Number at risk/);
+  for (const n of ["10", "5", "3"]) assert.match(svg, new RegExp(`class="risk s-sa"[^>]*>${n}<`));
 });

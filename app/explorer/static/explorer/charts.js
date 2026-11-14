@@ -161,7 +161,7 @@ function bars(spec) {
 // Axes, grid and labels of a chart with numeric x and y; returns the scales for the marks.
 function frame(spec, height, left = 50, bottom = 40) {
   const x = spec.x, y = spec.y;
-  const xt = niceTicks(x.min, x.max), yt = niceTicks(y.min, y.max);
+  const xt = x.ticks ?? niceTicks(x.min, x.max), yt = niceTicks(y.min, y.max);
   const sx = scale(xt[0], xt.at(-1), left, W - 12);
   const sy = scale(yt[0], yt.at(-1), height - bottom, 10);
   const parts = [];
@@ -173,16 +173,33 @@ function frame(spec, height, left = 50, bottom = 40) {
     parts.push(`<line class="grid" x1="${left}" x2="${W - 12}" y1="${sy(t)}" y2="${sy(t)}"/>`);
     parts.push(text(left - 5, sy(t) + 4, fmt(t, y.format), "tick", 'text-anchor="end"'));
   }
-  parts.push(text((left + W - 12) / 2, height - 6, x.label, "axis", 'text-anchor="middle"'));
+  parts.push(text((left + W - 12) / 2, height - bottom + 34, x.label, "axis", 'text-anchor="middle"'));
   const mid = (height - bottom + 10) / 2;
   parts.push(text(12, mid, y.label, "axis", `text-anchor="middle" transform="rotate(-90 12 ${mid})"`));
   return { sx, sy, parts, xt, yt, left };
 }
 
-// Line chart: series as lines or steps, optional dots, a diagonal, a marker and vertical event lines.
-function line(spec) {
-  const height = 270;
-  const { sx, sy, parts, xt, yt } = frame(spec, height);
+// Number at risk below a time-to-event chart: one row per series, values at the x ticks.
+function atRisk(spec, sx, top) {
+  const parts = [text(4, top + 12, "Number at risk", "risk-head")];
+  spec.at_risk.rows.forEach((row, i) => {
+    const y = top + 28 + i * 15;
+    parts.push(`<line class="ln risk-key s-${esc(row.cls)}${row.dash ? " dash" : ""}" x1="4" x2="22" y1="${y - 4}" y2="${y - 4}"><title>${esc(row.name)}</title></line>`);
+    spec.x.ticks.forEach((t, j) => {
+      parts.push(text(sx(t), y, String(row.values[j]), `risk s-${esc(row.cls)}`, 'text-anchor="middle"'));
+    });
+  });
+  return parts;
+}
+
+// Line chart: series as lines or steps, optional dots, a diagonal, a marker, vertical
+// event lines and the number at risk.
+export function line(spec) {
+  const extra = spec.at_risk ? 20 + 15 * spec.at_risk.rows.length : 0;
+  const bottom = 40 + extra;
+  const height = 270 + extra;
+  const { sx, sy, parts, xt, yt } = frame(spec, height, 50, bottom);
+  if (spec.at_risk) parts.push(...atRisk(spec, sx, height - extra));
   if (spec.diagonal) {
     const end = Math.min(xt.at(-1), yt.at(-1));
     parts.push(`<line class="diagonal" x1="${sx(0)}" y1="${sy(0)}" x2="${sx(end)}" y2="${sy(end)}"><title>perfect calibration</title></line>`);
@@ -199,13 +216,13 @@ function line(spec) {
   const m = spec.marker;
   if (m && m.x !== null && m.x !== undefined) {
     const x = sx(m.x);
-    parts.push(`<line class="marker" x1="${x}" x2="${x}" y1="10" y2="${height - 40}"/>`);
+    parts.push(`<line class="marker" x1="${x}" x2="${x}" y1="10" y2="${height - bottom}"/>`);
     parts.push(text(Math.min(x + 4, W - 80), 22, m.label, "hl-text"));
   }
   // Markers: vertical lines at points in time, e.g. the events of a patient.
   for (const k of spec.markers || []) {
     const x = sx(k.x).toFixed(1);
-    parts.push(`<line class="mk mk-${esc(k.cls)}" x1="${x}" x2="${x}" y1="10" y2="${height - 40}"><title>${esc(k.label)}</title></line>`);
+    parts.push(`<line class="mk mk-${esc(k.cls)}" x1="${x}" x2="${x}" y1="10" y2="${height - bottom}"><title>${esc(k.label)}</title></line>`);
   }
   return { height, svg: parts.join(""), legend: legend(spec.series.concat(spec.marker_legend || []), !!m) };
 }

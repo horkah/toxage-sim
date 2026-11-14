@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from . import charts, cohort, docs, filters, params, timeline
+from . import charts, cohort, docs, filters, params, survival, timeline
 from .middleware import accepted
 from .models import Dataset
 
@@ -49,38 +49,108 @@ def _load(request):
     return dataset, models, scenario, compare, cohort.rows(dataset, scenario["scenario_id"], models)
 
 
-def _time_sections(dataset, shown, ids, patient, models):
+def _time_sections(dataset, shown, ids, patient, models, cohort_link):
     """Sections of the view 'Course over time'. shown is the selected
-    scenario and, if any, the comparison."""
+    scenario and, if any, the comparison. The cohort over time is in the view
+    'Interventions' (cohort_link)."""
+    if not patient:
+        return [{
+            "title": "Course over time",
+            "note": "Select a patient to see the weekly values, adverse events and alerts under the selected "
+                    "scenario and the comparison.",
+            "link": (cohort_link, "Survival and time to event of the selected patients"),
+            "charts": [],
+        }]
+    courses = [(s["title"], cohort.course(dataset, s["scenario_id"], patient["patient_id"])) for s in shown]
+    return [{
+        "title": f"Patient {patient['patient_id']} over time",
+        "note": "Weekly values while on therapy and shortly after. Vertical lines mark adverse events, "
+                "alerts and the end of therapy in the selected scenario; hover for details.",
+        "link": (cohort_link, "Survival and time to event of the selected patients"),
+        "charts": timeline.patient_charts(courses, patient),
+        "events": [(name, timeline.event_rows(c)) for name, c in courses],
+    }]
+
+
+def _records(dataset, scenario, ids, models):
+    """Records of all endpoints for the selected patients under one scenario:
+    {key: (records, population note)}. Lung toxicity and cardiovascular events
+    count only among the patients their risk model covers."""
+    sid = scenario["scenario_id"]
+    rows = [r for r in cohort.rows(dataset, sid, models) if r["patient_id"] in ids]
+    events = cohort.events(dataset, sid)
+    by_id = {m.id: m for m in models}
+    covered = {key: [r for r in rows if key in by_id and by_id[key].applies(r)] for key in ("ild", "cv")}
+    therapy = survival.therapy_end(rows)
+    return {
+        "os": (survival.overall_survival(rows), ""),
+        "sfs": (survival.severe_free_survival(rows, events), ""),
+        "severe": (survival.specific_event(rows, lambda r: survival.first_severe(events.get(r["patient_id"], []))), ""),
+        "therapy": (therapy, ""),
+        "lung": (survival.lung_toxicity(covered["ild"]), f"{len(covered['ild'])} patients on trastuzumab deruxtecan"),
+        "heart": (survival.cardiovascular(covered["cv"]), f"{len(covered['cv'])} men under androgen deprivation"),
+    }
+
+
+def _day(records, patient, cause=None):
+    """Day of the selected patient's event in the records, None without one."""
+    if not patient:
+        return None
+    found = next((r for r in records if r.patient_id == patient["patient_id"]), None)
+    if found is None or found.cause is None or (cause and found.cause != cause):
+        return None
+    return round(found.time)
+
+
+def _survival_section(dataset, shown, ids, patient, models):
+    """Section 'Survival and time to event' of the view 'Interventions' for the
+    selected scenario and the comparison."""
     horizon = 7 * dataset.metadata["weeks"]
-    named_rows = [(s["title"], [r for r in cohort.rows(dataset, s["scenario_id"], models)
-                                if r["patient_id"] in ids]) for s in shown]
-    named_days = [(s["title"], timeline.first_severe_days(
-        cohort.events(dataset, s["scenario_id"]), ids)) for s in shown]
-    sections = []
-    if patient:
-        courses = [(s["title"], cohort.course(dataset, s["scenario_id"], patient["patient_id"])) for s in shown]
-        sections.append({
-            "title": f"Patient {patient['patient_id']} over time",
-            "note": "Weekly values while on therapy and shortly after. Vertical lines mark adverse events, "
-                    "alerts and the end of therapy in the selected scenario; hover for details.",
-            "charts": timeline.patient_charts(courses, patient),
-            "events": [(name, timeline.event_rows(c)) for name, c in courses],
-        })
-    sections.append({
-        "title": "Cohort over time",
-        "note": "Share of the selected patients over the time since therapy start.",
-        "charts": [
-            ("time-severe", timeline.severe_incidence(named_days, horizon)),
-            ("time-therapy", timeline.on_therapy(named_rows, horizon)),
-            ("time-survival", timeline.survival(named_rows, horizon)),
-        ],
-    })
-    return sections
+    two_years, three_years = min(horizon, 2 * survival.YEAR), min(horizon, 3 * survival.YEAR)
+    parts = [(s["title"], _records(dataset, s, ids, models)) for s in shown]
+    named = lambda key: [(name, p[key][0]) for name, p in parts]
+    mine = parts[0][1]
+    km, cif = survival.kaplan_meier, survival.cumulative_incidence
+    tte = timeline.time_to_event
+    charts = [
+        ("tte-os", tte("Overall survival", named("os"), km, horizon, "share alive", True,
+                       _day(mine["os"][0], patient))),
+        ("tte-sfs", tte("Survival without severe toxicity", named("sfs"), km, two_years,
+                        "share alive without severe event", True, _day(mine["sfs"][0], patient),
+                        "Event: the first adverse event of grade 3 to 5, or death.")),
+        ("tte-severe", tte("First severe adverse event", named("severe"), lambda r: cif(r, "event"), two_years,
+                           "share with event", False, _day(mine["severe"][0], patient, "event"),
+                           "Cumulative incidence; death before the event competes with it.")),
+        ("tte-therapy", tte("Time on therapy", named("therapy"), km, three_years, "share on therapy", True,
+                            _day(mine["therapy"][0], patient))),
+        ("tte-toxstop", tte("End of therapy for toxicity", named("therapy"), lambda r: cif(r, "toxicity"),
+                            three_years, "share of patients", False, _day(mine["therapy"][0], patient, "toxicity"),
+                            "Cumulative incidence; the other reasons for the end of therapy compete with it.")),
+        ("tte-reasons", timeline.therapy_end_reasons(shown[0]["title"], mine["therapy"][0], three_years)),
+    ]
+    for cid, key, title in (("tte-lung", "lung", "Lung toxicity, grade 2 or higher"),
+                            ("tte-heart", "heart", "Major cardiovascular event")):
+        if mine[key][0]:
+            charts.append((cid, tte(f"{title} ({mine[key][1]})", named(key), lambda r: cif(r, "event"), two_years,
+                                    "share with event", False, _day(mine[key][0], patient, "event"),
+                                    "Cumulative incidence; death before the event competes with it.")))
+    return {
+        "id": "survival",
+        "title": "Survival and time to event",
+        "note": "Kaplan-Meier curves for endpoints that include death, cumulative incidence for events that "
+                "death can prevent. Each patient counts from therapy start and is followed until death or the "
+                "end of the simulated period. The scenarios hold the same patients, so the differences are "
+                "paired: mean of the per-patient differences with a 95% confidence interval.",
+        "endpoints": timeline.endpoint_table(parts, horizon),
+        "endpoint_names": [name for name, _ in parts],
+        "charts": charts,
+    }
 
 
-def _intervention_sections(dataset, scenario, ids, models):
-    """Sections of the view 'Interventions': all scenarios side by side."""
+def _intervention_sections(dataset, shown, ids, patient, models):
+    """Sections of the view 'Interventions': all scenarios side by side, survival
+    and time to event, early recognition."""
+    scenario = shown[0]
     sid = scenario["scenario_id"]
     events_of = lambda s: cohort.events(dataset, s)
     table = timeline.scenario_table(
@@ -105,7 +175,7 @@ def _intervention_sections(dataset, scenario, ids, models):
             *[(cid, timeline.event_grades(dataset.scenarios, events_of, ids, sid, kind, title))
               for cid, kind, title in timeline.GRADED_EVENTS],
         ],
-    }]
+    }, _survival_section(dataset, shown, ids, patient, models)]
     if sid != cohort.USUAL_CARE:
         sections.append({
             "title": f"Early recognition: {scenario['title']}",
@@ -151,9 +221,10 @@ def _explorer(request):
     patient = cohort.find(rows, wanted) if wanted else None
 
     if view == "time":
-        sections = _time_sections(dataset, shown, ids, patient, models)
+        sections = _time_sections(dataset, shown, ids, patient, models,
+                                  "?" + _query(request.GET, view="interventions") + "#survival")
     elif view == "interventions":
-        sections = _intervention_sections(dataset, scenario, ids, models)
+        sections = _intervention_sections(dataset, shown, ids, patient, models)
         for r in sections[0]["table"]:
             r["link"] = _query(request.GET, scenario=r["scenario"]["scenario_id"])
     else:

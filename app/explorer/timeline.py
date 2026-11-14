@@ -4,9 +4,14 @@ The functions return chart specs like those of charts.py, which
 static/explorer/charts.js draws. Two scenarios can be shown together: the
 selected one (class "sa") and a comparison (class "sb", dashed).
 """
-from bisect import bisect_right
+import math
 
 from .charts import _empty, _r, mean, nice_max, rate
+from .survival import (MONTH, YEAR, at_risk, complete_until, cumulative_incidence, had_event, kaplan_meier,
+                       median, overall_survival, paired, restricted_mean, restricted_times, sampled,
+                       severe_free_survival, value_at)
+
+OS_HORIZON = 5 * YEAR
 
 ILD = "interstitial_lung_disease"
 CV = "cardiovascular_event"
@@ -23,74 +28,176 @@ def event_name(kind):
     return EVENT_NAMES.get(kind, kind.replace("_", " "))
 
 
-# Cohort over time ------------------------------------------------------------
+# Survival and time to event --------------------------------------------------
 
-def share_curve(days, n, end_day, per, falling=False, steps=120):
-    """Share of n patients with an event up to each time, as points [x, share].
-    days are the event days, x counts in units of per days. With falling the
-    share without the event is given."""
-    days = sorted(d for d in days if d is not None)
-    points = []
-    for i in range(steps + 1):
-        day = end_day * i / steps
-        share = bisect_right(days, day) / n if n else 0
-        points.append([_r(day / per, 3), _r(1 - share if falling else share)])
-    return points
+# Reasons for the end of therapy, in the order of the chart: (cause, label, class).
+END_REASONS = [("toxicity", "toxicity", "end-tox"), ("progression", "progression", "end-prog"),
+               ("completed", "completed as planned", "end-done"), ("death", "death", "end-death"),
+               ("lost_to_follow_up", "lost to follow-up", "end-lost")]
 
 
-def _over_time(title, named, days_of, end_day, per, x_label, y_label, falling=False):
-    """One curve per scenario. named is [(scenario title, rows or event days)]."""
-    series = []
-    for (name, items), cls in zip(named, CLASSES):
-        n, days = days_of(items)
-        if not n:
-            return _empty("line", title)
-        series.append({"name": name, "cls": cls, "dash": cls == "sb",
-                       "points": share_curve(days, n, end_day, per, falling)})
+def _axis(end_day):
+    """Unit, label and ticks of a time axis that reaches end_day: years beyond
+    three years, months below. The last tick is at or after end_day."""
+    if end_day > 3 * YEAR:
+        unit, label, step = YEAR, "years after therapy start", 1 if end_day <= 10.5 * YEAR else 2
+    else:
+        unit, label, step = MONTH, "months after therapy start", 3 if end_day <= 24.5 * MONTH else 6
+    top = math.ceil(end_day / unit / step - 0.02) * step
+    return unit, label, list(range(0, top + 1, step))
+
+
+def time_to_event(title, named, curve, end_day, y_label, falling, patient_day=None, note=None):
+    """Curves of one endpoint for the selected scenario and the comparison, with
+    the number at risk below. named is [(scenario title, records)]; curve(records)
+    gives the steps; patient_day marks the selected patient's event."""
+    if not named or not all(records for _, records in named):
+        return _empty("line", title)
+    unit, label, ticks = _axis(end_day)
+    series, risk_rows = [], []
+    for (name, records), cls in zip(named, CLASSES):
+        points = [[_r(t / unit, 3), _r(v)] for t, v in sampled(curve(records), end_day)]
+        series.append({"name": name, "cls": cls, "dash": cls == "sb", "step": True, "points": points})
+        risk_rows.append({"name": name, "cls": cls, "dash": cls == "sb",
+                          "values": [at_risk(records, min(t * unit, end_day)) for t in ticks]})
     top = 1.0 if falling else nice_max(max(p[1] for s in series for p in s["points"]) or 0.01)
+    spec = {
+        "type": "line", "title": title, "series": series,
+        "x": {"label": label, "format": "num", "min": 0, "max": ticks[-1], "ticks": ticks},
+        "y": {"label": y_label, "format": "pct", "min": 0, "max": top},
+        "at_risk": {"rows": risk_rows},
+        "marker": ({"x": _r(patient_day / unit, 3), "label": f"patient, day {patient_day}"}
+                   if patient_day is not None and patient_day <= end_day else None),
+    }
+    if note:
+        spec["note"] = note
+    return spec
+
+
+def therapy_end_reasons(name, records, end_day):
+    """Cumulative incidence of the end of therapy by reason, for one scenario."""
+    title = f"End of therapy by reason: {name}"
+    if not records:
+        return _empty("line", title)
+    unit, label, ticks = _axis(end_day)
+    series = [{"name": text, "cls": cls, "step": True,
+               "points": [[_r(t / unit, 3), _r(v)] for t, v in sampled(cumulative_incidence(records, cause), end_day)]}
+              for cause, text, cls in END_REASONS if any(r.cause == cause for r in records)]
     return {
         "type": "line", "title": title, "series": series,
-        "x": {"label": x_label, "format": "num", "min": 0, "max": end_day / per},
-        "y": {"label": y_label, "format": "pct", "min": 0, "max": top},
+        "x": {"label": label, "format": "num", "min": 0, "max": ticks[-1], "ticks": ticks},
+        "y": {"label": "share of patients", "format": "pct", "min": 0,
+              "max": nice_max(max(p[1] for s in series for p in s["points"]) or 0.01)},
+        "note": "Each reason against all others; at any time the shares and the share still on therapy add up to 100%.",
     }
 
 
-def survival(named_rows, horizon_days):
-    """Share of patients alive over the years after therapy start."""
-    return _over_time(
-        "Survival", named_rows, lambda rows: (len(rows), [r["death_day"] for r in rows]),
-        horizon_days, 365.25, "years after therapy start", "share alive", falling=True)
+def _span(days):
+    """A time in words: 90 days, 1 year, 5 years."""
+    if days >= YEAR - 1 and abs(days / YEAR - round(days / YEAR)) < 0.01:
+        years = round(days / YEAR)
+        return f"{years} year{'s' if years != 1 else ''}"
+    return f"{round(days)} days"
 
 
-def on_therapy(named_rows, horizon_days):
-    """Share of patients still on the therapy line over the first years."""
-    end = min(horizon_days, 3 * 365)
-    return _over_time(
-        "On therapy", named_rows, lambda rows: (len(rows), [r["treatment_end_day"] for r in rows]),
-        end, 30.44, "months after therapy start", "share on therapy", falling=True)
+# Measures of the endpoint table: (endpoint, measure label, kind, records key, days, cause, unit).
+# kind: "mean" restricted mean up to days, "free" share without event at days,
+# "cif" share with an event of cause by days, "median" median time. {span} in a
+# label is replaced by the time, cut to the simulated period.
+MEASURES = [
+    ("Overall survival", "mean survival within {span} (restricted mean)", "mean", "os", 5 * YEAR, None, "years"),
+    ("Overall survival", "alive at {span}", "free", "os", YEAR, None, "pct"),
+    ("Overall survival", "median survival", "median", "os", None, None, "years"),
+    ("Survival without severe toxicity", "mean time alive without severe event within {span}", "mean", "sfs",
+     YEAR, None, "days"),
+    ("Survival without severe toxicity", "alive without severe event at {span}", "free", "sfs", YEAR, None, "pct"),
+    ("First severe adverse event", "cumulative incidence at {span}", "cif", "severe", 90, "event", "pct"),
+    ("First severe adverse event", "cumulative incidence at {span}", "cif", "severe", YEAR, "event", "pct"),
+    ("Time on therapy", "median time on therapy", "median", "therapy", None, None, "months"),
+    ("End of therapy for toxicity", "cumulative incidence at {span}", "cif", "therapy", YEAR, "toxicity", "pct"),
+    ("Lung toxicity, grade 2 or higher", "cumulative incidence at {span}", "cif", "lung", YEAR, "event", "pct"),
+    ("Major cardiovascular event", "cumulative incidence at {span}", "cif", "heart", YEAR, "event", "pct"),
+]
 
 
-def first_severe_days(events, ids):
-    """Day of the first event of grade 3 to 5 per patient, None without one."""
-    days = []
-    for pid in ids:
-        severe = [e["day"] for e in events.get(pid, []) if e["grade"] >= 3]
-        days.append(min(severe) if severe else None)
-    return days
+def _show(value, unit):
+    """A value of the endpoint table as text."""
+    if value is None:
+        return "–"
+    if unit == "pct":
+        return f"{100 * value:.1f}%"
+    if unit == "years":
+        return f"{value / YEAR:.2f} years"
+    if unit == "months":
+        return f"{value / MONTH:.1f} months"
+    return f"{value:.1f} days"
 
 
-def severe_incidence(named_days, horizon_days):
-    """Share of patients with a first severe adverse event over time."""
-    end = min(horizon_days, 2 * 365)
-    return _over_time(
-        "First severe adverse event", named_days, lambda days: (len(days), days),
-        end, 30.44, "months after therapy start", "share with event")
+def _show_diff(value, unit):
+    """A difference of the endpoint table: percentage points for shares, days for times."""
+    if unit == "pct":
+        return f"{100 * value:+.1f} pts"
+    return f"{value:+.1f} days"
+
+
+def _curve_value(records, kind, days, cause):
+    """Value of a measure from the estimated curve (used when follow-up is not complete)."""
+    if kind == "cif":
+        return value_at(cumulative_incidence(records, cause), days)
+    steps = kaplan_meier(records)
+    if kind == "free":
+        return value_at(steps, days)
+    if kind == "median":
+        return median(steps)
+    return restricted_mean(steps, days)
+
+
+def _per_patient(records, kind, days, cause):
+    """{patient: value} of a measure, valid when follow-up is complete until days."""
+    if kind == "mean":
+        return restricted_times(records, days)
+    if kind == "free":
+        return {k: 1 - v for k, v in had_event(records, days).items()}
+    return had_event(records, days, cause)
+
+
+def endpoint_table(named, horizon):
+    """Rows of the endpoint table for the selected scenario and, if given, the
+    comparison. named is [(scenario title, {records key: (records, population note)})].
+    Times are cut to the simulated period (horizon days)."""
+    out = []
+    for endpoint, label, kind, key, days, cause, unit in MEASURES:
+        found = [parts.get(key) for _, parts in named]
+        if not all(f and f[0] for f in found):
+            continue
+        records = [f[0] for f in found]
+        days = min(days, horizon) if days else None
+        row = {"endpoint": endpoint, "population": found[0][1], "measure": label.format(span=_span(days or 0)),
+               "values": [], "diff": None, "ci": None}
+        complete = days is not None and all(complete_until(r, days) for r in records)
+        if kind != "median" and complete and len(records) == 2:
+            p = paired(*(_per_patient(r, kind, days, cause) for r in records))
+            row["values"] = [_show(p.a, unit), _show(p.b, unit)]
+            row["diff"] = _show_diff(p.diff, "pct" if unit == "pct" else "days")
+            low, high = (_show_diff(v, "pct" if unit == "pct" else "days") for v in (p.low, p.high))
+            row["ci"] = f"{low} to {high}"
+        else:
+            values = [_curve_value(r, kind, days, cause) for r in records]
+            row["values"] = [_show(v, unit) for v in values]
+            if len(values) == 2 and None not in values and kind != "median":
+                row["diff"] = _show_diff(values[0] - values[1], "pct" if unit == "pct" else "days")
+        out.append(row)
+    for previous, row in zip([None] + out, out):
+        row["first"] = previous is None or previous["endpoint"] != row["endpoint"]
+    return out
 
 
 # Scenarios side by side ------------------------------------------------------
 
 def scenario_table(scenarios, rows_of, events_of, ids, usual_care="usual_care"):
     """Key numbers per scenario for the patients with the given ids.
+    free_1y is the share alive without severe toxicity at one year, d_os the
+    gain in mean survival within five years against usual care, in days.
 
     rows_of(scenario_id) and events_of(scenario_id) give the rows and the
     events of a scenario. Costs and quality-adjusted life years are also
@@ -105,6 +212,7 @@ def scenario_table(scenarios, rows_of, events_of, ids, usual_care="usual_care"):
         events = [e for r in rows for e in events_of(sid).get(r["patient_id"], [])]
         alerts = sum(r["alerts"] for r in rows)
         n = len(rows)
+        end = max(r["follow_up_days"] for r in rows)
         table.append({
             "scenario": s, "n": n,
             "participating": rate(rows, "participating"),
@@ -120,17 +228,23 @@ def scenario_table(scenarios, rows_of, events_of, ids, usual_care="usual_care"):
             "qaly": mean(r["qaly"] for r in rows),
             "cost_care": mean(r["cost_care"] for r in rows),
             "cost_intervention": mean(r["cost_intervention"] for r in rows),
+            # Every patient is followed until death or the end of the simulated period.
+            "_os": restricted_times(overall_survival(rows), min(OS_HORIZON, end)),
+            "free_1y": 1 - mean(had_event(severe_free_survival(rows, events_of(sid)), min(YEAR, end)).values()),
         })
     for t in table:
         t["cost"] = t["cost_care"] + t["cost_intervention"]
     base = next((t for t in table if t["scenario"]["scenario_id"] == usual_care), None)
     for t in table:
-        t["d_cost"] = t["d_qaly"] = t["icer"] = None
+        t["d_cost"] = t["d_qaly"] = t["icer"] = t["d_os"] = None
         if base and t is not base:
+            t["d_os"] = paired(t["_os"], base["_os"]).diff
             t["d_cost"], t["d_qaly"] = t["cost"] - base["cost"], t["qaly"] - base["qaly"]
             # A cost per QALY is only meaningful for a clear gain at extra cost.
             if t["d_qaly"] >= 0.0005 and t["d_cost"] > 0:
                 t["icer"] = t["d_cost"] / t["d_qaly"]
+    for t in table:
+        del t["_os"]
     return table
 
 

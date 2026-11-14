@@ -433,15 +433,6 @@ export const STEPS = [
       "Each adverse event with the day it started, the day it was recognised, its grade, and what was done: pause, dose reduction or end of therapy. An event starts mild and worsens until it is recognised.",
     ],
   },
-  {
-    title: "The cohort over time",
-    url: "/?view=time",
-    target: 'tox-chart[chart="time-severe"]',
-    text: [
-      "For the selected patients: the share with a first severe adverse event, the share still on therapy, and survival over ten years. Most severe events come in the first weeks.",
-    ],
-  },
-
   // --- Explore: interventions ----------------------------------------------------------------
   {
     title: "Another scenario",
@@ -489,6 +480,23 @@ export const STEPS = [
     text: [
       "The same numbers as bars. “Perfect detection” is the upper limit: everyone takes part and every event is caught at its first stage. The distance between a scenario and this limit is what participation, sensitivity and timing cost.",
       "A click on a bar selects that scenario.",
+    ],
+  },
+  {
+    title: "Survival and time to event",
+    url: "/?view=interventions&scenario=combined",
+    target: "#survival table.endpoints",
+    text: [
+      "The selected scenario against the comparison, per endpoint: overall survival, survival without a severe adverse event, the first severe event, time on therapy and its end for toxicity. The same patients are in both scenarios, so the differences are paired, with a 95% confidence interval.",
+      "Survival differs by a few days only: an intervention changes survival here only through deaths from toxicity. The endpoints on toxicity show the effect clearly.",
+    ],
+  },
+  {
+    title: "Kaplan-Meier curves",
+    url: "/?view=interventions&scenario=combined",
+    target: 'tox-chart[chart="tte-sfs"]',
+    text: [
+      "Kaplan-Meier curves for endpoints that include death, cumulative incidence for events that death can prevent. The number at risk below each chart says how many patients are still followed and without the event.",
     ],
   },
   {

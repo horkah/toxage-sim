@@ -2,30 +2,37 @@ import json
 
 from django.test import SimpleTestCase
 
-from explorer import cohort, timeline
+from explorer import cohort, survival, timeline
+from explorer.survival import Record
 
 from .helpers import CohortTestCase
 
 
 class CurveTest(SimpleTestCase):
-    def test_share_curve_rises_to_the_share_with_event(self):
-        points = timeline.share_curve([10, 20, None, None], 4, 40, 10, steps=4)
-        self.assertEqual(points, [[0, 0], [1, 0.25], [2, 0.5], [3, 0.5], [4, 0.5]])
+    def test_time_axis_ends_on_a_tick_at_or_after_the_end(self):
+        unit, label, ticks = timeline._axis(3640)
+        self.assertEqual((unit, ticks[-1], len(ticks)), (survival.YEAR, 10, 11))
+        self.assertIn("years", label)
+        unit, label, ticks = timeline._axis(2 * survival.YEAR)
+        self.assertEqual((unit, ticks), (survival.MONTH, list(range(0, 25, 3))))
+        self.assertEqual(timeline._axis(3 * survival.YEAR)[2], list(range(0, 37, 6)))
 
-    def test_falling_curve(self):
-        points = timeline.share_curve([10], 2, 20, 1, falling=True, steps=2)
-        self.assertEqual([p[1] for p in points], [1, 0.5, 0.5])
-
-    def test_first_severe_days(self):
-        events = {"A": [{"grade": 2, "day": 3}, {"grade": 4, "day": 9}, {"grade": 3, "day": 5}], "B": []}
-        self.assertEqual(timeline.first_severe_days(events, ["A", "B", "C"]), [5, None, None])
+    def test_time_to_event_chart(self):
+        named = [("A", [Record("1", 100, "death"), Record("2", 400, None)]),
+                 ("B", [Record("1", 50, "death"), Record("2", 400, None)])]
+        spec = timeline.time_to_event("Survival", named, survival.kaplan_meier, 400, "share alive", True, 100)
+        self.assertEqual([s["cls"] for s in spec["series"]], ["sa", "sb"])
+        self.assertTrue(all(s["step"] for s in spec["series"]))
+        self.assertEqual(spec["at_risk"]["rows"][0]["values"][:2], [2, 2])
+        self.assertEqual(spec["x"]["max"], spec["x"]["ticks"][-1])
+        self.assertEqual(spec["marker"]["label"], "patient, day 100")
+        self.assertTrue(timeline.time_to_event("t", [("A", [])], survival.kaplan_meier, 10, "y", True)["empty"])
 
     def test_event_name(self):
         self.assertEqual(timeline.event_name("interstitial_lung_disease"), "lung toxicity")
         self.assertEqual(timeline.event_name("febrile_neutropenia"), "febrile neutropenia")
 
     def test_empty_charts(self):
-        self.assertTrue(timeline.survival([("a", [])], 100)["empty"])
         self.assertTrue(timeline.lead_time({}, set())["empty"])
         self.assertTrue(timeline.grade_shift({}, set())["empty"])
         self.assertTrue(timeline.scenario_bars([], "t", [], "l", "num", "x")["empty"])
@@ -40,23 +47,25 @@ class TimelineTest(CohortTestCase):
         self.events_of = lambda s: cohort.events(self.dataset, s)
         self.table = timeline.scenario_table(self.dataset.scenarios, self.rows_of, self.events_of, self.ids)
 
-    def test_cohort_curves(self):
-        named = [("Usual care", self.rows), ("Combined", self.rows_of("combined"))]
-        horizon = 7 * self.dataset.metadata["weeks"]
-        survival = timeline.survival(named, horizon)
-        self.assertEqual([s["cls"] for s in survival["series"]], ["sa", "sb"])
-        self.assertTrue(survival["series"][1]["dash"])
-        for s in survival["series"]:
-            shares = [p[1] for p in s["points"]]
-            self.assertEqual(shares[0], 1)
-            self.assertEqual(shares, sorted(shares, reverse=True))
-        dead = sum(r["death_day"] is not None for r in self.rows) / self.n
-        self.assertAlmostEqual(survival["series"][0]["points"][-1][1], 1 - dead, places=3)
-        therapy = timeline.on_therapy(named[:1], horizon)
-        self.assertLessEqual(therapy["x"]["max"], 36.1)
-        days = timeline.first_severe_days(self.events_of("usual_care"), self.ids)
-        incidence = timeline.severe_incidence([("Usual care", days)], horizon)
-        self.assertGreater(incidence["series"][0]["points"][-1][1], 0.4)
+    def test_endpoint_table_agrees_with_the_curves(self):
+        records = {"os": (survival.overall_survival(self.rows), "")}
+        table = timeline.endpoint_table([("Usual care", records)], 7 * self.dataset.metadata["weeks"])
+        alive = next(r for r in table if r["measure"] == "alive at 1 year")
+        steps = survival.kaplan_meier(records["os"][0])
+        self.assertEqual(alive["values"], [f"{100 * survival.value_at(steps, survival.YEAR):.1f}%"])
+        self.assertIsNone(alive["diff"])
+
+    def test_paired_endpoint_table(self):
+        both = [(name, {"os": (survival.overall_survival(rows), "")})
+                for name, rows in (("Combined", self.rows_of("combined")), ("Usual care", self.rows))]
+        table = timeline.endpoint_table(both, 7 * self.dataset.metadata["weeks"])
+        mean = table[0]
+        self.assertTrue(mean["first"])
+        self.assertIn("restricted mean", mean["measure"])
+        self.assertTrue(mean["diff"].endswith("days"))
+        self.assertIn(" to ", mean["ci"])
+        self.assertEqual(table[2]["measure"], "median survival")
+        self.assertIsNone(table[2]["diff"])
 
     def test_scenario_table(self):
         by_id = {t["scenario"]["scenario_id"]: t for t in self.table}
@@ -68,6 +77,9 @@ class TimelineTest(CohortTestCase):
         self.assertLess(combined["severe_events"], usual["severe_events"])
         self.assertGreater(combined["early"], 0)
         self.assertAlmostEqual(combined["d_qaly"], combined["qaly"] - usual["qaly"])
+        self.assertIsNone(usual["d_os"])
+        self.assertGreaterEqual(perfect["d_os"], 0)
+        self.assertGreater(perfect["free_1y"], usual["free_1y"])
         # With perfect detection only cardiovascular events without a warning phase remain.
         self.assertLessEqual(perfect["severe_events"], perfect["cv_events"] / perfect["n"] + 1e-9)
         self.assertLessEqual(perfect["cv_events"], combined["cv_events"])

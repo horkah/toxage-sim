@@ -118,8 +118,8 @@ Four views share the scenario, the filters and the selected patient:
 |---|---|
 | Risk | Predicted risk against the observed outcome for the chosen risk model |
 | Patient characteristics | Observed rate and mean predicted risk per group of every baseline field |
-| Course over time | For the cohort: first severe adverse event, share on therapy and survival over time, for the selected scenario and the comparison. For a selected patient: dose, blood values, oxygen saturation, blood pressure and reported symptoms per week under both scenarios, with the adverse events, alerts and the end of therapy marked, and a table of the adverse events under each scenario. |
-| Interventions | All scenarios side by side for the selected patients: a table of key numbers, including costs and quality-adjusted life years against usual care, bar charts, lung toxicity and cardiovascular events by grade, and for a scenario with monitoring the days gained and the grades of the events recognised early. |
+| Course over time | For a selected patient: dose, blood values, oxygen saturation, blood pressure and reported symptoms per week under both scenarios, with the adverse events, alerts and the end of therapy marked, and a table of the adverse events under each scenario. |
+| Interventions | All scenarios side by side for the selected patients: a table of key numbers, including survival without severe toxicity, survival against usual care, costs and quality-adjusted life years against usual care, bar charts, and lung toxicity and cardiovascular events by grade. Survival and time to event for the selected scenario and the comparison: a table of endpoints with paired differences and 95% confidence intervals, Kaplan-Meier curves and cumulative incidence curves with the number at risk, see section 4.4 of the [intervention model](../background/intervention-model.md). For a scenario with monitoring the days gained and the grades of the events recognised early. |
 
 ### Filters
 
@@ -225,7 +225,8 @@ Only one demo changes the app at a time. While it runs, a demo started in anothe
 | `explorer/cohort.py` | Loads the patients, adds the risks of all models, describes the schema fields |
 | `explorer/filters.py` | Filters built from schema and risk models |
 | `explorer/charts.py` | Data of the risk charts and key numbers |
-| `explorer/timeline.py` | Data of the charts over time and across scenarios |
+| `explorer/timeline.py` | Data of the charts over time and across scenarios, and the table of endpoints |
+| `explorer/survival.py` | Endpoints, Kaplan-Meier and Aalen-Johansen estimates, restricted means and the paired comparison of scenarios |
 | `explorer/views.py`, `middleware.py` | Explorer, random patient, about, disclaimer |
 | `explorer/templates/explorer/` | Templates |
 | `explorer/static/explorer/charts.js` | Web component `<tox-chart>` that draws the charts |
@@ -247,5 +248,5 @@ Only one demo changes the app at a time. While it runs, a demo started in anothe
 - One data set is generated at a time, and at most 20 000 patients per data set.
 - The Markdown renderer covers what the documents of the repository use, not all of Markdown.
 - The risk models describe the risk at therapy start without an intervention. In a scenario with an intervention the observed rates are lower than predicted.
-- The charts of the Risk view show time to event within the window of the risk model. The longer course is in the view "Course over time".
+- The charts of the Risk view show time to event within the window of the risk model. The longer course is in the section "Survival and time to event" of the view "Interventions".
 - All patients are loaded and scored on every request. This is fast enough for some ten thousand patients.

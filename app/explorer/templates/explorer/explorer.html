@@ -185,17 +185,33 @@
 
     {{ chart_data|json_script:"chart-data" }}
     {% for s in sections %}
-    <section class="charts">
+    <section class="charts"{% if s.id %} id="{{ s.id }}"{% endif %}>
       <header class="section-head">
         <h2>{{ s.title }}</h2>
-        <p class="note">{{ s.note|cite }}</p>
+        <p class="note">{{ s.note|cite }}{% if s.link %} <a href="{{ s.link.0 }}">{{ s.link.1 }}</a>{% endif %}</p>
       </header>
+      {% if s.endpoints %}
+      <div class="scroll">
+      <table class="numbers endpoints">
+        <thead><tr><th>Endpoint</th><th>Measure</th>
+          {% for name in s.endpoint_names %}<th>{{ name }}</th>{% endfor %}
+          {% if s.endpoint_names|length > 1 %}<th>Difference</th><th>95% confidence interval</th>{% endif %}</tr></thead>
+        <tbody>
+        {% for e in s.endpoints %}
+        <tr{% if e.first %} class="group"{% endif %}><th scope="row">{% if e.first %}{{ e.endpoint }}{% if e.population %}<small>{{ e.population }}</small>{% endif %}{% endif %}</th>
+          <td>{{ e.measure }}</td>{% for v in e.values %}<td>{{ v }}</td>{% endfor %}
+          {% if s.endpoint_names|length > 1 %}<td>{{ e.diff|default:"–" }}</td><td>{{ e.ci|default:"–" }}</td>{% endif %}</tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% endif %}
       {% if s.table %}
       <div class="scroll">
       <table class="numbers scenarios">
         <thead><tr>
           <th>Scenario</th><th>Taking part</th><th>Severe toxicity, 90 days</th><th>Severe events per patient</th>
-          <th>Events recognised early per patient</th><th>Cardiovascular events</th><th>Deaths from toxicity</th><th>Hospital days per patient</th>
+          <th>Events recognised early per patient</th><th>Cardiovascular events</th><th>Deaths from toxicity</th><th>Alive without severe event at 1 year</th><th>Survival against usual care (days within 5 years)</th><th>Hospital days per patient</th>
           <th>Alerts per patient</th><th>False alerts</th><th>QALY per patient</th><th>Cost per patient (€)</th>
           <th>Cost against usual care (€)</th><th>QALY against usual care</th><th>Cost per QALY gained (€)</th>
         </tr></thead>
@@ -204,7 +220,7 @@
         <tr{% if r.scenario.scenario_id == scenario.scenario_id %} class="selected"{% endif %}>
           <td><a href="?{{ r.link }}" title="Select this scenario">{{ r.scenario.title }}</a></td><td>{{ r.participating|pct }}</td><td>{{ r.severe_90d|pct }}</td>
           <td>{{ r.severe_events|num }}</td><td>{{ r.early|num }}</td><td>{{ r.cv_events }}</td><td>{{ r.toxic_deaths }}</td>
-          <td>{{ r.hospital_days|num }}</td><td>{{ r.alerts|num }}</td><td>{{ r.false_share|pct:0 }}</td>
+          <td>{{ r.free_1y|pct }}</td><td>{{ r.d_os|num:1 }}</td><td>{{ r.hospital_days|num }}</td><td>{{ r.alerts|num }}</td><td>{{ r.false_share|pct:0 }}</td>
           <td>{{ r.qaly|num:3 }}</td><td>{{ r.cost|num:0 }}</td><td>{{ r.d_cost|num:0 }}</td>
           <td>{{ r.d_qaly|num:3 }}</td><td>{{ r.icer|num:0 }}</td>
         </tr>

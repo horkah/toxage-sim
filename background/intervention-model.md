@@ -209,6 +209,26 @@ Further scenarios come from varying single parameters, for example uptake, sensi
 | Efficiency | Patients to monitor to avoid one severe event, alerts to handle per avoided event |
 | Fairness | All measures by tumour, subgroup, age and frailty |
 
+### 4.4 Time-to-event endpoints
+
+Every endpoint counts from the start of therapy. Each patient is followed until death or the end of the simulated period; a patient without the event is censored at that end.
+
+| Endpoint | Event | Estimate | Measures |
+|---|---|---|---|
+| Overall survival | Death from any cause | Kaplan-Meier | Restricted mean survival within 5 years, alive at 1 year, median survival |
+| Survival without severe toxicity | First adverse event of grade 3 to 5, or death | Kaplan-Meier | Restricted mean within 1 year, alive without severe event at 1 year |
+| First severe adverse event | First adverse event of grade 3 to 5; death competes | Cumulative incidence (Aalen-Johansen) | Share at 90 days and at 1 year |
+| Time on therapy | End of the therapy line for any reason | Kaplan-Meier | Median |
+| End of therapy for toxicity | End of therapy for toxicity; the other reasons compete | Cumulative incidence | Share at 1 year; all reasons of the selected scenario in one chart |
+| Lung toxicity | Lung toxicity of grade 2 or higher, by its day of onset; death competes. Patients on trastuzumab deruxtecan | Cumulative incidence | Share at 1 year |
+| Major cardiovascular event | Myocardial infarction, stroke or cardiovascular death; death from other causes competes. Men under androgen deprivation | Cumulative incidence | Share at 1 year |
+
+Events that death can prevent get a cumulative incidence, not 1 − Kaplan-Meier: Kaplan-Meier would count the patients who died as if they could still have the event and overestimate it.
+
+The scenarios hold the same patients with the same random draws. They are therefore compared pair by pair, not with tests for independent groups such as the log-rank test. Because the status of every patient is known up to the end of the simulated period, a restricted mean or a share at a time is the mean of a per-patient value; the difference between two scenarios is the mean of the per-patient differences, with a 95% confidence interval from their spread. In a simulation the interval says how precisely the cohort shows the difference, not whether an effect is real.
+
+The endpoints on toxicity and therapy are intermediate endpoints, not validated surrogates for survival. In the model their link to survival is explicit: deaths from toxicity end survival directly, and the dose received changes the time to progression through a parameter that is switched off by default (section 3.7). An intervention therefore changes survival by days, while it changes survival without severe toxicity and the end of therapy for toxicity clearly.
+
 ## 5. Parameters
 
 | Group | Parameter | Anchor in our references |
