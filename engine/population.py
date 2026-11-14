@@ -10,12 +10,12 @@ import math
 TUMOURS = ("pancreas", "prostate", "breast")
 
 
-def _clip(value, low, high):
+def clip(value, low, high):
     """The value limited to [low, high]."""
     return max(low, min(high, value))
 
 
-def _sigmoid(x):
+def sigmoid(x):
     """Logistic function: maps a log-odds value to a probability."""
     return 1 / (1 + math.exp(-x))
 
@@ -40,7 +40,7 @@ def _regimen(rng, subgroup, frailty, age, bilirubin, lung_problem, params):
         x = m["intercept"] + m["frailty_slope"] * frailty + m["per_year_above_65"] * (age - 65)
         if bilirubin > 1.5:
             x += m["bilirubin_above_1_5_shift"]
-        return "nalirifox" if rng.random() < _sigmoid(x) else "gemcitabine_nab_paclitaxel"
+        return "nalirifox" if rng.random() < sigmoid(x) else "gemcitabine_nab_paclitaxel"
     if subgroup == "breast_her2_low":
         m = c["breast_her2_low_trastuzumab_deruxtecan"]
         p = m["probability_with_lung_problem"] if lung_problem else m["probability"]
@@ -56,7 +56,7 @@ def _cardiovascular(rng, tumour, age, diabetes, cvd, params):
     p = params["population"]
     prior = cvd and rng.random() < p["prior_cardiovascular_event"]["probability_with_cardiovascular_disease"]
     h = p["arterial_hypertension"]
-    hypertension = rng.random() < _sigmoid(
+    hypertension = rng.random() < sigmoid(
         h["intercept"] + h["per_year_above_65"] * (age - 65) + h["diabetes_shift"] * diabetes
         + h["cardiovascular_disease_shift"] * cvd
     )
@@ -72,7 +72,7 @@ def _cardiovascular(rng, tumour, age, diabetes, cvd, params):
         "adt_type": adt,
         "prior_cardiovascular_event": prior,
         "arterial_hypertension": hypertension,
-        "systolic_bp_mmhg": round(_clip(pressure, b["minimum"], b["maximum"])),
+        "systolic_bp_mmhg": round(clip(pressure, b["minimum"], b["maximum"])),
         "smoking_status": smoking,
     }
 
@@ -84,7 +84,7 @@ def draw_patient(rng, index, tumour, regimens, params):
 
     age_p = p["age"]
     age = round(rng.gauss(age_p[subgroup]["mean"], age_p[subgroup]["sd"]))
-    age = _clip(age, age_p["minimum"], age_p["maximum"])
+    age = clip(age, age_p["minimum"], age_p["maximum"])
     if tumour == "prostate":
         sex = "male"
     elif tumour == "breast":
@@ -101,7 +101,7 @@ def draw_patient(rng, index, tumour, regimens, params):
 
     ga_p = p["ga"]
     if age >= ga_p["assessed_from_age"]:
-        prob = _sigmoid(ga_p["intercept"] + ga_p["frailty_slope"] * frailty)
+        prob = sigmoid(ga_p["intercept"] + ga_p["frailty_slope"] * frailty)
         ga = sum(rng.random() < prob for _ in range(7))
     else:
         ga = None
@@ -113,18 +113,18 @@ def draw_patient(rng, index, tumour, regimens, params):
     bmi = b["mean"] + b["frailty_slope"] * frailty + b["pancreas_shift"] * is_pancreas + rng.gauss(0, b["sd"])
 
     d = p["diabetes"]
-    diabetes = rng.random() < _sigmoid(
+    diabetes = rng.random() < sigmoid(
         d["intercept"] + d["per_year_above_65"] * (age - 65) + d["pancreas_shift"] * is_pancreas
     )
     cv = p["cardiovascular_disease"]
-    cvd = rng.random() < _sigmoid(
+    cvd = rng.random() < sigmoid(
         cv["intercept"] + cv["per_year_above_65"] * (age - 65) + cv["male_shift"] * (sex == "male")
     )
     lung = rng.random() < p["lung_comorbidity_probability"]["value"]
 
     e = p["egfr_ml_min"]
     egfr = e["mean_at_40"] - e["decline_per_year"] * (age - 40) + e["diabetes_shift"] * diabetes + rng.gauss(0, e["sd"])
-    egfr = round(_clip(egfr, e["minimum"], e["maximum"]))
+    egfr = round(clip(egfr, e["minimum"], e["maximum"]))
     if egfr >= e["categories"]["normal_from"]:
         renal = "normal"
     elif egfr >= e["categories"]["mild_decrease_from"]:
@@ -140,7 +140,7 @@ def draw_patient(rng, index, tumour, regimens, params):
 
     s = p["spo2"]
     spo2 = s["mean"] + s["lung_comorbidity_shift"] * lung + s["frailty_slope"] * frailty + rng.gauss(0, s["sd"])
-    spo2 = round(_clip(spo2, s["minimum"], 100))
+    spo2 = round(clip(spo2, s["minimum"], 100))
 
     lines = rng.choice(p["prior_therapy_lines"][subgroup])
     pretreated = lines >= p["pretreated_from_lines"]
@@ -162,7 +162,7 @@ def draw_patient(rng, index, tumour, regimens, params):
     regimen = _regimen(rng, subgroup, frailty, age, bilirubin, lung or spo2 < 95, params)
 
     sd = params["treatment_choice"]["starting_dose_reduction"]
-    reduced = rng.random() < _sigmoid(
+    reduced = rng.random() < sigmoid(
         sd["intercept"] + sd["frailty_slope"] * frailty + sd["per_year_above_70"] * (age - 70)
     )
     gcsf = (
@@ -182,13 +182,13 @@ def draw_patient(rng, index, tumour, regimens, params):
         "sex": sex,
         "ecog": ecog,
         "ga_impaired_domains": ga,
-        "bmi": round(_clip(bmi, b["minimum"], b["maximum"]), 1),
-        "albumin_g_l": round(_clip(albumin, a["minimum"], a["maximum"]), 1),
+        "bmi": round(clip(bmi, b["minimum"], b["maximum"]), 1),
+        "albumin_g_l": round(clip(albumin, a["minimum"], a["maximum"]), 1),
         "egfr_ml_min": egfr,
         "renal_function": renal,
         "bilirubin_ratio_uln": round(bilirubin, 2),
         "neutrophils_10e9_l": round(neutrophils, 2),
-        "haemoglobin_g_dl": round(_clip(hb, h["minimum"], h["maximum"]), 1),
+        "haemoglobin_g_dl": round(clip(hb, h["minimum"], h["maximum"]), 1),
         "platelets_10e9_l": round(platelets),
         "spo2_percent": spo2,
         "lung_comorbidity": lung,

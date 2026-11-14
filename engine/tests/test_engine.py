@@ -380,5 +380,26 @@ class EngineTest(unittest.TestCase):
         self.assertGreaterEqual(self.total("qaly", s), self.total("qaly", "combined"))
 
 
+class ReviewFixesTest(unittest.TestCase):
+    """Fixes of the code review (project/code-review-issues.md)."""
+
+    def test_a_share_of_zero_flags_nobody(self):
+        import interventions
+        iv = generate.load_interventions()
+        iv["risk_adapted_start"]["share_flagged"] = 0
+        threshold = interventions.flag_threshold([0.1, 0.5, 0.9], iv)
+        self.assertFalse(any(score >= threshold for score in (0.1, 0.5, 0.9)))
+        iv["risk_adapted_start"]["share_flagged"] = 1 / 3
+        self.assertEqual(interventions.flag_threshold([0.1, 0.5, 0.9], iv), 0.9)
+
+    def test_zero_weeks_are_zero_weeks(self):
+        import course
+        config = generate.default_config()
+        regimens, params, iv = config["regimens"], config["parameters"], config["interventions"]
+        patients, thresholds = generate.cohort(3, 1, regimens, params, iv)
+        table = hazards.HazardTable(regimens, params, config["calibration"])
+        result = next(generate.run(patients, thresholds, USUAL, regimens, params, iv, table, weeks=0))[3]
+        self.assertEqual(result["states"], [])
+
 if __name__ == "__main__":
     unittest.main()

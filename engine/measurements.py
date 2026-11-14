@@ -8,13 +8,13 @@ import math
 import random
 
 from hazards import CV
+from population import clip
 
 LAB_EVENTS = ("neutropenia", "febrile_neutropenia", "anaemia", "thrombocytopenia")
-
-
-def _clip(value, low, high):
-    """The value limited to [low, high]."""
-    return max(low, min(high, value))
+# Rates of severe events that drive the drift of the weekly values (blood
+# counts, diarrhoea) for regimens without a published rate of that event: a
+# small effect, so that the values still move a little under therapy.
+FALLBACK_RATES = {"neutropenia": 0.05, "anaemia": 0.03, "thrombocytopenia": 0.02, "diarrhoea": 0.02}
 
 
 def _ild_effect(day, ild, rise_per_week, maximum, recovery_per_week):
@@ -74,16 +74,16 @@ def observations(draws, latent, regimen, params, course, mult):
         )
         neutrophils = haemoglobin = platelets = None
         if scheduled or any(t in types for t in LAB_EVENTS):
-            drop = n_p["drop_per_event_rate"] * rates.get("neutropenia", 0.05) * sens_n
+            drop = n_p["drop_per_event_rate"] * rates.get("neutropenia", FALLBACK_RATES["neutropenia"]) * sens_n
             neutrophils = patient["neutrophils_10e9_l"] * math.exp(-drop * exposure) * rng.lognormvariate(0, n_p["noise_sigma"])
             event = types.get("neutropenia") or types.get("febrile_neutropenia")
             if event:
                 neutrophils = rng.uniform(*n_p["grade_4" if event["grade"] >= 4 else "grade_3"])
-            drop = min(h_p["maximum_drop"], h_p["drop_g_dl_per_event_rate"] * rates.get("anaemia", 0.03) * sens_a)
+            drop = min(h_p["maximum_drop"], h_p["drop_g_dl_per_event_rate"] * rates.get("anaemia", FALLBACK_RATES["anaemia"]) * sens_a)
             haemoglobin = patient["haemoglobin_g_dl"] - drop * exposure + rng.gauss(0, h_p["noise_sd"])
             if "anaemia" in types:
                 haemoglobin = rng.uniform(*h_p["event_range"])
-            drop = min(t_p["maximum_drop"], t_p["drop_per_event_rate"] * rates.get("thrombocytopenia", 0.02) * sens_t)
+            drop = min(t_p["maximum_drop"], t_p["drop_per_event_rate"] * rates.get("thrombocytopenia", FALLBACK_RATES["thrombocytopenia"]) * sens_t)
             platelets = patient["platelets_10e9_l"] * (1 - drop * exposure) * rng.lognormvariate(0, t_p["noise_sigma"])
             event = types.get("thrombocytopenia")
             if event:
@@ -97,20 +97,20 @@ def observations(draws, latent, regimen, params, course, mult):
             maximum = s_p["ild_maximum_drop"][str(ild["grade"])] if ild else 0.0
             drop = _ild_effect(day + 6, ild, s_p["ild_drop_per_week"], maximum, s_p["recovery_per_week"])
             base = patient["spo2_percent"] if week == 0 else patient["spo2_percent"] + rng.gauss(0, s_p["noise_sd"])
-            spo2 = round(_clip(base - drop, 50, 100))
+            spo2 = round(clip(base - drop, 50, 100))
 
         fatigue = diarrhoea = cough = dyspnoea = chest_pain = None
         reported = rng.random() >= y_p["missing"]
         if reported:
             noise = lambda: rng.gauss(0, y_p["noise_sd"])
-            level = lambda x: round(_clip(x + noise(), 0, 4))
+            level = lambda x: round(clip(x + noise(), 0, 4))
             f = y_p["fatigue"]
             recent = here or by_week.get(week - 1, [])
             severe = any(e["grade"] >= 3 for e in recent)
             fatigue = level(f["base"] + f["frailty_slope"] * frailty + f["exposure_slope"] * exposure
                             + f["severe_event_bump"] * severe)
             d = y_p["diarrhoea"]
-            value = d["base"] + d["exposure_slope_per_event_rate"] * rates.get("diarrhoea", 0.02) * exposure
+            value = d["base"] + d["exposure_slope_per_event_rate"] * rates.get("diarrhoea", FALLBACK_RATES["diarrhoea"]) * exposure
             if "diarrhoea" in types:
                 value = d["event_level"]
             elif any(e["event_type"] == "diarrhoea" for e in by_week.get(week + 1, [])):
@@ -135,7 +135,7 @@ def observations(draws, latent, regimen, params, course, mult):
                                         b_p["recovery_per_week"])
             if "hypertension" in types:
                 pressure = rng.uniform(*b_p["hypertension_event_range"])
-            pressure = round(_clip(pressure, 60, 260))
+            pressure = round(clip(pressure, 60, 260))
         if reported:
             c = y_p["chest_pain"]
             value = c["base"] + c["cardiovascular_disease_shift"] * patient["cardiovascular_disease"]
@@ -143,7 +143,7 @@ def observations(draws, latent, regimen, params, course, mult):
                                      c["recovery_per_week"])
             if CV in types:
                 value = max(value, c["event_level"])
-            chest_pain = round(_clip(value + rng.gauss(0, y_p["noise_sd"]), 0, 4))
+            chest_pain = round(clip(value + rng.gauss(0, y_p["noise_sd"]), 0, 4))
 
         records.append({
             "scenario_id": plan["scenario_id"], "patient_id": patient["patient_id"], "week": week, "day": day,

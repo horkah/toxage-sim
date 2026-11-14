@@ -139,6 +139,21 @@ def _reference_profiles(ref):
         yield share, [n for _, names in combo for n in names]
 
 
+def solve_baseline_risk(profiles, target):
+    """Risk r0 without risk factors such that the mean risk 1 - (1 - r0)^ratio
+    over the profiles [(share, ratio)] equals the target rate.
+
+    The mean risk grows with r0, so a bisection over [0, 1] finds it. The upper
+    bound is 1, not the target: with protective factors (ratio below 1) r0 lies
+    above the target."""
+    low, high = 0.0, 1.0
+    for _ in range(60):
+        mid = (low + high) / 2
+        mean = sum(share * (1 - (1 - mid) ** ratio) for share, ratio in profiles)
+        low, high = (mid, high) if mean < target else (low, mid)
+    return (low + high) / 2
+
+
 def ild_baseline_risk(regimen, cfg):
     """Risk r0 of a patient without risk factors on the given regimen.
 
@@ -153,13 +168,7 @@ def ild_baseline_risk(regimen, cfg):
         (share, math.prod(hr[n]["value"] for n in names))
         for share, names in _reference_profiles(cfg["ild"]["reference_population"])
     ]
-    target = entry["rate"]
-    low, high = 0.0, target
-    for _ in range(60):
-        mid = (low + high) / 2
-        mean = sum(share * (1 - (1 - mid) ** ratio) for share, ratio in profiles)
-        low, high = (mid, high) if mean < target else (low, mid)
-    return (low + high) / 2
+    return solve_baseline_risk(profiles, entry["rate"])
 
 
 def ild_risk(patient, cfg, baseline_risk=None):
@@ -246,13 +255,7 @@ def cv_baseline_risk(adt, cfg):
     profiles = []
     for combo in itertools.product(*[((1 - share, 1.0), (share, ratio)) for share, ratio in factors]):
         profiles.append((math.prod(s for s, _ in combo), math.prod(r for _, r in combo)))
-    target = cv_reference_rate(adt, cfg)
-    low, high = 0.0, target
-    for _ in range(60):
-        mid = (low + high) / 2
-        mean = sum(share * (1 - (1 - mid) ** ratio) for share, ratio in profiles)
-        low, high = (mid, high) if mean < target else (low, mid)
-    return (low + high) / 2
+    return solve_baseline_risk(profiles, cv_reference_rate(adt, cfg))
 
 
 def cv_risk(patient, cfg, baseline_risk=None):

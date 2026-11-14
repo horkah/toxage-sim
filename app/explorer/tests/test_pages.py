@@ -137,6 +137,19 @@ class DataTest(CohortTestCase):
         self.assertNotContains(self.client.get("/data/"), "Generate a data set")
         self.assertEqual(self.client.post("/data/use/", {"dataset": self.dataset.pk}).status_code, 302)
 
+    def test_a_page_beyond_the_end_shows_the_last_page(self):
+        url = f"/data/{self.dataset.pk}/records/?table=outcome&scenario=combined"
+        context = self.client.get(url + "&page=100000").context
+        self.assertEqual(context["page"], 1)       # 30 records: one page
+        self.assertEqual(len(context["rows"]), self.n)
+
+    def test_looking_for_interrupted_data_sets_writes_nothing_if_there_are_none(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+        with CaptureQueriesContext(connection) as queries:
+            store.mark_interrupted()
+        self.assertFalse([q for q in queries if q["sql"].lstrip().upper().startswith("UPDATE")])
+
     def test_records_link_to_patients_and_the_schema(self):
         response = self.client.get(f"/data/{self.dataset.pk}/records/?table=outcome&scenario=combined&patient=3")
         self.assertContains(response, f'href="/?dataset={self.dataset.pk}&amp;scenario=combined&amp;patient=P000003"')

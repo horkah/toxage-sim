@@ -73,7 +73,8 @@ def cohort(n, seed, regimens, params, iv):
 
 
 def run(patients, thresholds, scenario_id, regimens, params, iv, table, weeks=None):
-    """Simulate all patients under one scenario. Yields (latent, plan, course, multipliers)."""
+    """Simulate all patients under one scenario. Yields (latent values, fixed
+    random numbers, regimen, course, hazard multipliers) per patient."""
     scenario = iv["scenarios"][scenario_id]
     for patient, latent, draws, scores in patients:
         regimen = regimens[patient["regimen"]]

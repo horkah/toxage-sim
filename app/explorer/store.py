@@ -150,8 +150,11 @@ def mark_interrupted():
     """A data set that is 'running' without a thread of this process was cut
     off by a restart of the server."""
     with _LOCK:
-        Dataset.objects.filter(status=Dataset.RUNNING).exclude(pk__in=list(_RUNNING)).update(
-            status=Dataset.FAILED, message="Interrupted by a restart of the app")
+        cut_off = Dataset.objects.filter(status=Dataset.RUNNING).exclude(pk__in=list(_RUNNING))
+        # Read first: an UPDATE needs the write lock of SQLite even if it changes
+        # nothing, and this runs on every view and poll of the data page.
+        if cut_off.exists():
+            cut_off.update(status=Dataset.FAILED, message="Interrupted by a restart of the app")
 
 
 # Deleting ---------------------------------------------------------------------

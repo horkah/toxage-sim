@@ -7,16 +7,12 @@ therapy is adapted, and which events monitoring can detect.
 import math
 
 from hazards import general_multiplier
+from population import sigmoid
 
 COMPONENTS = ("risk_adapted_start", "symptom_monitoring", "lung_monitoring", "cardiovascular_monitoring")
 # Monitoring for one kind of event, offered to patients on the regimens at risk.
 TARGETED = ("lung_monitoring", "cardiovascular_monitoring")
 SOURCES = TARGETED + ("symptom_report",)   # order of priority for an alert
-
-
-def _sigmoid(x):
-    """Logistic function: maps a log-odds value to a probability."""
-    return 1 / (1 + math.exp(-x))
 
 
 def predictor_score(patient, latent, draws, params, iv, perfect=False):
@@ -32,6 +28,8 @@ def flag_threshold(scores, iv):
     """Score from which a patient counts as high risk: the given share of the
     cohort is flagged."""
     share = iv["risk_adapted_start"]["share_flagged"]
+    if share <= 0 or not scores:
+        return math.inf      # nobody is flagged
     ordered = sorted(scores)
     return ordered[min(len(ordered) - 1, int((1 - share) * len(ordered)))]
 
@@ -43,7 +41,7 @@ def plan(patient, latent, regimen, draws, scenario, params, iv, score, threshold
     part = iv["participation"]
 
     up = part["uptake"]
-    uptake = _sigmoid(up["intercept"] + up["frailty_slope"] * latent["frailty"]
+    uptake = sigmoid(up["intercept"] + up["frailty_slope"] * latent["frailty"]
                       + up["per_10_years_above_65"] * (patient["age_years"] - 65) / 10)
     takes_part = perfect or draws.u("uptake") < uptake
     ad = part["adherence"]

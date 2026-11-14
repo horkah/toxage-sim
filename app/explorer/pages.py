@@ -173,6 +173,10 @@ def records(request, pk):
     scenario = cohort.scenario(dataset, request.GET.get("scenario"))
     patient_id = cohort.normalise_id(request.GET.get("patient"))
     page = _int(request.GET.get("page"), 1, 1, 10**9)
+    known = None if patient_id else store.count(dataset, table, scenario["scenario_id"])
+    if known is not None:
+        # A page beyond the end shows the last page instead of reading every record.
+        page = min(page, max(1, -(-known // PAGE)))
     spec = toxage_schema.load(table)["properties"]
     fields = [(name, spec[name].get("title", name), spec[name].get("unit", "")) for name in spec]
     found, more = [], False
@@ -182,7 +186,7 @@ def records(request, pk):
             break
         if i >= (page - 1) * PAGE:
             found.append([cohort.display(record.get(name)) for name, _, _ in fields])
-    total = None if patient_id else store.count(dataset, table, scenario["scenario_id"])
+    total = known
     names = [name for name, _, _ in fields]
     return render(request, "explorer/records.html", {
         "patient_col": names.index("patient_id") if "patient_id" in names else -1,

@@ -32,7 +32,7 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
     """
     patient = plan["patient"]
     pid = patient["patient_id"]
-    weeks = weeks or params["simulation"]["weeks"]
+    weeks = params["simulation"]["weeks"] if weeks is None else weeks
     hz, act, sim = params["hazards"], params["actions"], params["simulation"]
     levels = act["dose_levels"]
     gamma = hz["dose_exponent"]["value"]

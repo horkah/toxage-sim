@@ -56,11 +56,13 @@ def fit(x, y, link="logit", offset=None, start=None, max_iter=50, tol=1e-9):
     x: rows of predictor values (include a column of ones for an intercept).
     y: outcomes, 0 or 1.
     start: starting coefficients, zero by default.
-    Returns dict with coefficients, standard errors and the number of iterations.
+    Returns dict with coefficients, standard errors, the number of iterations
+    and whether the fit converged within max_iter rounds.
     """
     n, k = len(x), len(x[0])
     offset = offset or [0.0] * n
     beta = list(start) if start else [0.0] * k
+    converged = False
     for iteration in range(1, max_iter + 1):
         xtwx = [[0.0] * k for _ in range(k)]
         xtwz = [0.0] * k
@@ -87,10 +89,12 @@ def fit(x, y, link="logit", offset=None, start=None, max_iter=50, tol=1e-9):
         change = max(abs(a - b) for a, b in zip(new, beta))
         beta = new
         if change < tol:
+            converged = True
             break
     cov = inverse(xtwx)
     return {
         "coefficients": beta,
         "standard_errors": [math.sqrt(max(cov[i][i], 0.0)) for i in range(k)],
         "iterations": iteration,
+        "converged": converged,     # False: the coefficients are those of the last round
     }

@@ -71,50 +71,19 @@ What remains needs a decision of the author.
 
 ## Minor
 
-### m1. A share of 0 flagged patients still flags one patient
-
-- Where: `engine/interventions.py` (`flag_threshold`).
-- What: with `risk_adapted_start/share_flagged` = 0 the threshold is the
-  highest score, so the patient with that score is flagged.
-
-### m2. The baseline risk of the lung and heart models can be wrong for protective factors
-
-- Where: `risk-model/models.py` (`ild_baseline_risk`, `cv_baseline_risk`).
-- What: the bisection searches r0 between 0 and the target rate. That holds
-  only if the reference population has a mean hazard ratio of at least 1. With
-  a hazard ratio below 1 (possible on the parameters page) r0 must be above
-  the target, and the result sticks at the target. The same bisection is
-  written twice.
-
-### m3. The regression does not say whether it converged
-
-- Where: `risk-model/glm.py` (`fit`).
-- What: after `max_iter` rounds without convergence the last coefficients are
-  returned as if they were the result.
-
-### m4. Whole-number parameters accept fractions
+### m4. Whole-number parameters accept fractions (needs a decision)
 
 - Where: `app/explorer/params.py` (`parse`).
-- What: 2.5 for a whole-number parameter (e.g. `simulation/weeks`) is saved
-  as 2.5 and fails only later, when a data set is generated.
-
-### m5. weeks=0 is taken as "not given"
-
-- Where: `engine/course.py` (`simulate`).
-- What: `weeks or params[...]` replaces an explicit 0 with the default.
-
-### m6. Every page view of "Data" writes to the database
-
-- Where: `app/explorer/store.py` (`mark_interrupted`).
-- What: called by every view of the data page, its polling and
-  `/tour/state/` (every 0.4 s in the demo), it runs an UPDATE each time, which
-  needs the write lock of SQLite even when nothing changes. While a large data
-  set is stored, these requests wait for the lock.
-
-### m7. A page number beyond the end reads the whole table
-
-- Where: `app/explorer/pages.py` (`records`).
-- What: `?page=100000` reads every record of the table to find nothing.
+- What: a value keeps the type of its default, but a fraction is accepted
+  where the default is a whole number: 2.5 for `simulation/weeks` is saved
+  and fails only when a data set is generated (with a clear message since
+  M1). A whole number in the parameter files does not always mean "only
+  whole numbers", though: costs such as 800 euros per hospital day may well
+  get cents, so a general rule would be wrong.
+- Options: mark the parameters that must be whole numbers (weeks, days,
+  counts) in the parameter files, e.g. with a key "integer": true next to the
+  value, and refuse fractions there; or rely on the check of M1.
+- Status: open, decision of the author.
 
 ### m8. DEBUG is on unless it is switched off (needs a decision)
 
@@ -151,25 +120,4 @@ What remains needs a decision of the author.
 
 ## Cosmetic
 
-### c1. Wrong docstring of `generate.run`
-
-- Where: `engine/generate.py`.
-- What: says it yields (latent, plan, course, multipliers); it yields
-  (latent, draws, regimen, course, multipliers).
-
-### c2. The crosshair of a scatter plot has a fixed left edge
-
-- Where: `app/explorer/static/explorer/charts.js` (`scatter`).
-- What: the horizontal line starts at x = 50, a copy of the default margin of
-  `frame()`; it would be wrong if the margin changed.
-
-### c3. Small helpers are written several times in the engine
-
-- Where: `engine/population.py`, `engine/interventions.py`, `engine/measurements.py`.
-- What: `_sigmoid` and `_clip` exist twice each.
-
-### c4. Fallback event rates in the observations have no explanation
-
-- Where: `engine/measurements.py`.
-- What: `rates.get("neutropenia", 0.05)` and similar use rates for regimens
-  without a published rate of that event; the numbers are not explained.
+None open.

@@ -20,6 +20,14 @@ import glm  # noqa: E402
 import models  # noqa: E402
 
 
+def _warn_if_not_converged(result):
+    """Say on stderr when a fit did not converge: its coefficients are not
+    estimates, e.g. because the data separate the outcome completely."""
+    if not result.get("converged", True):
+        print(f"warning: the fit did not converge in {result['iterations']} rounds; "
+              "the coefficients are not reliable", file=sys.stderr)
+
+
 def _ci(coef, se):
     """95% confidence interval of a ratio from a log coefficient and its standard
     error."""
@@ -44,6 +52,7 @@ def fit_severe_toxicity(baseline, outcomes, cfg):
         x.append(row)
         y.append(int(outcomes[p["patient_id"]]["severe_toxicity_90d"]))
     result = glm.fit(x, y, link="logit")
+    _warn_if_not_converged(result)
     coef, se = result["coefficients"], result["standard_errors"]
     k = len(regimens)
     fitted = {}
@@ -80,6 +89,7 @@ def fit_ild(baseline, outcomes, cfg):
     start = [math.log(-math.log(1 - min(max(rt, 0.001), 0.9))) for rt in rates]
     start += [0.0] * len(factors)
     result = glm.fit(x, y, link="cloglog", start=start)
+    _warn_if_not_converged(result)
     coef, se = result["coefficients"], result["standard_errors"]
     k = len(regimens)
     fitted = {}
@@ -121,6 +131,7 @@ def fit_cardiovascular(baseline, outcomes, cfg):
     start = [math.log(-math.log(1 - min(max(rt, 0.001), 0.9))) for rt in rates]
     start += [0.0] * (len(x[0]) - k)
     result = glm.fit(x, y, link="cloglog", start=start)
+    _warn_if_not_converged(result)
     coef, se = result["coefficients"], result["standard_errors"]
     entry = lambda j: {"value": math.exp(coef[j]), "ci95": _ci(coef[j], se[j]), "basis": "fitted"}
     fitted = {a: {"rate": rates[i], "baseline_risk": 1 - math.exp(-math.exp(coef[i])),

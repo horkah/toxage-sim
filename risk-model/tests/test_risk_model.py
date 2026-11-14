@@ -283,5 +283,26 @@ class PipelineTest(unittest.TestCase):
             self.assertLessEqual(after[name]["model"]["brier"], before[name]["model"]["brier"] + 1e-9)
 
 
+class ReviewFixesTest(unittest.TestCase):
+    """Fixes of the code review (project/code-review-issues.md)."""
+
+    def test_baseline_risk_with_protective_factors(self):
+        # Half of the population has a hazard ratio of 0.5: r0 must lie above the target.
+        profiles = [(0.5, 1.0), (0.5, 0.5)]
+        r0 = models.solve_baseline_risk(profiles, 0.2)
+        self.assertGreater(r0, 0.2)
+        mean = sum(share * (1 - (1 - r0) ** ratio) for share, ratio in profiles)
+        self.assertAlmostEqual(mean, 0.2, places=9)
+
+    def test_fit_says_whether_it_converged(self):
+        x = [[1.0, v] for v in (0, 0, 0, 1, 1, 1, 2, 2, 2)]
+        y = [0, 0, 1, 0, 1, 1, 0, 1, 1]
+        self.assertTrue(glm.fit(x, y)["converged"])
+        self.assertFalse(glm.fit(x, y, max_iter=1)["converged"])
+        # Separated data (all 0 at x = 0, all 1 at x = 2): the slope grows without end.
+        separated = glm.fit([[1.0, v] for v in (0, 0, 1, 1, 2, 2)], [0, 0, 1, 0, 1, 1])
+        self.assertFalse(separated["converged"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -176,7 +176,7 @@ function frame(spec, height, left = 50, bottom = 40) {
   parts.push(text((left + W - 12) / 2, height - 6, x.label, "axis", 'text-anchor="middle"'));
   const mid = (height - bottom + 10) / 2;
   parts.push(text(12, mid, y.label, "axis", `text-anchor="middle" transform="rotate(-90 12 ${mid})"`));
-  return { sx, sy, parts, xt, yt };
+  return { sx, sy, parts, xt, yt, left };
 }
 
 // Line chart: series as lines or steps, optional dots, a diagonal, a marker and vertical event lines.
@@ -213,7 +213,7 @@ function line(spec) {
 // Scatter plot of patients, coloured by outcome; points select a patient, the selected one has a crosshair.
 function scatter(spec) {
   const height = 290;
-  const { sx, sy, parts } = frame(spec, height);
+  const { sx, sy, parts, left } = frame(spec, height);
   const order = [...spec.points].sort((a, b) => a[2] - b[2]);
   const classes = spec.classes;
   for (const [x, y, c, id] of order) {
@@ -222,7 +222,7 @@ function scatter(spec) {
   const h = spec.highlight;
   if (h) {
     const [x, y] = [sx(h[0]), sy(h[1])];
-    parts.push(`<line class="marker" x1="${x}" x2="${x}" y1="10" y2="${height - 40}"/><line class="marker" x1="50" x2="${W - 12}" y1="${y}" y2="${y}"/>`);
+    parts.push(`<line class="marker" x1="${x}" x2="${x}" y1="10" y2="${height - 40}"/><line class="marker" x1="${left}" x2="${W - 12}" y1="${y}" y2="${y}"/>`);
     parts.push(`<circle class="hl-point" cx="${x}" cy="${y}" r="6"><title>${esc(h[2])}</title></circle>`);
   }
   return { height, svg: parts.join(""), legend: legend(classes, !!h) };
