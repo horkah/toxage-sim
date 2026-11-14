@@ -75,6 +75,9 @@ pre { background: var(--surface-2); border: 1px solid var(--border); padding: 10
 .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .icon .fill { fill: currentColor; stroke: none; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* A field the app found missing or out of range (app.js), with or without focus */
+.invalid, .invalid:focus-visible { outline: 2px solid var(--danger); outline-offset: 2px; border-radius: 4px; }
+.field-error { margin: 4px 0 8px; font-size: .86rem; }
 
 /* Controls ----------------------------------------------------------------------- */
 button, .button, input, select {

@@ -286,6 +286,57 @@ function onClick(event) {
   visit(url.href);
 }
 
+// Checking forms ------------------------------------------------------------------------
+// The app checks required and bounded fields itself instead of the browser: browsers
+// show a missing field differently (a bubble, a focus ring or both, depending on the
+// device). A field that is not valid gets a red mark and its message below it, the
+// same everywhere. Without JavaScript the browser and the server check as before.
+
+const messages = new WeakMap();
+
+function unmark(el) {
+  el.classList.remove("invalid");
+  el.removeAttribute("aria-invalid");
+  messages.get(el)?.remove();
+  messages.delete(el);
+}
+
+// True if every field of the form is valid; otherwise marks the fields that are not.
+function valid(form) {
+  const fields = [...form.elements].filter((el) => el.willValidate);
+  fields.forEach(unmark);
+  const bad = fields.filter((el) => !el.validity.valid);
+  const named = new Set();
+  for (const el of bad) {
+    el.classList.add("invalid");
+    el.setAttribute("aria-invalid", "true");
+    if (el.name && named.has(el.name)) continue;     // one message per group of radio buttons
+    named.add(el.name);
+    const note = document.createElement("p");
+    note.className = "error field-error";
+    note.setAttribute("role", "alert");
+    note.textContent = el.getAttribute("data-message") || el.validationMessage;
+    (el.closest("label") ?? el).after(note);
+    messages.set(el, note);
+  }
+  bad[0]?.scrollIntoView({ block: "center", behavior: "smooth" });
+  return bad.length === 0;
+}
+
+// Runs before every other handler of the submit event.
+function onSubmitCheck(event) {
+  const form = event.target;
+  if (form.getAttribute("method") === "dialog" || valid(form)) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+}
+
+// A marked field loses its mark as soon as it is valid.
+function onFixed(event) {
+  const el = event.target;
+  if (el.classList?.contains("invalid") && el.validity.valid) unmark(el);
+}
+
 // A form is sent: ask first if it deletes something, then send it in place.
 async function onSubmit(event) {
   const form = event.target;
@@ -404,6 +455,7 @@ function revealHash() {
 
 // After every load or swap: messages, settings, polling of running data sets, the parameter search.
 function settle(root) {
+  for (const form of root.querySelectorAll("form")) form.noValidate = true;
   for (const note of root.querySelectorAll("[data-toast]")) {
     toast(note.textContent.trim());
     note.remove();
@@ -432,7 +484,10 @@ function settle(root) {
 // Listen to the page once: links, forms, settings, popovers, history and anchors.
 function init() {
   document.addEventListener("click", onClick);
+  document.addEventListener("submit", onSubmitCheck, true);
   document.addEventListener("submit", onSubmit);
+  document.addEventListener("input", onFixed);
+  document.addEventListener("change", onFixed);
   document.addEventListener("change", onChange);
   document.addEventListener("input", onInput);
   document.addEventListener("toxage:navigate", (event) => visit(event.detail));
