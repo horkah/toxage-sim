@@ -1,6 +1,6 @@
 # References
 
-Literature on toxicity of systemic therapy in advanced pancreatic, prostate and breast cancer: 20 papers from high-impact international journals, published between 2020 and 2024, and 8 further clinical guidelines from the US (ASCO) and Europe (ESMO, EAU), published between 2018 and 2024.
+Literature on toxicity of systemic therapy in advanced pancreatic, prostate and breast cancer: 20 papers from high-impact international journals, published between 2020 and 2024, and 8 further clinical guidelines from the US (ASCO) and Europe (ESMO, EAU), published between 2018 and 2024. Nine sources were added later for the next model revision: risk scores for chemotherapy toxicity, the effect, adherence and cost of symptom monitoring, cardiovascular safety of androgen deprivation, management of lung toxicity, and quality-of-life utilities (published between 2006 and 2022).
 Citations follow APA style (7th edition). All bibliographic data were checked against PubMed; author names with accents were cross-checked against Crossref.
 
 ## Overview by topic
@@ -11,15 +11,18 @@ Citations follow APA style (7th edition). All bibliographic data were checked ag
 | Prostate cancer | de Bono et al. (2020); Fizazi et al. (2022); Sartor et al. (2021); Shore et al. (2020); Smith et al. (2022) | Tilki et al. (2024), EAU; Virgo et al. (2021), ASCO |
 | Breast cancer | Bardia et al. (2021); Cortes et al. (2022); Hortobagyi et al. (2022); Modi et al. (2022); Powell et al. (2022) | Gennari et al. (2021), ESMO |
 | Immune-related toxicity | – | Haanen et al. (2022), ESMO; Schneider et al. (2021), ASCO |
-| Cardiovascular toxicity | – | Lyon et al. (2022), ESC |
+| Cardiovascular toxicity | Lopes et al. (2021) | Lyon et al. (2022), ESC |
 | Neuropathy | – | Loprinzi et al. (2020), ASCO |
 | Venous thromboembolism | – | Key et al. (2020), ASCO |
-| Febrile neutropenia | – | Taplitz et al. (2018), ASCO and IDSA |
-| Antibody–drug conjugates | Tarantino et al. (2023) | – |
-| Older patients | Mohile et al. (2021) | Dale et al. (2023), ASCO |
-| Symptom monitoring by patients | Basch et al. (2022) | Di Maio et al. (2022), ESMO |
+| Febrile neutropenia | Lyman et al. (2011) | Taplitz et al. (2018), ASCO and IDSA |
+| Antibody–drug conjugates | Tarantino et al. (2023) | Swain et al. (2022), multidisciplinary guidance |
+| Older patients | Extermann et al. (2012); Hurria et al. (2011); Hurria et al. (2016); Mohile et al. (2021) | Dale et al. (2023), ASCO |
+| Symptom monitoring by patients | Absolom et al. (2021); Basch et al. (2022); Lizée et al. (2019) | Di Maio et al. (2022), ESMO |
+| Quality of life (utilities) | Lloyd et al. (2006) | – |
 
 ## Reference list
+
+Absolom, K., Warrington, L., Hudson, E., Hewison, J., Morris, C., Holch, P., Carter, R., Gibson, A., Holmes, M., Clayton, B., Rogers, Z., McParland, L., Conner, M., Glidewell, L., Woroncow, B., Dawkins, B., Dickinson, S., Hulme, C., Brown, J., & Velikova, G. (2021). Phase III randomized controlled trial of eRAPID: eHealth intervention during chemotherapy. *Journal of Clinical Oncology*, *39*(7), 734–747. <https://doi.org/10.1200/JCO.20.02015>
 
 Bardia, A., Hurvitz, S. A., Tolaney, S. M., Loirat, D., Punie, K., Oliveira, M., Brufsky, A., Sardesai, S. D., Kalinsky, K., Zelnak, A. B., Weaver, R., Traina, T., Dalenc, F., Aftimos, P., Lynce, F., Diab, S., Cortés, J., O'Shaughnessy, J., Diéras, V., . . . Rugo, H. S. (2021). Sacituzumab govitecan in metastatic triple-negative breast cancer. *The New England Journal of Medicine*, *384*(16), 1529–1541. <https://doi.org/10.1056/NEJMoa2028485>
 
@@ -35,6 +38,8 @@ de Bono, J., Mateo, J., Fizazi, K., Saad, F., Shore, N., Sandhu, S., Chi, K. N.,
 
 Di Maio, M., Basch, E., Denis, F., Fallowfield, L. J., Ganz, P. A., Howell, D., Kowalski, C., Perrone, F., Stover, A. M., Sundaresan, P., Warrington, L., Zhang, L., Apostolidis, K., Freeman-Daily, J., Ripamonti, C. I., & Santini, D. (2022). The role of patient-reported outcome measures in the continuum of cancer clinical care: ESMO Clinical Practice Guideline. *Annals of Oncology*, *33*(9), 878–892. <https://doi.org/10.1016/j.annonc.2022.04.007>
 
+Extermann, M., Boler, I., Reich, R. R., Lyman, G. H., Brown, R. H., DeFelice, J., Levine, R. M., Lubiner, E. T., Reyes, P., Schreiber, F. J., & Balducci, L. (2012). Predicting the risk of chemotherapy toxicity in older patients: The Chemotherapy Risk Assessment Scale for High-Age Patients (CRASH) score. *Cancer*, *118*(13), 3377–3386. <https://doi.org/10.1002/cncr.26646>
+
 Fizazi, K., Foulon, S., Carles, J., Roubaud, G., McDermott, R., Fléchon, A., Tombal, B., Supiot, S., Berthold, D., Ronchin, P., Kacso, G., Gravis, G., Calabro, F., Berdah, J.-F., Hasbini, A., Silva, M., Thiery-Vuillemin, A., Latorzeff, I., Mourey, L., . . . Bossi, A. (2022). Abiraterone plus prednisone added to androgen deprivation therapy and docetaxel in de novo metastatic castration-sensitive prostate cancer (PEACE-1): A multicentre, open-label, randomised, phase 3 study with a 2 × 2 factorial design. *The Lancet*, *399*(10336), 1695–1707. <https://doi.org/10.1016/S0140-6736(22)00367-1>
 
 Gennari, A., André, F., Barrios, C. H., Cortés, J., de Azambuja, E., DeMichele, A., Dent, R., Fenlon, D., Gligorov, J., Hurvitz, S. A., Im, S.-A., Krug, D., Kunz, W. G., Loi, S., Penault-Llorca, F., Ricke, J., Robson, M., Rugo, H. S., Saura, C., . . . Harbeck, N. (2021). ESMO Clinical Practice Guideline for the diagnosis, staging and treatment of patients with metastatic breast cancer. *Annals of Oncology*, *32*(12), 1475–1495. <https://doi.org/10.1016/j.annonc.2021.09.019>
@@ -43,9 +48,21 @@ Haanen, J., Obeid, M., Spain, L., Carbonnel, F., Wang, Y., Robert, C., Lyon, A. 
 
 Hortobagyi, G. N., Stemmer, S. M., Burris, H. A., Yap, Y.-S., Sonke, G. S., Hart, L., Campone, M., Petrakova, K., Winer, E. P., Janni, W., Conte, P., Cameron, D. A., André, F., Arteaga, C. L., Zarate, J. P., Chakravartty, A., Taran, T., Le Gac, F., Serra, P., & O'Shaughnessy, J. (2022). Overall survival with ribociclib plus letrozole in advanced breast cancer. *The New England Journal of Medicine*, *386*(10), 942–950. <https://doi.org/10.1056/NEJMoa2114663>
 
+Hurria, A., Togawa, K., Mohile, S. G., Owusu, C., Klepin, H. D., Gross, C. P., Lichtman, S. M., Gajra, A., Bhatia, S., Katheria, V., Klapper, S., Hansen, K., Ramani, R., Lachs, M., Wong, F. L., & Tew, W. P. (2011). Predicting chemotherapy toxicity in older adults with cancer: A prospective multicenter study. *Journal of Clinical Oncology*, *29*(25), 3457–3465. <https://doi.org/10.1200/JCO.2011.34.7625>
+
+Hurria, A., Mohile, S., Gajra, A., Klepin, H., Muss, H., Chapman, A., Feng, T., Smith, D., Sun, C.-L., De Glas, N., Cohen, H. J., Katheria, V., Doan, C., Zavala, L., Levi, A., Akiba, C., & Tew, W. P. (2016). Validation of a prediction tool for chemotherapy toxicity in older adults with cancer. *Journal of Clinical Oncology*, *34*(20), 2366–2371. <https://doi.org/10.1200/JCO.2015.65.4327>
+
 Key, N. S., Khorana, A. A., Kuderer, N. M., Bohlke, K., Lee, A. Y. Y., Arcelus, J. I., Wong, S. L., Balaban, E. P., Flowers, C. R., Francis, C. W., Gates, L. E., Kakkar, A. K., Levine, M. N., Liebman, H. A., Tempero, M. A., Lyman, G. H., & Falanga, A. (2020). Venous thromboembolism prophylaxis and treatment in patients with cancer: ASCO clinical practice guideline update. *Journal of Clinical Oncology*, *38*(5), 496–520. <https://doi.org/10.1200/JCO.19.01461>
 
+Lizée, T., Basch, E., Trémolières, P., Voog, E., Domont, J., Peyraga, G., Urban, T., Bennouna, J., Septans, A.-L., Balavoine, M., Detournay, B., & Denis, F. (2019). Cost-effectiveness of web-based patient-reported outcome surveillance in patients with lung cancer. *Journal of Thoracic Oncology*, *14*(6), 1012–1020. <https://doi.org/10.1016/j.jtho.2019.02.005>
+
+Lloyd, A., Nafees, B., Narewska, J., Dewilde, S., & Watkins, J. (2006). Health state utilities for metastatic breast cancer. *British Journal of Cancer*, *95*(6), 683–690. <https://doi.org/10.1038/sj.bjc.6603326>
+
+Lopes, R. D., Higano, C. S., Slovin, S. F., Nelson, A. J., Bigelow, R., Sørensen, P. S., Melloni, C., Goodman, S. G., Evans, C. P., Nilsson, J., Bhatt, D. L., Clarke, N. W., Olesen, T. K., Doyle-Olsen, B. T., Kristensen, H., Arney, L., Roe, M. T., Alexander, J. H., & PRONOUNCE Study Investigators. (2021). Cardiovascular safety of degarelix versus leuprolide in patients with prostate cancer: The primary results of the PRONOUNCE randomized trial. *Circulation*, *144*(16), 1295–1307. <https://doi.org/10.1161/CIRCULATIONAHA.121.056810>
+
 Loprinzi, C. L., Lacchetti, C., Bleeker, J., Cavaletti, G., Chauhan, C., Hertz, D. L., Kelley, M. R., Lavino, A., Lustberg, M. B., Paice, J. A., Schneider, B. P., Lavoie Smith, E. M., Smith, M. L., Smith, T. J., Wagner-Johnston, N., & Hershman, D. L. (2020). Prevention and management of chemotherapy-induced peripheral neuropathy in survivors of adult cancers: ASCO guideline update. *Journal of Clinical Oncology*, *38*(28), 3325–3348. <https://doi.org/10.1200/JCO.20.01399>
+
+Lyman, G. H., Kuderer, N. M., Crawford, J., Wolff, D. A., Culakova, E., Poniewierski, M. S., & Dale, D. C. (2011). Predicting individual risk of neutropenic complications in patients receiving cancer chemotherapy. *Cancer*, *117*(9), 1917–1927. <https://doi.org/10.1002/cncr.25691>
 
 Lyon, A. R., López-Fernández, T., Couch, L. S., Asteggiano, R., Aznar, M. C., Bergler-Klein, J., Boriani, G., Cardinale, D., Cordoba, R., Cosyns, B., Cutter, D. J., de Azambuja, E., de Boer, R. A., Dent, S. F., Farmakis, D., Gevaert, S. A., Gorog, D. A., Herrmann, J., Lenihan, D., . . . van der Pal, H. J. H. (2022). 2022 ESC Guidelines on cardio-oncology developed in collaboration with the European Hematology Association (EHA), the European Society for Therapeutic Radiology and Oncology (ESTRO) and the International Cardio-Oncology Society (IC-OS). *European Heart Journal*, *43*(41), 4229–4361. <https://doi.org/10.1093/eurheartj/ehac244>
 
@@ -67,6 +84,8 @@ Smith, M. R., Hussain, M., Saad, F., Fizazi, K., Sternberg, C. N., Crawford, E. 
 
 Sohal, D. P. S., Kennedy, E. B., Cinar, P., Conroy, T., Copur, M. S., Crane, C. H., Garrido-Laguna, I., Lau, M. W., Johnson, T., Krishnamurthi, S., Moravek, C., O'Reilly, E. M., Philip, P. A., Pant, S., Shah, M. A., Sahai, V., Uronis, H. E., Zaidi, N., & Laheru, D. (2020). Metastatic pancreatic cancer: ASCO guideline update. *Journal of Clinical Oncology*, *38*(27), 3217–3230. <https://doi.org/10.1200/JCO.20.01364>
 
+Swain, S. M., Nishino, M., Lancaster, L. H., Li, B. T., Nicholson, A. G., Bartholmai, B. J., Naidoo, J., Schumacher-Wulf, E., Shitara, K., Tsurutani, J., Conte, P., Kato, T., André, F., & Powell, C. A. (2022). Multidisciplinary clinical guidance on trastuzumab deruxtecan (T-DXd)-related interstitial lung disease/pneumonitis—Focus on proactive monitoring, diagnosis, and management. *Cancer Treatment Reviews*, *106*, Article 102378. <https://doi.org/10.1016/j.ctrv.2022.102378>
+
 Taplitz, R. A., Kennedy, E. B., Bow, E. J., Crews, J., Gleason, C., Hawley, D. K., Langston, A. A., Nastoupil, L. J., Rajotte, M., Rolston, K., Strasfeld, L., & Flowers, C. R. (2018). Outpatient management of fever and neutropenia in adults treated for malignancy: American Society of Clinical Oncology and Infectious Diseases Society of America clinical practice guideline update. *Journal of Clinical Oncology*, *36*(14), 1443–1453. <https://doi.org/10.1200/JCO.2017.77.6211>
 
 Tarantino, P., Ricciuti, B., Pradhan, S. M., & Tolaney, S. M. (2023). Optimizing the safety of antibody–drug conjugates for patients with solid tumours. *Nature Reviews Clinical Oncology*, *20*(8), 558–576. <https://doi.org/10.1038/s41571-023-00783-w>
@@ -83,6 +102,7 @@ PDFs are stored in `papers/`. "Read" says which text the report in `toxicity-rep
 
 | Reference | PMID | PDF in `papers/` | Read |
 |---|---|---|---|
+| Absolom et al. (2021) | 33417506 | missing | abstract |
 | Bardia et al. (2021) | 33882206 | `Bardia-2021-NEJMoa2028485.pdf` | full text |
 | Basch et al. (2022) | 35661856 | `Basch-2022_jama_oi_220058_1655397799.0558.pdf` | full text |
 | Conroy et al. (2023) | 37678671 | `Conroy-2023-1-s2.0-S0923753423008244-main.pdf` | full text |
@@ -90,12 +110,19 @@ PDFs are stored in `papers/`. "Read" says which text the report in `toxicity-rep
 | Dale et al. (2023) | 37459573 | missing | full text (accepted manuscript, PMC12803700) |
 | de Bono et al. (2020) | 32343890 | `DeBono-2020-NEJMoa1911440.pdf` | full text |
 | Di Maio et al. (2022) | 35462007 | missing | not read, no abstract |
+| Extermann et al. (2012) | 22072065 | missing | abstract |
 | Fizazi et al. (2022) | 35405085 | `Fizazi-2022-1-s2.0-S0140673622003671-main.pdf` | full text |
 | Gennari et al. (2021) | 34678411 | missing | not read, no abstract |
 | Haanen et al. (2022) | 36270461 | `Haanan-2022-1-s2.0-S0923753422041874-main.pdf` | full text, without supplement |
 | Hortobagyi et al. (2022) | 35263519 | `Hortobagyi-2022-NEJMoa2114663.pdf` | full text |
+| Hurria et al. (2011) | 21810685 | missing | abstract |
+| Hurria et al. (2016) | 27185838 | missing | abstract |
 | Key et al. (2020) | 31381464 | missing | abstract |
+| Lizée et al. (2019) | 30776447 | missing | abstract |
+| Lloyd et al. (2006) | 16967055 | missing | abstract |
+| Lopes et al. (2021) | 34459214 | missing | abstract |
 | Loprinzi et al. (2020) | 32663120 | `Loprinzi-2020-prevention-and-management-of-chemotherapy-induced-peripheral-neuropathy-in-survivors-of-adult.pdf` | full text |
+| Lyman et al. (2011) | 21509769 | missing | abstract |
 | Lyon et al. (2022) | 36017568 | `Lyon-2022-ehac244.pdf` | full text, selected sections |
 | Modi et al. (2022) | 35665782 | `Modi-2022-NEJMoa2203690.pdf` | full text |
 | Mohile et al. (2021) | 34741815 | `Mohile-2021-1-s2.0-S014067362101789X-main.pdf` | full text |
@@ -106,6 +133,7 @@ PDFs are stored in `papers/`. "Read" says which text the report in `toxicity-rep
 | Shore et al. (2020) | 32469183 | `Shore-2020-NEJMoa2004325.pdf` | full text |
 | Smith et al. (2022) | 35179323 | `Smith-2022-NEJMoa2119115.pdf` | full text |
 | Sohal et al. (2020) | 32755482 | missing | full text (accepted manuscript, PMC12974607) |
+| Swain et al. (2022) | 35430509 | missing | abstract |
 | Taplitz et al. (2018) | 29461916 | missing | abstract |
 | Tarantino et al. (2023) | 37296177 | `Tarantino-2023-s41571-023-00783-w.pdf` | full text |
 | Tilki et al. (2024) | 38688773 | missing | abstract |
@@ -114,6 +142,6 @@ PDFs are stored in `papers/`. "Read" says which text the report in `toxicity-rep
 
 Notes:
 
-- The PDFs of all 20 papers of the first selection are in `papers/`. The PDFs of the 8 added guidelines are missing.
+- The PDFs of all 20 papers of the first selection are in `papers/`. The PDFs of the 8 added guidelines and of the 9 sources added for the next model revision are missing.
 - For the long guidelines by Lyon et al. (2022) and Schneider et al. (2021), the sections on risk assessment, definitions, monitoring and the therapies of our three patient groups were read.
 - Several figures in Haanen et al. (2022) on baseline screening and on single organs are in the online supplement, which is not in `papers/`.

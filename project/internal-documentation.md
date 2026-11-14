@@ -14,7 +14,7 @@ Technical and organisational details that go beyond the public [README](../READM
 
 | Folder | Purpose | Status |
 |---|---|---|
-| `background/` | Literature, report, concepts | 28 references, report with ten risk model candidates, intervention model, 20 PDFs |
+| `background/` | Literature, report, concepts | 37 references, report with ten risk model candidates, intervention model, 20 PDFs |
 | `schema/` | Central data schema | scenario, baseline, observation, event, alert and outcome table (version 0.4.0), risk_score table (version 0.2.0), Python loader, validator, CSV reader and writer |
 | `engine/` | Synthetic data generator | weekly microsimulation until death or ten years, five subgroups, ten regimens, three event categories modelled in detail (severe toxicity, lung toxicity, cardiovascular events), seven intervention scenarios, calibration, tests |
 | `risk-model/` | Toxicity risk model | common interface, baseline models for candidates 1, 2 and 5, fitting, evaluation, tests, list of extensions |
