@@ -41,6 +41,15 @@ export function swappable(url, origin) {
 // was sent, which must not be repeated as a page load (a GET of a POST
 // address such as /data/delete/ is refused with 405); "load" to load a page
 // address normally.
+// Address of a loaded page: the address of the answer, with the anchor of the
+// requested address. fetch() leaves the anchor out of response.url; a browser
+// keeps it, also across redirects, unless the answer names its own.
+export function withAnchor(answered, requested) {
+  const url = new URL(answered);
+  if (!url.hash) url.hash = new URL(requested).hash;
+  return url;
+}
+
 export function afterFailure(method, partial, leaving) {
   if (leaving || partial) return "ignore";
   return method === "GET" ? "load" : "message";
@@ -238,7 +247,7 @@ export async function visit(href, options = {}) {
     if (mine === controller || options.only) document.documentElement.classList.remove("loading");
   }
   // A page that answers a form in place says under which address it can be loaded again.
-  const final = new URL(response.headers.get("X-Toxage-Location") || response.url, location.href);
+  const final = withAnchor(new URL(response.headers.get("X-Toxage-Location") || response.url, location.href), url.href);
   const html = (response.headers.get("content-type") || "").includes("text/html") ? await response.text() : null;
   if (mine.signal.aborted) return;
   const doc = html && new DOMParser().parseFromString(html, "text/html");
@@ -387,6 +396,9 @@ function revealHash() {
   for (let node = target; node; node = node.parentElement) {
     if (node.tagName === "DETAILS") node.open = true;
   }
+  // An address set by history.pushState() does not change :target; mark the target instead.
+  for (const old of document.querySelectorAll(".is-target")) old.classList.remove("is-target");
+  target.classList.add("is-target");
   target.scrollIntoView({ block: target.tagName === "TR" ? "center" : "start" });
 }
 

@@ -266,3 +266,8 @@ Make this pdf and anchor link part of Claude.md - as well as the following: don'
 2026-11-14 12:40 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 I need in the demo and tutorial the hint box be with a very subtle yellow background (of course adapted for bright and dark design) and also the hint box borders (two boxes, one containing the text and the other pointing to the UI element) be colored in some matching yellowish tone, to be elegantly different from the regular app design.
+
+================================================================================
+2026-11-14 13:05 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+The anchor was not reached or found from the first reference link in the toxicity report. From the references.md section it worked fine. Please fix for any other location from where we can invoke such hyperlinks. // next, I want you to add to the papers folder in the repo and to the references file a clear statement that that the PDFs are for personal scientific use within the project context only and not for any other use. Please use a better appropriate formulation. Background is that the pdfs were downloaded by the author within his university work in an academic project. Make the formulation short but precise, yet generic such that other group members can also store their PDFs there

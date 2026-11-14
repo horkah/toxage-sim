@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { afterFailure, estimateMb, formUrl, matches, swappable } from "../static/explorer/app.js";
+import { afterFailure, estimateMb, formUrl, matches, swappable, withAnchor } from "../static/explorer/app.js";
 
 test("formUrl keeps the non-empty values of a form", () => {
   const url = formUrl("http://h/?old=1", [["tumour_type", "breast"], ["tumour_type", "prostate"], ["age_min", ""], ["view", "time"]]);
@@ -42,4 +42,13 @@ test("estimateMb: a complete base and what the other scenarios add", () => {
   assert.equal(estimateMb(1000, [lung], 5500), 5.5);              // without usual care: complete
   assert.equal(estimateMb(1000, [], 5500), 0);
   assert.equal(estimateMb(-5, [usual], 5500), 0);
+});
+
+test("a loaded page keeps the anchor of the link", () => {
+  // fetch() drops the anchor from response.url (the report's links to the references).
+  assert.equal(withAnchor("https://x.org/documents/references/", "https://x.org/documents/references/#basch-2022").href,
+    "https://x.org/documents/references/#basch-2022");
+  assert.equal(withAnchor("https://x.org/b/", "https://x.org/a/#k").href, "https://x.org/b/#k");      // after a redirect
+  assert.equal(withAnchor("https://x.org/b/#own", "https://x.org/a/#k").href, "https://x.org/b/#own");
+  assert.equal(withAnchor("https://x.org/b/", "https://x.org/a/").href, "https://x.org/b/");
 });
