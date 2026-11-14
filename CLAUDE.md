@@ -21,3 +21,16 @@
 - Only simple prompts such as "resume" or "continue" after a limit was
   reached may be left out. All other prompts are logged, also questions,
   short follow-ups and prompts with screenshots.
+
+## Citations
+
+- Every mention of a publication such as "[Basch et al. (2022)](background/references.md#basch-2022)",
+  "([Basch et al., 2022](background/references.md#basch-2022))" or "[Basch 2022](background/references.md#basch-2022)", in a Markdown file or anywhere
+  in the app, is a link to its entry in `background/references.md`
+  (anchor `#<first author>-<year>`, e.g. `#basch-2022`).
+- Every entry of the reference list has that anchor, the full APA record
+  with DOI, and a link to its PDF, but only if the PDF is in
+  `background/papers/`. The link is the GitHub URL
+  `https://github.com/horkah/toxage-sim/blob/main/background/papers/<file>`.
+- `uv run python app/manage.py link_citations` links the citations of all
+  Markdown files; the app links those of the configuration notes itself.

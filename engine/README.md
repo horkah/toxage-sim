@@ -145,7 +145,7 @@ These mechanisms make the data behave like real data rather than like independen
 2. **Age effects.** Age lowers renal function, raises the rates of diabetes and cardiovascular disease, and adds to frailty and to the toxicity hazards.
 3. **Tumour-specific patterns.** Pancreatic cancer comes with more frailty, lower albumin and weight, more diabetes and, in some patients, raised bilirubin. Castration-resistant prostate cancer and HER2-low breast cancer come with earlier therapy lines and lower blood counts.
 4. **Treatment by indication.** Fitter and younger pancreatic patients more often get NALIRIFOX. Patients with lung problems less often get trastuzumab deruxtecan. Men with an earlier cardiovascular event more often get a GnRH antagonist instead of an agonist. Frail and older patients more often start with a reduced dose. Regimen and dose are therefore not independent of the patient's risk.
-5. **Type-specific risk factors.** Low baseline neutrophils and earlier therapy lines raise the hazard of neutropenia, G-CSF lowers it. Low haemoglobin and renal impairment raise the hazard of anaemia. Diabetes raises the hazard of neuropathy, cardiovascular disease that of hypertension. The six published risk factors raise the hazard of lung toxicity. For cardiovascular events an earlier event raises the hazard strongly under a GnRH agonist and hardly under an antagonist, as in HERO (Shore et al., 2020); age, diabetes, hypertension, smoking, renal function, cardiovascular disease without an event and frailty add to it.
+5. **Type-specific risk factors.** Low baseline neutrophils and earlier therapy lines raise the hazard of neutropenia, G-CSF lowers it. Low haemoglobin and renal impairment raise the hazard of anaemia. Diabetes raises the hazard of neuropathy, cardiovascular disease that of hypertension. The six published risk factors raise the hazard of lung toxicity. For cardiovascular events an earlier event raises the hazard strongly under a GnRH agonist and hardly under an antagonist, as in HERO ([Shore et al., 2020](../background/references.md#shore-2020)); age, diabetes, hypertension, smoking, renal function, cardiovascular disease without an event and frailty add to it.
 6. **Time patterns.** Neutropenia, diarrhoea and unspecified events occur mainly in the first weeks. Anaemia, low platelets, hypertension and immune-related events peak around week 8. Neuropathy grows with time on therapy. Lung toxicity follows the published onset distribution. Cardiovascular events have a constant hazard while the patient is on therapy. Toxicity from docetaxel ends after 18 weeks.
 7. **Feedback.** A severe event can lead to an interruption, a dose reduction or the end of therapy. A lower dose lowers the hazard of later events. A patient who stops therapy has no further therapy-related events.
 8. **Competing events.** Progression, the planned end of therapy and death end the time at risk.
@@ -226,17 +226,17 @@ Further checks against the literature:
 
 | Quantity | Literature | Generated |
 |---|---|---|
-| Severe toxicity within 90 days in patients aged 70 or older with at least one impaired geriatric domain, usual care | 71% (Mohile et al., 2021, usual care) | about 68% |
-| The same in flagged patients who take part in the risk-adapted start, against usual care | relative risk 0.74 (Mohile et al., 2021) | 57% against 70%, relative risk 0.81 |
-| Dose reduction with NALIRIFOX | 60% (Wainberg et al., 2023) | about 50% |
-| Therapy stopped because of adverse events with NALIRIFOX | 32% (Wainberg et al., 2023) | about 24% |
+| Severe toxicity within 90 days in patients aged 70 or older with at least one impaired geriatric domain, usual care | 71% ([Mohile et al., 2021](../background/references.md#mohile-2021), usual care) | about 68% |
+| The same in flagged patients who take part in the risk-adapted start, against usual care | relative risk 0.74 ([Mohile et al., 2021](../background/references.md#mohile-2021)) | 57% against 70%, relative risk 0.81 |
+| Dose reduction with NALIRIFOX | 60% ([Wainberg et al., 2023](../background/references.md#wainberg-2023)) | about 50% |
+| Therapy stopped because of adverse events with NALIRIFOX | 32% ([Wainberg et al., 2023](../background/references.md#wainberg-2023)) | about 24% |
 | Lung toxicity with trastuzumab deruxtecan within 52 weeks | 10.5% (12.1% overall, 87% of events within 12 months) | about 11% |
-| Share of lung toxicity recognised late | 53% (Powell et al., 2022) | about 47% |
-| Median day of onset of lung toxicity | 129 (Modi et al., 2022) | about 108 |
-| Cardiovascular events within 48 weeks under a GnRH agonist | 6.2% (Shore et al., 2020) | 6.5% |
-| The same in men without and with an earlier event | 4.2% and 17.8% (Shore et al., 2020; 11 of 263 and 8 of 45) | 4.2% and 29% |
-| Cardiovascular events within 48 weeks under a GnRH antagonist | 2.9% (Shore et al., 2020) | 4.9% |
-| Share of men with an earlier cardiovascular event | 13.9% (Shore et al., 2020) | 12.4% |
+| Share of lung toxicity recognised late | 53% ([Powell et al., 2022](../background/references.md#powell-2022)) | about 47% |
+| Median day of onset of lung toxicity | 129 ([Modi et al., 2022](../background/references.md#modi-2022)) | about 108 |
+| Cardiovascular events within 48 weeks under a GnRH agonist | 6.2% ([Shore et al., 2020](../background/references.md#shore-2020)) | 6.5% |
+| The same in men without and with an earlier event | 4.2% and 17.8% ([Shore et al., 2020](../background/references.md#shore-2020); 11 of 263 and 8 of 45) | 4.2% and 29% |
+| Cardiovascular events within 48 weeks under a GnRH antagonist | 2.9% ([Shore et al., 2020](../background/references.md#shore-2020)) | 4.9% |
+| Share of men with an earlier cardiovascular event | 13.9% ([Shore et al., 2020](../background/references.md#shore-2020)) | 12.4% |
 
 Scenarios, from the same run, per patient of the whole cohort:
 
@@ -264,10 +264,10 @@ The effects of the scenarios follow from the assumed parameters of the intervent
 | Part | Basis |
 |---|---|
 | Event rates per regimen, treatment duration, median survival | Literature, see `config/regimens.json` |
-| Hazard ratios, onset distribution, grades and recognition delay of lung toxicity | Literature (Powell et al., 2022; Modi et al., 2022) |
-| Shares below 95% oxygen saturation, with lung comorbidity and by renal function | Literature (Powell et al., 2022), approximately |
-| Rate of cardiovascular events under a GnRH agonist, effect of an earlier event and of an antagonist | Literature (Shore et al., 2020); the groups with an earlier event are small |
-| Effects of age, diabetes, hypertension, smoking, renal function, cardiovascular disease without an event and frailty on cardiovascular events | Assumption; the directions follow the ESC guideline (Lyon et al., 2022) |
+| Hazard ratios, onset distribution, grades and recognition delay of lung toxicity | Literature ([Powell et al., 2022](../background/references.md#powell-2022); [Modi et al., 2022](../background/references.md#modi-2022)) |
+| Shares below 95% oxygen saturation, with lung comorbidity and by renal function | Literature ([Powell et al., 2022](../background/references.md#powell-2022)), approximately |
+| Rate of cardiovascular events under a GnRH agonist, effect of an earlier event and of an antagonist | Literature ([Shore et al., 2020](../background/references.md#shore-2020)); the groups with an earlier event are small |
+| Effects of age, diabetes, hypertension, smoking, renal function, cardiovascular disease without an event and frailty on cardiovascular events | Assumption; the directions follow the ESC guideline ([Lyon et al., 2022](../background/references.md#lyon-2022)) |
 | Share and length of the warning phase, grades of cardiovascular events | Assumption |
 | Mean age in three subgroups | Literature (median ages in ARASENS, VISION, ASCENT) |
 | All other baseline distributions | Assumption |
@@ -275,11 +275,11 @@ The effects of the scenarios follow from the assumed parameters of the intervent
 | Time patterns, grades and actions for events other than lung toxicity | Assumption |
 | Choice of regimen and starting dose | Assumption |
 | Size of the signals in the measurements, noise and missing weeks | Assumption |
-| Recognition delay of lung toxicity | Literature (Powell et al., 2022) |
+| Recognition delay of lung toxicity | Literature ([Powell et al., 2022](../background/references.md#powell-2022)) |
 | Days per grade of the other event types | Assumption |
 | Participation, adherence, dropout, attendance, loss to follow-up | Assumption |
 | Accuracy of the stand-ins for prediction and detection, false alerts | Assumption |
-| Effect of early treatment, adapted start and supportive measures | Assumption, checked against GAP70+ (Mohile et al., 2021) |
+| Effect of early treatment, adapted start and supportive measures | Assumption, checked against GAP70+ ([Mohile et al., 2021](../background/references.md#mohile-2021)) |
 | Hospital stays and duration of events by grade | Assumption |
 | Unit costs and quality-of-life weights | Placeholder values, not from the literature |
 
@@ -314,7 +314,7 @@ The effects of the scenarios follow from the assumed parameters of the intervent
 - Events that stay at grade 1 or 2 in usual care.
 - Genetic factors such as UGT1A1.
 - Other cardiovascular toxicity from the report: cardiac dysfunction under HER2-targeted therapy, myocarditis under checkpoint inhibitors, ischaemia under fluoropyrimidines.
-- A switch from a GnRH agonist to an antagonist for men at high cardiovascular risk as part of the risk-adapted start, as the ESC guideline suggests (Lyon et al., 2022).
+- A switch from a GnRH agonist to an antagonist for men at high cardiovascular risk as part of the risk-adapted start, as the ESC guideline suggests ([Lyon et al., 2022](../background/references.md#lyon-2022)).
 - Lipids, a full SCORE2 risk and a diastolic blood pressure in the baseline record.
 - Further signals: weight, temperature, potassium, liver values, troponin, ECOG over time.
 - Detection by real risk models that read the weekly observations, in place of the stand-ins.

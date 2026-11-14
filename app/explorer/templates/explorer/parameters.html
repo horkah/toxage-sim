@@ -1,4 +1,5 @@
 {% extends "explorer/base.html" %}
+{% load explorer_tags %}
 {% block title %}{{ source.title }} · Parameters · toxage-sim{% endblock %}
 {% block content %}
 <div class="layout">
@@ -20,7 +21,7 @@
     <header class="page-head">
       <div>
         <h1>{{ source.title }}</h1>
-        <p class="lead">{{ source.intro }}</p>
+        <p class="lead">{{ source.intro|cite }}</p>
         <p class="muted small">{% if is_engine %}Changes apply to data sets generated from now on; stored data sets keep the values they were made with.{% else %}Changes apply to the risks in the explorer at once.{% endif %}
           Defaults come from <code>{{ source.path }}</code>.</p>
       </div>
@@ -44,14 +45,14 @@
       {% for g in groups %}
       <details id="{{ g.anchor }}"{% if g.changed or forloop.first %} open{% endif %}>
         <summary>{{ g.title }}{% if g.changed %} <span class="count">{{ g.changed }} changed</span>{% endif %}</summary>
-        {% if g.note %}<p class="basis">{{ g.note }}</p>{% endif %}
+        {% if g.note %}<p class="basis">{{ g.note|cite }}</p>{% endif %}
         <table class="paramtable">
           <thead><tr><th>Parameter</th><th>Value</th><th>Default</th><th><span class="sr-only">Reset</span></th></tr></thead>
           <tbody>
           {% for r in g.rows %}
           <tr id="{{ r.anchor }}"{% if r.changed %} class="changed"{% endif %}>
             <th><label for="p-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">{{ r.label }}</label>
-              {% if r.note %}<small>{{ r.note }}</small>{% endif %}</th>
+              {% if r.note %}<small>{{ r.note|cite }}</small>{% endif %}</th>
             <td>
               {% if r.kind == "bool" %}
               <select name="p:{{ r.path }}" id="p-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"{% if read_only %} disabled{% endif %}>

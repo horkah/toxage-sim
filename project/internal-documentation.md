@@ -50,21 +50,21 @@ Sections 2 to 7 of the report state what the sources say. Section 8, the risk mo
 
 Limits of the current reading:
 
-- The two longest guidelines (Lyon 2022 with 133 pages, Schneider 2021 with 64 pages) were read in selected sections.
-- The online supplements of the papers are not in the repository. This affects Haanen 2022 most, where baseline screening and details on several organs are in the supplement.
-- In the text extracted from Conroy 2023, the signs "≥" and "≤" are lost. The thresholds for Karnofsky score and bilirubin in section 3 of the report follow from the wording of the neighbouring recommendations.
+- The two longest guidelines ([Lyon 2022](../background/references.md#lyon-2022) with 133 pages, [Schneider 2021](../background/references.md#schneider-2021) with 64 pages) were read in selected sections.
+- The online supplements of the papers are not in the repository. This affects [Haanen 2022](../background/references.md#haanen-2022) most, where baseline screening and details on several organs are in the supplement.
+- In the text extracted from [Conroy 2023](../background/references.md#conroy-2023), the signs "≥" and "≤" are lost. The thresholds for Karnofsky score and bilirubin in section 3 of the report follow from the wording of the neighbouring recommendations.
 
 ### PDFs
 
-All 20 PDFs of the first selection are in `background/papers/`. File names follow the pattern `<first author>-<year>-<publisher file name>.pdf`. The file of Haanen 2022 is spelled `Haanan-…` .
+All 20 PDFs of the first selection are in `background/papers/`. File names follow the pattern `<first author>-<year>-<publisher file name>.pdf`. The file of [Haanen 2022](../background/references.md#haanen-2022) is spelled `Haanan-…` .
 
-The PDFs of the eight added guidelines are missing: Dale 2023, Di Maio 2022, Gennari 2021, Key 2020, Sohal 2020, Taplitz 2018, Tilki 2024, Virgo 2021.
+The PDFs of the eight added guidelines are missing: [Dale 2023](../background/references.md#dale-2023), [Di Maio 2022](../background/references.md#di-maio-2022), [Gennari 2021](../background/references.md#gennari-2021), [Key 2020](../background/references.md#key-2020), [Sohal 2020](../background/references.md#sohal-2020), [Taplitz 2018](../background/references.md#taplitz-2018), [Tilki 2024](../background/references.md#tilki-2024), [Virgo 2021](../background/references.md#virgo-2021).
 
 Automated download is limited because the publisher websites and the Europe PMC website block scripted access. The only automated source for PDFs is the PubMed Central article dataset on AWS (`pmc-oa-opendata`), which holds PDFs only for articles with an open licence.
 
 ### Licences of the stored PDFs
 
-- Powell 2022 and Nichetti 2024 are open access under CC BY and may be redistributed.
+- [Powell 2022](../background/references.md#powell-2022) and [Nichetti 2024](../background/references.md#nichetti-2024) are open access under CC BY and may be redistributed.
 - All other PDFs are publisher versions under publisher copyright, obtained through the university account or free to read on the journal website.
 
 The copyrighted PDFs must not be in the repository when it becomes public. Before publication, `background/papers/` has to be reduced to openly licensed files, and the PDFs have to be removed from the git history as well.

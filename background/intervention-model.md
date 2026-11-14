@@ -26,7 +26,7 @@ Every arrow is a step where the intervention can fail. Each step gets its own pa
 | Input | Baseline data | Weekly observations |
 | Time of action | Before the first cycle | In the week of the alert |
 | Typical action | Adapted dose or regimen, prophylaxis, closer monitoring | Contact, examination, pause of therapy, early treatment |
-| Evidence that acting helps | Geriatric assessment with adapted management lowered severe toxicity from 71% to 51% (Mohile et al., 2021) | Weekly symptom reports with alerts improved function, symptom control and quality of life (Basch et al., 2022) |
+| Evidence that acting helps | Geriatric assessment with adapted management lowered severe toxicity from 71% to 51% ([Mohile et al., 2021](references.md#mohile-2021)) | Weekly symptom reports with alerts improved function, symptom control and quality of life ([Basch et al., 2022](references.md#basch-2022)) |
 
 ## 3. Model components
 
@@ -46,7 +46,7 @@ Two points matter for realism:
 - **Selective participation.** Patients who take part and stay adherent are on average fitter than those who do not. If the model ignores this, it overstates the benefit, because the patients with the highest risk are the ones the intervention reaches least. Uptake and adherence therefore depend on the latent frailty.
 - **Loss to follow-up exists without the intervention.** A patient who stays away after a diagnosis has a later recognition of every further toxicity and no adapted therapy. This belongs to usual care and to every other scenario.
 
-Anchor: in PRO-TECT, 1066 of 1191 patients (89.5%) completed the three-month follow-up of the trial (Basch et al., 2022). This is retention in the study, not the completion of weekly reports. All values of this section have to be set as assumptions or taken from further literature.
+Anchor: in PRO-TECT, 1066 of 1191 patients (89.5%) completed the three-month follow-up of the trial ([Basch et al., 2022](references.md#basch-2022)). This is retention in the study, not the completion of weekly reports. All values of this section have to be set as assumptions or taken from further literature.
 
 ### 3.2 Detector and risk model
 
@@ -83,7 +83,7 @@ onset ─► mild ─► moderate ─► severe ─► life-threatening ─► f
 
 The stage times and ceilings are set so that the scenario "usual care" gives the same event rates and grade distributions as the engine gives today. The published values stay the calibration targets.
 
-For lung toxicity the published delay supports this structure directly: onset was set earlier by the adjudication committee for 53% of events, with a median difference of 43 days (Powell et al., 2022). For other event types the length of the early phase is an assumption. Cardiovascular events are a special case: only a part of them has a phase with warning signs, such as unstable angina, a transient ischaemic attack or rising blood pressure. The others come without notice, and no detection can prevent them. The engine assumes a warning phase for half of the events.
+For lung toxicity the published delay supports this structure directly: onset was set earlier by the adjudication committee for 53% of events, with a median difference of 43 days ([Powell et al., 2022](references.md#powell-2022)). For other event types the length of the early phase is an assumption. Cardiovascular events are a special case: only a part of them has a phase with warning signs, such as unstable angina, a transient ischaemic attack or rising blood pressure. The others come without notice, and no detection can prevent them. The engine assumes a warning phase for half of the events.
 
 ### 3.4 Actions
 
@@ -98,7 +98,7 @@ What the care team does after a flag or an alert. Each action has a probability 
 | Supportive measures, for example nutrition, review of medication, physiotherapy | Lower general hazard, fewer falls | No |
 | Closer monitoring | Earlier recognition of all events | No |
 
-Anchor: in GAP70+, 48.7% of patients in the intervention group started with reduced intensity against 35.0% with usual care. Severe toxicity fell by a relative risk of 0.74. Survival did not differ (Mohile et al., 2021).
+Anchor: in GAP70+, 48.7% of patients in the intervention group started with reduced intensity against 35.0% with usual care. Severe toxicity fell by a relative risk of 0.74. Survival did not differ ([Mohile et al., 2021](references.md#mohile-2021)).
 
 **After an alert during therapy**
 
@@ -110,7 +110,7 @@ Anchor: in GAP70+, 48.7% of patients in the intervention group started with redu
 | Early specific treatment, for example corticosteroids for lung toxicity or immune-related events, antibiotics for fever in neutropenia, fluids and electrolytes for diarrhoea | Lower final grade, shorter duration, less often a hospital stay |
 | Resumption of therapy after a mild, well-managed event | Fewer permanent stops of therapy |
 
-Anchors: in PRO-TECT, 33.9% of the weekly surveys triggered an alert, and 59.1% of the alerts led to an immediate action by a nurse, mostly a phone call (Basch et al., 2022). The ASCO guideline ties the management of immune-related events to the grade: continue at grade 1, pause at grade 2, high-dose corticosteroids at grade 3, permanent stop at grade 4 (Schneider et al., 2021). An event caught at a lower grade therefore has a milder consequence for the therapy by rule.
+Anchors: in PRO-TECT, 33.9% of the weekly surveys triggered an alert, and 59.1% of the alerts led to an immediate action by a nurse, mostly a phone call ([Basch et al., 2022](references.md#basch-2022)). The ASCO guideline ties the management of immune-related events to the grade: continue at grade 1, pause at grade 2, high-dose corticosteroids at grade 3, permanent stop at grade 4 ([Schneider et al., 2021](references.md#schneider-2021)). An event caught at a lower grade therefore has a milder consequence for the therapy by rule.
 
 ### 3.5 Consequences
 
@@ -222,12 +222,12 @@ Further scenarios come from varying single parameters, for example uptake, sensi
 | | Threshold or share flagged | none |
 | Detection | Sensitivity per stage | none; later from the real risk model |
 | | False alerts per patient-week | PRO-TECT: alerts in 33.9% of surveys under fixed thresholds |
-| Natural course | Time per stage, ceiling grade | Lung toxicity: recognition delay in Powell et al. (2022), grades in Modi et al. (2022). Cardiovascular events: share and length of the warning phase are assumptions |
+| Natural course | Time per stage, ceiling grade | Lung toxicity: recognition delay in [Powell et al. (2022)](references.md#powell-2022), grades in [Modi et al. (2022)](references.md#modi-2022). Cardiovascular events: share and length of the warning phase are assumptions |
 | Actions at start | Share of flagged patients with reduced dose | GAP70+: 48.7% against 35.0% |
 | | Effect of supportive measures on the hazard | GAP70+: relative risk 0.74 for the whole bundle |
 | Actions after alert | Share of alerts with action | PRO-TECT: 59.1% |
 | | Effect of early treatment on the final grade | none |
-| | Therapy consequence by grade | Schneider et al. (2021) for immune-related events |
+| | Therapy consequence by grade | [Schneider et al. (2021)](references.md#schneider-2021) for immune-related events |
 | Consequences | Hospital stay by type and grade, length of stay | none |
 | | Effect of dose received on progression | GAP70+: no difference in survival |
 | Value | Unit costs, quality-of-life weights | none |

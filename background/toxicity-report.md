@@ -21,8 +21,8 @@ All numbers come from the cited sources. The table "Full texts" in `references.m
 - Severe toxicity is the normal case. In the phase 3 trials covered here, between about half and almost nine in ten patients had at least one adverse event of grade 3 or higher.
 - Each therapy class has its own pattern, its own timing and its own risk factors. One general model will therefore not be enough. A small set of models per toxicity type fits the evidence better.
 - Guidelines already use risk stratification in some areas: performance status and bilirubin for the choice of pancreatic chemotherapy, the HFA-ICOS tool and SCORE2 for cardiovascular risk, geriatric assessment for patients aged 65 or older, the MASCC index for febrile neutropenia. In other areas they state openly that no validated tool exists, for example for cardiovascular risk under androgen deprivation.
-- Toxicity is often noticed late. For lung toxicity from trastuzumab deruxtecan, an expert committee dated the onset earlier than the treating investigators in about half of the events, with a median gap of 43 days (Powell et al., 2022).
-- Better assessment and monitoring change outcomes. Geriatric assessment lowered severe toxicity in older patients from 71% to 51% (Mohile et al., 2021). Weekly electronic symptom reports improved physical function, symptom control and quality of life (Basch et al., 2022).
+- Toxicity is often noticed late. For lung toxicity from trastuzumab deruxtecan, an expert committee dated the onset earlier than the treating investigators in about half of the events, with a median gap of 43 days ([Powell et al., 2022](references.md#powell-2022)).
+- Better assessment and monitoring change outcomes. Geriatric assessment lowered severe toxicity in older patients from 71% to 51% ([Mohile et al., 2021](references.md#mohile-2021)). Weekly electronic symptom reports improved physical function, symptom control and quality of life ([Basch et al., 2022](references.md#basch-2022)).
 
 ## 2. How toxicity is measured
 
@@ -32,11 +32,11 @@ Three things make numbers hard to compare between trials:
 
 - Some trials count all adverse events during treatment, others only those judged to be related to the drug.
 - Reporting thresholds differ, for example "events in at least 5% of patients".
-- Longer treatment means more time to collect events. DESTINY-Breast04 therefore also reports rates per patient-year (Modi et al., 2022).
+- Longer treatment means more time to collect events. DESTINY-Breast04 therefore also reports rates per patient-year ([Modi et al., 2022](references.md#modi-2022)).
 
-Patient-reported outcomes are a second source next to clinician grading. PRO-TECT used weekly patient surveys and the EORTC QLQ-C30 questionnaire (Basch et al., 2022). A secondary analysis of GAP70+ used the patient-reported version of the CTCAE (Dale et al., 2023).
+Patient-reported outcomes are a second source next to clinician grading. PRO-TECT used weekly patient surveys and the EORTC QLQ-C30 questionnaire ([Basch et al., 2022](references.md#basch-2022)). A secondary analysis of GAP70+ used the patient-reported version of the CTCAE ([Dale et al., 2023](references.md#dale-2023)).
 
-Some toxicities have their own definitions. The ESC guideline defines cancer therapy-related cardiac dysfunction by symptoms, left ventricular ejection fraction (LVEF), global longitudinal strain (GLS) and cardiac biomarkers (Lyon et al., 2022):
+Some toxicities have their own definitions. The ESC guideline defines cancer therapy-related cardiac dysfunction by symptoms, left ventricular ejection fraction (LVEF), global longitudinal strain (GLS) and cardiac biomarkers ([Lyon et al., 2022](references.md#lyon-2022)):
 
 | Asymptomatic cardiac dysfunction | Definition |
 |---|---|
@@ -50,7 +50,7 @@ Some toxicities have their own definitions. The ESC guideline defines cancer the
 
 Both guidelines tie the choice of first-line chemotherapy for metastatic disease to the patient's condition. This is risk stratification by expected tolerance.
 
-| Patient | ESMO (Conroy et al., 2023) | ASCO (Sohal et al., 2020) |
+| Patient | ESMO ([Conroy et al., 2023](references.md#conroy-2023)) | ASCO ([Sohal et al., 2020](references.md#sohal-2020)) |
 |---|---|---|
 | ECOG 0–1, bilirubin below 1.5 times the upper limit of normal | FOLFIRINOX or gemcitabine plus nab-paclitaxel | FOLFIRINOX if comorbidity profile is favourable, a support system exists and port and pump services are available; gemcitabine plus nab-paclitaxel if comorbidity profile is relatively favourable |
 | ECOG 2 with Karnofsky score of 70 or more and bilirubin up to 1.5 times the upper limit | Gemcitabine plus nab-paclitaxel can be considered | Gemcitabine alone; a second drug may be added with proactive dose and schedule adjustments |
@@ -61,7 +61,7 @@ The ESMO guideline adds that there is no randomised comparison of FOLFIRINOX wit
 
 ### Toxicity of first-line regimens
 
-NAPOLI 3 compared NALIRIFOX with gemcitabine plus nab-paclitaxel in 770 patients (Wainberg et al., 2023). Safety data refer to 370 and 379 treated patients.
+NAPOLI 3 compared NALIRIFOX with gemcitabine plus nab-paclitaxel in 770 patients ([Wainberg et al., 2023](references.md#wainberg-2023)). Safety data refer to 370 and 379 treated patients.
 
 | NAPOLI 3 | NALIRIFOX | Gemcitabine + nab-paclitaxel |
 |---|---|---|
@@ -81,7 +81,7 @@ NAPOLI 3 compared NALIRIFOX with gemcitabine plus nab-paclitaxel in 770 patients
 
 The overall burden is the same in both arms, but the pattern differs: NALIRIFOX causes more gastrointestinal toxicity and hypokalaemia, gemcitabine plus nab-paclitaxel more blood count changes and neuropathy. Median treatment duration was 24.3 versus 17.6 weeks.
 
-A meta-analysis of seven phase 3 trials with 2581 patients compared all three regimens (Nichetti et al., 2024):
+A meta-analysis of seven phase 3 trials with 2581 patients compared all three regimens ([Nichetti et al., 2024](references.md#nichetti-2024)):
 
 - Severe low platelet counts: 1.6% with NALIRIFOX, 11.8% with FOLFIRINOX, 10.8% with gemcitabine plus nab-paclitaxel.
 - Severe diarrhoea: 20.3% with NALIRIFOX, 16.8% with FOLFIRINOX, 15.7% with gemcitabine plus nab-paclitaxel.
@@ -99,23 +99,23 @@ A meta-analysis of seven phase 3 trials with 2581 patients compared all three re
 
 ### Treatment frame
 
-The ASCO guideline names docetaxel, abiraterone, enzalutamide or apalutamide, each with androgen deprivation, as standards of care for metastatic hormone-sensitive disease (Virgo et al., 2021). The European guideline of 2024 adds combinations of androgen receptor inhibitors with chemotherapy, PARP inhibitors and their combinations, and PSMA-based therapy (Tilki et al., 2024). Only the abstracts of these two guidelines have been read.
+The ASCO guideline names docetaxel, abiraterone, enzalutamide or apalutamide, each with androgen deprivation, as standards of care for metastatic hormone-sensitive disease ([Virgo et al., 2021](references.md#virgo-2021)). The European guideline of 2024 adds combinations of androgen receptor inhibitors with chemotherapy, PARP inhibitors and their combinations, and PSMA-based therapy ([Tilki et al., 2024](references.md#tilki-2024)). Only the abstracts of these two guidelines have been read.
 
 ### Androgen deprivation
 
-HERO compared the oral antagonist relugolix with leuprolide injections over 48 weeks in 930 patients (Shore et al., 2020).
+HERO compared the oral antagonist relugolix with leuprolide injections over 48 weeks in 930 patients ([Shore et al., 2020](references.md#shore-2020)).
 
 - Major adverse cardiovascular events occurred in 2.9% with relugolix and 6.2% with leuprolide (hazard ratio 0.46).
 - More than 90% of the men had at least one cardiovascular risk factor.
 - In men with a history of such events, the rates were 3.6% with relugolix (3 of 84) and 17.8% with leuprolide (8 of 45).
 
-The ESC guideline states that GnRH agonists are associated with increased cardiovascular risk and mortality, particularly in men over 60, and that the main effects to consider are hypertension, diabetes, ischaemic heart disease and cardiac dysfunction (Lyon et al., 2022). It also notes that a second trial, PRONOUNCE, found no difference in cardiovascular events between an antagonist and an agonist at one year, and that more research is needed.
+The ESC guideline states that GnRH agonists are associated with increased cardiovascular risk and mortality, particularly in men over 60, and that the main effects to consider are hypertension, diabetes, ischaemic heart disease and cardiac dysfunction ([Lyon et al., 2022](references.md#lyon-2022)). It also notes that a second trial, PRONOUNCE, found no difference in cardiovascular events between an antagonist and an agonist at one year, and that more research is needed.
 
 ### Treatment intensification in hormone-sensitive disease
 
 Two trials added a second hormonal drug to androgen deprivation plus docetaxel.
 
-| | PEACE-1 (Fizazi et al., 2022) | ARASENS (Smith et al., 2022) |
+| | PEACE-1 ([Fizazi et al., 2022](references.md#fizazi-2022)) | ARASENS ([Smith et al., 2022](references.md#smith-2022)) |
 |---|---|---|
 | Added drug | Abiraterone plus prednisone | Darolutamide |
 | Severe adverse events with / without the added drug | 63% / 52% (grade 3 or worse) | 66.1% / 63.5% (grade 3 or 4) |
@@ -128,7 +128,7 @@ In ARASENS, serious adverse events occurred in 44.8% and 42.3%, and deaths from 
 
 ### PARP inhibition
 
-In PROfound, olaparib was compared with a hormonal drug in castration-resistant disease with alterations in DNA repair genes (de Bono et al., 2020). Safety data refer to 256 and 130 patients.
+In PROfound, olaparib was compared with a hormonal drug in castration-resistant disease with alterations in DNA repair genes ([de Bono et al., 2020](references.md#de-bono-2020)). Safety data refer to 256 and 130 patients.
 
 | PROfound | Olaparib | Control |
 |---|---|---|
@@ -142,7 +142,7 @@ In PROfound, olaparib was compared with a hormonal drug in castration-resistant 
 
 ### Radioligand therapy
 
-VISION tested lutetium-177–PSMA-617 added to standard care after hormonal therapy and taxanes (Sartor et al., 2021). Safety data refer to 529 and 205 patients.
+VISION tested lutetium-177–PSMA-617 added to standard care after hormonal therapy and taxanes ([Sartor et al., 2021](references.md#sartor-2021)). Safety data refer to 529 and 205 patients.
 
 | VISION | Lutetium-177–PSMA-617 + standard care | Standard care |
 |---|---|---|
@@ -160,11 +160,11 @@ Adverse events led to stopping the radioligand in 11.9%, to interruption in 16.1
 
 ### Treatment frame
 
-The ESMO guideline on metastatic breast cancer (Gennari et al., 2021) is the European frame for treatment choice. Its full text has not been read yet.
+The ESMO guideline on metastatic breast cancer ([Gennari et al., 2021](references.md#gennari-2021)) is the European frame for treatment choice. Its full text has not been read yet.
 
 ### Antibody–drug conjugates
 
-Trastuzumab deruxtecan was compared with chemotherapy of the physician's choice in HER2-low disease in DESTINY-Breast04 (Modi et al., 2022). Safety data refer to 371 and 172 patients.
+Trastuzumab deruxtecan was compared with chemotherapy of the physician's choice in HER2-low disease in DESTINY-Breast04 ([Modi et al., 2022](references.md#modi-2022)). Safety data refer to 371 and 172 patients.
 
 | DESTINY-Breast04 | Trastuzumab deruxtecan | Chemotherapy |
 |---|---|---|
@@ -178,7 +178,7 @@ Trastuzumab deruxtecan was compared with chemotherapy of the physician's choice 
 
 Of the lung events with trastuzumab deruxtecan, 3.5% were grade 1, 6.5% grade 2, 1.3% grade 3 and 0.8% fatal. The median time to onset was 129 days (range 26 to 710).
 
-A pooled analysis of nine earlier studies with 1150 heavily pretreated patients, 44% of them with breast cancer, looked at this lung toxicity in detail (Powell et al., 2022):
+A pooled analysis of nine earlier studies with 1150 heavily pretreated patients, 44% of them with breast cancer, looked at this lung toxicity in detail ([Powell et al., 2022](references.md#powell-2022)):
 
 - Incidence 15.4%, fatal in 2.2%.
 - 77.4% of affected patients had grade 1 or 2 events.
@@ -186,9 +186,9 @@ A pooled analysis of nine earlier studies with 1150 heavily pretreated patients,
 - For 53.2% of events the adjudication committee set an earlier onset than the investigators. The median difference was 43 days.
 - Baseline factors linked to higher risk: age under 65, enrolment in Japan, dose above 6.4 mg/kg, oxygen saturation below 95%, moderate or severe renal impairment, lung comorbidities, and more than four years since first diagnosis.
 
-Sacituzumab govitecan was compared with single-agent chemotherapy in metastatic triple-negative disease in ASCENT (Bardia et al., 2021). Treatment-related events of grade 3 or higher were neutropenia (51% versus 33%), leukopenia (10% versus 5%), diarrhoea (10% versus under 1%), anaemia (8% versus 5%) and febrile neutropenia (6% versus 2%). Only 5% stopped treatment because of adverse events, and no death was attributed to the drug. The paper notes that homozygosity for the UGT1A1*28 gene variant is associated with an increased risk of haematological toxicity.
+Sacituzumab govitecan was compared with single-agent chemotherapy in metastatic triple-negative disease in ASCENT ([Bardia et al., 2021](references.md#bardia-2021)). Treatment-related events of grade 3 or higher were neutropenia (51% versus 33%), leukopenia (10% versus 5%), diarrhoea (10% versus under 1%), anaemia (8% versus 5%) and febrile neutropenia (6% versus 2%). Only 5% stopped treatment because of adverse events, and no death was attributed to the drug. The paper notes that homozygosity for the UGT1A1*28 gene variant is associated with an increased risk of haematological toxicity.
 
-A review of antibody–drug conjugates explains why these drugs are not as gentle as hoped (Tarantino et al., 2023). Most still cause toxicity that resembles their cytotoxic payload, plus effects on healthy tissue carrying the target, plus other poorly understood and sometimes life-threatening effects. The review names patient factors that change the risk:
+A review of antibody–drug conjugates explains why these drugs are not as gentle as hoped ([Tarantino et al., 2023](references.md#tarantino-2023)). Most still cause toxicity that resembles their cytotoxic payload, plus effects on healthy tissue carrying the target, plus other poorly understood and sometimes life-threatening effects. The review names patient factors that change the risk:
 
 - Impaired organ function at baseline. Impaired renal function and lower oxygen saturation are linked to lung toxicity from trastuzumab deruxtecan.
 - Gene variants in drug metabolism. Patients with deleterious UGT1A1 variants had more adverse events with sacituzumab govitecan.
@@ -199,7 +199,7 @@ For early detection the review points to wearable biosensors, pulse oximetry, ho
 
 ### Immunotherapy plus chemotherapy
 
-KEYNOTE-355 added pembrolizumab to chemotherapy in advanced triple-negative disease (Cortes et al., 2022).
+KEYNOTE-355 added pembrolizumab to chemotherapy in advanced triple-negative disease ([Cortes et al., 2022](references.md#cortes-2022)).
 
 - Treatment-related events of grade 3 to 5 occurred in 68.1% with pembrolizumab and 66.9% with placebo. Most of the severe toxicity therefore comes from the chemotherapy.
 - Immune-mediated events occurred in 26.5% versus 6.4%, of grade 3 or 4 in 5.3% versus 0%.
@@ -207,7 +207,7 @@ KEYNOTE-355 added pembrolizumab to chemotherapy in advanced triple-negative dise
 
 ### CDK4/6 inhibition
 
-In MONALEESA-2, ribociclib plus letrozole was compared with letrozole alone as first-line treatment of hormone receptor-positive disease, with a median follow-up of 6.6 years (Hortobagyi et al., 2022). Grade 3 or 4 events of special interest were:
+In MONALEESA-2, ribociclib plus letrozole was compared with letrozole alone as first-line treatment of hormone receptor-positive disease, with a median follow-up of 6.6 years ([Hortobagyi et al., 2022](references.md#hortobagyi-2022)). Grade 3 or 4 events of special interest were:
 
 | MONALEESA-2 | Ribociclib + letrozole | Placebo + letrozole |
 |---|---|---|
@@ -215,15 +215,15 @@ In MONALEESA-2, ribociclib plus letrozole was compared with letrozole alone as f
 | Liver and bile duct toxicity | 14.4% | 4.8% |
 | Prolonged QT interval | 4.5% | 2.1% |
 
-Grade 3 lung inflammation occurred in 0.6% with ribociclib. The ESC guideline confirms that CDK4/6 inhibitors can prolong the QT interval, ribociclib in particular (Lyon et al., 2022).
+Grade 3 lung inflammation occurred in 0.6% with ribociclib. The ESC guideline confirms that CDK4/6 inhibitors can prolong the QT interval, ribociclib in particular ([Lyon et al., 2022](references.md#lyon-2022)).
 
 ## 6. Toxicity across tumour types
 
 ### Immune-related adverse events
 
-Checkpoint inhibitors cause a different kind of toxicity than chemotherapy. Any organ can be affected, with gut, skin, liver, hormone glands and lung in front (Schneider et al., 2021). Incidence depends on the drug class: lower with anti-PD-1 or anti-PD-L1 than with anti-CTLA-4, and highest with combinations. Onset ranges from days to 26 weeks, with a median of about 40 days.
+Checkpoint inhibitors cause a different kind of toxicity than chemotherapy. Any organ can be affected, with gut, skin, liver, hormone glands and lung in front ([Schneider et al., 2021](references.md#schneider-2021)). Incidence depends on the drug class: lower with anti-PD-1 or anti-PD-L1 than with anti-CTLA-4, and highest with combinations. Onset ranges from days to 26 weeks, with a median of about 40 days.
 
-The ESMO guideline gives figures by organ (Haanen et al., 2022):
+The ESMO guideline gives figures by organ ([Haanen et al., 2022](references.md#haanen-2022)):
 
 | Organ | Incidence | Onset and risk factors |
 |---|---|---|
@@ -239,9 +239,9 @@ The ESMO guideline gives figures by organ (Haanen et al., 2022):
 | Heart (myocarditis) | Severe in under 1% | – |
 | Blood | – | About 25 weeks with single drug, 12 weeks with combination; no clear predisposing factors reported |
 
-For the heart, the ESC guideline adds that in the largest case series of 122 patients, myocarditis started after a median of 30 days and up to 50% of the patients died. High cardiovascular risk under checkpoint inhibitors is linked to dual checkpoint inhibition, combination with other cardiotoxic therapy, earlier non-cardiac immune-related events, and earlier cardiac dysfunction or cardiovascular disease (Lyon et al., 2022).
+For the heart, the ESC guideline adds that in the largest case series of 122 patients, myocarditis started after a median of 30 days and up to 50% of the patients died. High cardiovascular risk under checkpoint inhibitors is linked to dual checkpoint inhibition, combination with other cardiotoxic therapy, earlier non-cardiac immune-related events, and earlier cardiac dysfunction or cardiovascular disease ([Lyon et al., 2022](references.md#lyon-2022)).
 
-The ASCO guideline gives management rules by grade (Schneider et al., 2021):
+The ASCO guideline gives management rules by grade ([Schneider et al., 2021](references.md#schneider-2021)):
 
 - Grade 1: continue the checkpoint inhibitor with close monitoring. Exceptions are some neurological, haematological and cardiac toxicities.
 - Grade 2: pause for most toxicities and consider restarting once symptoms are back to grade 1 or lower. Corticosteroids may be given.
@@ -252,7 +252,7 @@ The panel notes that high-quality evidence is scarce and that the recommendation
 
 ### Peripheral neuropathy
 
-Neuropathy matters in all three patient groups because oxaliplatin and taxanes are widely used. The ASCO guideline update states (Loprinzi et al., 2020):
+Neuropathy matters in all three patient groups because oxaliplatin and taxanes are widely used. The ASCO guideline update states ([Loprinzi et al., 2020](references.md#loprinzi-2020)):
 
 - Before treatment, clinicians should weigh risks and benefits in patients with existing neuropathy and with conditions that predispose to it, such as diabetes or a family or personal history of hereditary neuropathy.
 - No drug is recommended to prevent chemotherapy-induced neuropathy.
@@ -263,7 +263,7 @@ Since prevention does not work, early detection and dose adjustment are the only
 
 ### Cardiovascular toxicity
 
-The trial data show cardiovascular events under androgen deprivation, hypertension with abiraterone or darolutamide, and QT prolongation with ribociclib. The ESC guideline covers the whole field (Lyon et al., 2022). Points that matter for our three groups:
+The trial data show cardiovascular events under androgen deprivation, hypertension with abiraterone or darolutamide, and QT prolongation with ribociclib. The ESC guideline covers the whole field ([Lyon et al., 2022](references.md#lyon-2022)). Points that matter for our three groups:
 
 - Fluoropyrimidines can cause myocardial ischaemia through coronary spasm and vessel injury. Chest pain and ECG changes typically occur at rest within days of drug administration. The risk rises markedly with existing coronary artery disease.
 - HER2-targeted therapy can cause cardiac dysfunction. Management depends on the severity grades in section 2.
@@ -271,15 +271,15 @@ The trial data show cardiovascular events under androgen deprivation, hypertensi
 
 ### Venous thromboembolism
 
-The ASCO guideline states that patients with cancer should be assessed for the risk of venous thromboembolism periodically, and that clinicians may offer thromboprophylaxis to selected high-risk outpatients (Key et al., 2020). Rivaroxaban and edoxaban for treatment carry a higher bleeding risk than low-molecular-weight heparin in gastrointestinal cancers. Pancreatic cancer has a particularly high rate, see section 3. In PROfound, pulmonary embolism was more frequent with olaparib (de Bono et al., 2020).
+The ASCO guideline states that patients with cancer should be assessed for the risk of venous thromboembolism periodically, and that clinicians may offer thromboprophylaxis to selected high-risk outpatients ([Key et al., 2020](references.md#key-2020)). Rivaroxaban and edoxaban for treatment carry a higher bleeding risk than low-molecular-weight heparin in gastrointestinal cancers. Pancreatic cancer has a particularly high rate, see section 3. In PROfound, pulmonary embolism was more frequent with olaparib ([de Bono et al., 2020](references.md#de-bono-2020)).
 
 ### Febrile neutropenia
 
-The joint guideline of ASCO and the Infectious Diseases Society of America requires the first dose of empirical antibiotics within one hour of triage (Taplitz et al., 2018). To decide who can be treated as an outpatient, it recommends clinical judgement together with clinical criteria or a validated tool such as the risk index of the Multinational Association of Supportive Care in Cancer (MASCC). This index grades the risk of complications once fever has occurred. It does not predict who will develop febrile neutropenia.
+The joint guideline of ASCO and the Infectious Diseases Society of America requires the first dose of empirical antibiotics within one hour of triage ([Taplitz et al., 2018](references.md#taplitz-2018)). To decide who can be treated as an outpatient, it recommends clinical judgement together with clinical criteria or a validated tool such as the risk index of the Multinational Association of Supportive Care in Cancer (MASCC). This index grades the risk of complications once fever has occurred. It does not predict who will develop febrile neutropenia.
 
 ### Older patients
 
-GAP70+ enrolled 718 patients aged 70 or older with incurable cancer and at least one impaired domain in a geriatric assessment, starting a new treatment with a high risk of toxicity (Mohile et al., 2021). Mean age was 77 years, and patients had on average 4.5 impaired domains.
+GAP70+ enrolled 718 patients aged 70 or older with incurable cancer and at least one impaired domain in a geriatric assessment, starting a new treatment with a high risk of toxicity ([Mohile et al., 2021](references.md#mohile-2021)). Mean age was 77 years, and patients had on average 4.5 impaired domains.
 
 - With usual care, 71% had a toxic effect of grade 3 to 5 within three months.
 - When oncologists received a summary of the assessment with management recommendations, the rate was 51% (relative risk 0.74).
@@ -287,18 +287,18 @@ GAP70+ enrolled 718 patients aged 70 or older with incurable cancer and at least
 - Falls within three months fell from 21% to 12%.
 - More patients in the intervention group started with reduced treatment intensity (48.7% versus 35.0%). Survival did not differ between the groups.
 
-The ASCO guideline turned this into a strong recommendation (Dale et al., 2023): all patients aged 65 or older should have a geriatric assessment, and those with impairments should have their care plan adapted to it. The assessment should cover physical and cognitive function, emotional health, comorbid conditions, polypharmacy, nutrition and social support. The guideline offers the Practical Geriatric Assessment as one tool for this.
+The ASCO guideline turned this into a strong recommendation ([Dale et al., 2023](references.md#dale-2023)): all patients aged 65 or older should have a geriatric assessment, and those with impairments should have their care plan adapted to it. The assessment should cover physical and cognitive function, emotional health, comorbid conditions, polypharmacy, nutrition and social support. The guideline offers the Practical Geriatric Assessment as one tool for this.
 
 ### Symptom monitoring by patients
 
-PRO-TECT randomised 52 US community oncology practices with 1191 patients treated for metastatic cancer (Basch et al., 2022). Patients in the intervention group filled in a weekly symptom survey by web or phone for up to one year. Severe or worsening symptoms triggered an alert to the care team.
+PRO-TECT randomised 52 US community oncology practices with 1191 patients treated for metastatic cancer ([Basch et al., 2022](references.md#basch-2022)). Patients in the intervention group filled in a weekly symptom survey by web or phone for up to one year. Severe or worsening symptoms triggered an alert to the care team.
 
 - After three months, physical function, symptom control and health-related quality of life were each about 2.5 points better on a 100-point scale than with usual care. The odds of a clinically meaningful benefit were higher by factors of 1.35, 1.50 and 1.41.
 - Of 20 565 completed surveys, 33.9% triggered an alert, most often for pain, reduced performance status and diarrhoea.
 - 59.1% of the alerts led to immediate action by a nurse, mostly a phone call.
 - The primary endpoint, overall survival, was not yet reported in this paper.
 
-The ESMO guideline on patient-reported outcome measures (Di Maio et al., 2022) covers their use in routine care. Its full text has not been read yet.
+The ESMO guideline on patient-reported outcome measures ([Di Maio et al., 2022](references.md#di-maio-2022)) covers their use in routine care. Its full text has not been read yet.
 
 ## 7. What guidelines ask for: risk assessment and monitoring
 
@@ -308,14 +308,14 @@ This section lists the risk tools and monitoring schedules that guidelines recom
 
 | Area | Tool or criteria | Source |
 |---|---|---|
-| Choice of pancreatic chemotherapy | ECOG performance status, Karnofsky score, bilirubin, comorbidity profile | Conroy et al. (2023); Sohal et al. (2020) |
-| Patients aged 65 or older | Geriatric assessment of seven domains | Dale et al. (2023) |
-| Cardiovascular toxicity of HER2-targeted therapy and some other drug classes | HFA-ICOS risk assessment | Lyon et al. (2022) |
-| Cardiovascular risk under androgen deprivation, endocrine therapy for breast cancer and fluoropyrimidines | SCORE2 or SCORE2-OP, the general European scores for 10-year cardiovascular risk | Lyon et al. (2022) |
-| Checkpoint inhibitors | ECG, natriuretic peptides and troponin in all patients; echocardiography in high-risk patients | Lyon et al. (2022) |
-| QT prolongation | List of correctable and non-correctable risk factors | Lyon et al. (2022) |
-| Neuropathy | Existing neuropathy, diabetes, hereditary neuropathy | Loprinzi et al. (2020) |
-| Venous thromboembolism | Periodic risk assessment | Key et al. (2020) |
+| Choice of pancreatic chemotherapy | ECOG performance status, Karnofsky score, bilirubin, comorbidity profile | [Conroy et al. (2023)](references.md#conroy-2023); [Sohal et al. (2020)](references.md#sohal-2020) |
+| Patients aged 65 or older | Geriatric assessment of seven domains | [Dale et al. (2023)](references.md#dale-2023) |
+| Cardiovascular toxicity of HER2-targeted therapy and some other drug classes | HFA-ICOS risk assessment | [Lyon et al. (2022)](references.md#lyon-2022) |
+| Cardiovascular risk under androgen deprivation, endocrine therapy for breast cancer and fluoropyrimidines | SCORE2 or SCORE2-OP, the general European scores for 10-year cardiovascular risk | [Lyon et al. (2022)](references.md#lyon-2022) |
+| Checkpoint inhibitors | ECG, natriuretic peptides and troponin in all patients; echocardiography in high-risk patients | [Lyon et al. (2022)](references.md#lyon-2022) |
+| QT prolongation | List of correctable and non-correctable risk factors | [Lyon et al. (2022)](references.md#lyon-2022) |
+| Neuropathy | Existing neuropathy, diabetes, hereditary neuropathy | [Loprinzi et al. (2020)](references.md#loprinzi-2020) |
+| Venous thromboembolism | Periodic risk assessment | [Key et al. (2020)](references.md#key-2020) |
 
 The HFA-ICOS assessment sorts patients into low, moderate, high and very high risk. It uses earlier cardiovascular disease, cardiac imaging and biomarkers, age, cardiovascular risk factors such as hypertension, diabetes, kidney disease, smoking and obesity, and earlier cardiotoxic cancer treatment. Each factor counts as moderate (1 or 2 points), high or very high for a given drug class:
 
@@ -330,12 +330,12 @@ The guideline is open about the limits. It states that only a limited number of 
 
 | Therapy | Recommended monitoring | Source |
 |---|---|---|
-| Checkpoint inhibitors | Transaminases, alkaline phosphatase and bilirubin before every cycle; attention to creatinine relative to the patient's own baseline | Haanen et al. (2022) |
-| Checkpoint inhibitors | ECG and troponin before doses 2, 3 and 4, then every three doses (should be considered) | Lyon et al. (2022) |
-| HER2-targeted therapy | Echocardiography at baseline in all patients; in metastatic disease every 3 months in the first year, then every 6 months if there are no problems | Lyon et al. (2022) |
-| Androgen deprivation | Cardiovascular risk assessment every year; repeated ECGs in patients at risk of QT prolongation | Lyon et al. (2022) |
-| All chemotherapy with neuropathy risk | Assessment of neuropathy and of the need to adjust the dose | Loprinzi et al. (2020) |
-| Pancreatic chemotherapy | Evaluation every 8–12 weeks by clinical status, CA 19-9 and imaging | Conroy et al. (2023) |
+| Checkpoint inhibitors | Transaminases, alkaline phosphatase and bilirubin before every cycle; attention to creatinine relative to the patient's own baseline | [Haanen et al. (2022)](references.md#haanen-2022) |
+| Checkpoint inhibitors | ECG and troponin before doses 2, 3 and 4, then every three doses (should be considered) | [Lyon et al. (2022)](references.md#lyon-2022) |
+| HER2-targeted therapy | Echocardiography at baseline in all patients; in metastatic disease every 3 months in the first year, then every 6 months if there are no problems | [Lyon et al. (2022)](references.md#lyon-2022) |
+| Androgen deprivation | Cardiovascular risk assessment every year; repeated ECGs in patients at risk of QT prolongation | [Lyon et al. (2022)](references.md#lyon-2022) |
+| All chemotherapy with neuropathy risk | Assessment of neuropathy and of the need to adjust the dose | [Loprinzi et al. (2020)](references.md#loprinzi-2020) |
+| Pancreatic chemotherapy | Evaluation every 8–12 weeks by clinical status, CA 19-9 and imaging | [Conroy et al. (2023)](references.md#conroy-2023) |
 
 ## 8. Candidates for risk models
 
@@ -366,15 +366,15 @@ Two kinds of model appear in every candidate:
 - **Event.** At least one adverse event of grade 3 to 5 within three months of starting a new therapy line. Secondary events: dose reduction, stopping treatment, falls.
 - **Why.** It is the primary endpoint of GAP70+ and the most comparable number across trials. Reference rates range from 51% to 87% in trials and reach 71% in older patients under usual care.
 - **Baseline predictors.** Regimen and number of drugs, planned dose intensity, age, the seven geriatric assessment domains, ECOG and Karnofsky score, comorbidity, bilirubin in pancreatic cancer, number of earlier therapy lines.
-- **Current standard.** Geriatric assessment for patients aged 65 or older (Dale et al., 2023); performance status and bilirubin rules in pancreatic cancer.
+- **Current standard.** Geriatric assessment for patients aged 65 or older ([Dale et al., 2023](references.md#dale-2023)); performance status and bilirubin rules in pancreatic cancer.
 - **What a model adds.** A risk estimate instead of a list of impairments, also for patients under 65, and specific to the regimen.
 
 ### Candidate 2: lung toxicity
 
 - **Event.** Interstitial lung disease or pneumonitis of any grade, and of grade 2 or higher.
 - **Applies to.** Trastuzumab deruxtecan in breast cancer (12–15%, fatal in 0.8–2.2%); checkpoint inhibitors (about 4% with anti-PD-1); ribociclib at a low rate.
-- **Baseline predictors.** Oxygen saturation below 95%, moderate or severe renal impairment, lung comorbidities, dose, age under 65, Japanese origin, time since diagnosis (Powell et al., 2022). For checkpoint inhibitors: tobacco exposure, chronic lung disease, earlier chest radiotherapy (Haanen et al., 2022).
-- **Detection signals.** Oxygen saturation, heart and breathing rate, cough, home spirometry, reported breathlessness (Tarantino et al., 2023).
+- **Baseline predictors.** Oxygen saturation below 95%, moderate or severe renal impairment, lung comorbidities, dose, age under 65, Japanese origin, time since diagnosis ([Powell et al., 2022](references.md#powell-2022)). For checkpoint inhibitors: tobacco exposure, chronic lung disease, earlier chest radiotherapy ([Haanen et al., 2022](references.md#haanen-2022)).
+- **Detection signals.** Oxygen saturation, heart and breathing rate, cough, home spirometry, reported breathlessness ([Tarantino et al., 2023](references.md#tarantino-2023)).
 - **Time window.** Median onset after 129 days to 5.4 months, 87% within the first year.
 - **What a model adds.** The measured delay of 43 days between true and recognised onset is the clearest gap in current care among all candidates.
 
@@ -384,7 +384,7 @@ Two kinds of model appear in every candidate:
 - **Reference rates.** Grade 3–4 neutropenia: 25% with gemcitabine plus nab-paclitaxel, 14% with NALIRIFOX, 34% with docetaxel triplets, 51% with sacituzumab govitecan, 64% with ribociclib. Febrile neutropenia: 7–8% with docetaxel triplets, 6% with sacituzumab govitecan, highest among pancreatic regimens with FOLFIRINOX.
 - **Baseline predictors.** Regimen and dose, G-CSF prophylaxis, UGT1A1 genotype for sacituzumab govitecan and irinotecan, earlier therapy lines, age and geriatric impairments.
 - **Detection signals.** Blood counts over the cycles, temperature, reported symptoms of infection.
-- **Current standard.** The MASCC index grades risk only after fever has occurred (Taplitz et al., 2018).
+- **Current standard.** The MASCC index grades risk only after fever has occurred ([Taplitz et al., 2018](references.md#taplitz-2018)).
 - **What a model adds.** Prediction before the cycle, so that G-CSF, dose and follow-up can be adapted.
 
 ### Candidate 4: severe diarrhoea with dehydration and electrolyte loss
@@ -400,7 +400,7 @@ Two kinds of model appear in every candidate:
 - **Events.** Major cardiovascular events under androgen deprivation; hypertension of grade 3 or higher with abiraterone or darolutamide; cardiac dysfunction under HER2-targeted therapy; QT prolongation with ribociclib or androgen deprivation; myocardial ischaemia with fluoropyrimidines; myocarditis with checkpoint inhibitors.
 - **Baseline predictors.** Earlier cardiovascular events (17.8% versus 3.6% event rate under leuprolide and relugolix in HERO), type of androgen deprivation, age, hypertension, diabetes, kidney function, lipids, smoking, obesity, LVEF, troponin and natriuretic peptides, baseline QT interval, QT-prolonging co-medication, electrolytes.
 - **Detection signals.** Blood pressure at home, ECG, troponin, natriuretic peptides, LVEF and strain, reported chest pain and breathlessness.
-- **Current standard.** HFA-ICOS and SCORE2 (Lyon et al., 2022).
+- **Current standard.** HFA-ICOS and SCORE2 ([Lyon et al., 2022](references.md#lyon-2022)).
 - **What a model adds.** The guideline itself states that HFA-ICOS needs validation and that no risk calculator exists for androgen deprivation. Prostate cancer under androgen deprivation is the clearest open field.
 
 ### Candidate 6: immune-related adverse events
@@ -425,7 +425,7 @@ Two kinds of model appear in every candidate:
 - **Event.** Deep vein thrombosis or pulmonary embolism during therapy.
 - **Reference rates.** Prevalence of about 25% in pancreatic cancer; pulmonary embolism in 4% with olaparib versus 1% in PROfound.
 - **Baseline predictors.** Tumour type, chemotherapy, earlier thrombosis, drug.
-- **Current standard.** Periodic risk assessment and prophylaxis for selected high-risk outpatients (Key et al., 2020). The full text with the recommended risk score has not been read yet.
+- **Current standard.** Periodic risk assessment and prophylaxis for selected high-risk outpatients ([Key et al., 2020](references.md#key-2020)). The full text with the recommended risk score has not been read yet.
 
 ### Candidate 9: anaemia and low platelets needing action
 
@@ -473,4 +473,4 @@ Candidate 1 as the baseline model and candidate 2 as the detection model are the
 - Toxicity rates in routine care compared with trials.
 - Risk scores for venous thromboembolism and for febrile neutropenia before the event.
 - Second-line chemotherapy in pancreatic cancer and cabazitaxel in prostate cancer.
-- The content of six guidelines whose full texts are missing: Di Maio et al. (2022), Gennari et al. (2021), Key et al. (2020), Taplitz et al. (2018), Tilki et al. (2024) and Virgo et al. (2021).
+- The content of six guidelines whose full texts are missing: [Di Maio et al. (2022)](references.md#di-maio-2022), [Gennari et al. (2021)](references.md#gennari-2021), [Key et al. (2020)](references.md#key-2020), [Taplitz et al. (2018)](references.md#taplitz-2018), [Tilki et al. (2024)](references.md#tilki-2024) and [Virgo et al. (2021)](references.md#virgo-2021).

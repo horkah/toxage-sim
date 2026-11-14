@@ -1,4 +1,5 @@
 {% extends "explorer/reference_base.html" %}
+{% load explorer_tags %}
 {% block title %}Data schema · toxage-sim{% endblock %}
 {% block reference %}
 <header class="page-head">
@@ -15,13 +16,13 @@
     <h2>{{ t.name }} <span class="muted">· {{ t.title }} · version {{ t.version }}</span></h2>
     {% if t.records and dataset %}<a class="button small" href="{% url 'records' dataset.pk %}?table={{ t.name }}">Records in “{{ dataset.name }}”</a>{% endif %}
   </header>
-  <p>{{ t.description }}</p>
+  <p>{{ t.description|cite }}</p>
   <div class="scroll">
   <table class="numbers schema">
     <thead><tr><th>Field</th><th>Title</th><th>Type</th><th>Values</th><th>Unit</th><th>Description</th></tr></thead>
     <tbody>
     {% for f in t.fields %}
-    <tr id="{{ t.name }}-{{ f.name }}"><td><code>{{ f.name }}</code></td><td>{{ f.title }}</td><td>{{ f.type }}</td><td>{{ f.values }}</td><td>{{ f.unit }}</td><td>{{ f.description }}</td></tr>
+    <tr id="{{ t.name }}-{{ f.name }}"><td><code>{{ f.name }}</code></td><td>{{ f.title }}</td><td>{{ f.type }}</td><td>{{ f.values }}</td><td>{{ f.unit }}</td><td>{{ f.description|cite }}</td></tr>
     {% endfor %}
     </tbody>
   </table>

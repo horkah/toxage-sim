@@ -5,7 +5,9 @@ they use into HTML: headings, paragraphs, lists, tables, code blocks, and
 inline code, bold, italic and links. Everything else is shown as text.
 """
 import functools
+import os
 import re
+import unicodedata
 from dataclasses import dataclass
 from html import escape
 from pathlib import Path
@@ -39,7 +41,7 @@ DOCUMENTS = {d.key: d for d in (
     Document("interventions", "Intervention model", "Scientific background", "background/intervention-model.md",
              "From the offer of an intervention to its effect on health and costs."),
     Document("references", "References", "Scientific background", "background/references.md",
-             "The 28 published sources of the project."),
+             "The published sources of the project."),
     Document("engine", "Data engine", "Models", "engine/README.md",
              "How the synthetic patients are simulated week by week.", omit=("Run", "Files")),
     Document("risk-model", "Risk models", "Models", "risk-model/README.md",
@@ -104,6 +106,84 @@ def slug(text):
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
+REFERENCES = "background/references.md"
+PAPERS_URL = "https://github.com/horkah/toxage-sim/blob/main/background/papers/"
+ANCHOR = re.compile(r'^<a id="([a-z0-9-]+)"></a>')
+
+# A citation: "Basch et al. (2022)", "Basch et al., 2022" or "Basch 2022".
+_NAME = r"(?:(?:[dD]e|Di|van|von) )?[A-Z][a-zà-ÿ'-]+"
+CITATION = re.compile(
+    rf"(?<![\w\[/#-])(?:(?P<a>{_NAME}) et al\. \((?P<ay>(?:19|20)\d\d)\)"
+    rf"|(?P<b>{_NAME}) et al\., (?P<by>(?:19|20)\d\d)"
+    rf"|(?P<c>{_NAME}) (?P<cy>(?:19|20)\d\d))(?![\w])")
+# Pieces of a line that are left alone: inline code, links and HTML tags.
+_UNTOUCHED = re.compile(r"(`[^`]*`|\[[^\]]*\]\([^)]*\)|<[^>]+>)")
+
+
+def reference_id(name, year):
+    """Anchor of a reference in the reference list: "Lizée", 2019 -> "lizee-2019"."""
+    plain = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", "-", plain.lower()).strip("-") + f"-{year}"
+
+
+@functools.lru_cache(maxsize=1)
+def reference_ids():
+    """Anchors of all entries of the reference list."""
+    text = (REPO / REFERENCES).read_text(encoding="utf-8")
+    return frozenset(m.group(1) for line in text.splitlines() if (m := ANCHOR.match(line)))
+
+
+def _citations(text, address):
+    """Replace every citation of a known reference in plain text by
+    link(match text, address of its anchor)."""
+    ids = reference_ids()
+
+    def one(match):
+        name = match.group("a") or match.group("b") or match.group("c")
+        year = match.group("ay") or match.group("by") or match.group("cy")
+        ref = reference_id(name, year)
+        return address(match.group(0), ref) if ref in ids else match.group(0)
+    return CITATION.sub(one, text)
+
+
+def link_citations(text, path):
+    """Markdown text of the file at path (relative to the repository) with every
+    citation of a known reference linked to its entry in the reference list.
+    Headings, code blocks, existing links and the entries themselves stay."""
+    here = os.path.dirname(path)
+    target = "" if path == REFERENCES else os.path.relpath(REFERENCES, here or ".")
+    out, fenced = [], False
+    for line in text.split("\n"):
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            fenced = not fenced
+        if fenced or stripped.startswith(("```", "#")) or ANCHOR.match(stripped):
+            out.append(line)
+            continue
+        pieces = _UNTOUCHED.split(line)
+        for i in range(0, len(pieces), 2):
+            pieces[i] = _citations(pieces[i], lambda label, ref: f"[{label}]({target}#{ref})")
+        out.append("".join(pieces))
+    return "\n".join(out)
+
+
+def markdown_files():
+    """The Markdown files of the repository whose citations are linked, relative paths."""
+    skip = {".venv", "node_modules", ".git", "papers", "__pycache__"}
+    found = []
+    for root, dirs, files in os.walk(REPO):
+        dirs[:] = sorted(d for d in dirs if d not in skip and not d.startswith("."))
+        found += [os.path.relpath(os.path.join(root, f), REPO) for f in sorted(files) if f.endswith(".md")]
+    return found
+
+
+def cite(text, references_url):
+    """Plain text as HTML with every citation of a known reference linked to its
+    entry in the reference list of the app."""
+    return _citations(escape(text, quote=False),
+                      lambda label, ref: f'<a href="{references_url}#{ref}">{label}</a>')
+
+
 def _cells(line):
     """Cells of one Markdown table row, without the outer bars."""
     return [c.strip() for c in line.strip().strip("|").split("|")]
@@ -115,9 +195,14 @@ def render(text, base=""):
     out, headings, paragraph, i = [], [], [], 0
 
     def flush():
-        """Write the collected lines as one paragraph."""
+        """Write the collected lines as one paragraph. An anchor in front of it
+        (<a id="..."></a>, as in the reference list) becomes its id."""
         if paragraph:
-            out.append(f"<p>{inline(' '.join(paragraph), base)}</p>")
+            text = " ".join(paragraph)
+            anchor = ANCHOR.match(text)
+            attribute = f' id="{anchor.group(1)}"' if anchor else ""
+            text = text[anchor.end():] if anchor else text
+            out.append(f"<p{attribute}>{inline(text, base)}</p>")
             paragraph.clear()
 
     while i < len(lines):

@@ -221,6 +221,10 @@ class ParameterPageTest(TestCase):
             self.assertEqual(response.context["section"], "parameters")
         self.assertEqual(self.client.get("/parameters/x/").status_code, 404)
 
+    def test_citations_in_the_notes_link_to_the_references(self):
+        self.assertContains(self.client.get("/parameters/risk/"),
+                            '<a href="/documents/references/#powell-2022">Powell et al. (2022)</a>')
+
     def test_saving_in_place_answers_with_the_page(self):
         response = self.client.post("/parameters/risk/", {f"p:{self.PATH}": "3"}, headers={"X-Toxage-Fetch": "1"})
         self.assertEqual(response.status_code, 200)

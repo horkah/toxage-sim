@@ -36,7 +36,7 @@
     <a class="button" id="random" href="{% url 'random' %}?{{ request.GET.urlencode }}" title="A random patient of the current selection">Random</a>
   </form>
 </div>
-<p class="scenario-note"><b>{{ scenario.title }}</b>{% if compare %} compared with <b>{{ compare.title }}</b>{% endif %}: {{ scenario.description }}</p>
+<p class="scenario-note"><b>{{ scenario.title }}</b>{% if compare %} compared with <b>{{ compare.title }}</b>{% endif %}: {{ scenario.description|cite }}</p>
 
 <div class="layout">
   <aside class="sidebar" id="sidebar" data-keep-scroll>
@@ -112,7 +112,7 @@
       {% endfor %}
     </nav>
     <p class="model-info">Candidate {{ focus.candidate }} of the toxicity report, outcome within {{ focus.window_days }} days.
-      Source: {{ focus.source }}. Risks at therapy start without an intervention.
+      Source: {{ focus.source|cite }}. Risks at therapy start without an intervention.
       <a href="{% url 'document' 'risk-model' %}{% if model_doc %}#{{ model_doc }}{% endif %}">How the model works</a>
       · <a href="{% url 'parameters' 'risk' %}{% if model_group %}#group-{{ model_group }}{% endif %}">Its parameters</a></p>
     {% endif %}
@@ -188,7 +188,7 @@
     <section class="charts">
       <header class="section-head">
         <h2>{{ s.title }}</h2>
-        <p class="note">{{ s.note }}</p>
+        <p class="note">{{ s.note|cite }}</p>
       </header>
       {% if s.table %}
       <div class="scroll">

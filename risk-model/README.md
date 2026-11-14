@@ -107,7 +107,7 @@ A logistic model. The published rate of the regimen is the risk of a reference p
 | ECOG 2 or higher | 2.0 | assumption |
 | Each impaired geriatric domain | 1.1 | assumption |
 
-With these values a patient like the average GAP70+ participant (77 years, 4.5 impaired domains, regimen rate 60%) has a risk of 74%. The usual-care arm of that trial had 71% (Mohile et al., 2021). The regimen rates come from the trials listed in `config/models.json`. A missing geriatric assessment counts as no impaired domain.
+With these values a patient like the average GAP70+ participant (77 years, 4.5 impaired domains, regimen rate 60%) has a risk of 74%. The usual-care arm of that trial had 71% ([Mohile et al., 2021](../background/references.md#mohile-2021)). The regimen rates come from the trials listed in `config/models.json`. A missing geriatric assessment counts as no impaired domain.
 
 Risk categories: low below 50%, intermediate from 50%, high from 70%. The thresholds are assumptions, oriented on the two arms of GAP70+ (51% and 71%). Because the regimen rates lie between 51% and 87%, most patients are intermediate or high, and both pancreatic regimens are high for nearly everyone. This reflects the trial data.
 
@@ -124,15 +124,15 @@ A proportional hazards model: risk = 1 − (1 − r0)^HR. `r0` is the risk of a 
 | More than 4 years since diagnosis | 1.82 |
 | Oxygen saturation below 95% | 2.14 |
 
-The hazard ratios are the multivariable Cox model of Powell et al. (2022), Figure 2B. `r0` is set so that the mean risk in the pooled population of Powell et al. equals the published rate of the regimen: 12.1% for trastuzumab deruxtecan and 0.6% for single-agent chemotherapy (Modi et al., 2022). The shares of the risk factors in that population come from Powell et al., Table 2, and the factors are treated as independent. This gives `r0` = 4.6% for trastuzumab deruxtecan and 0.2% for single-agent chemotherapy.
+The hazard ratios are the multivariable Cox model of [Powell et al. (2022)](../background/references.md#powell-2022), Figure 2B. `r0` is set so that the mean risk in the pooled population of Powell et al. equals the published rate of the regimen: 12.1% for trastuzumab deruxtecan and 0.6% for single-agent chemotherapy ([Modi et al., 2022](../background/references.md#modi-2022)). The shares of the risk factors in that population come from Powell et al., Table 2, and the factors are treated as independent. This gives `r0` = 4.6% for trastuzumab deruxtecan and 0.2% for single-agent chemotherapy.
 
-The risk of grade 2 or higher is 71.1% of the risk of any grade, the share in Modi et al. (2022), for all patients.
+The risk of grade 2 or higher is 71.1% of the risk of any grade, the share in [Modi et al. (2022)](../background/references.md#modi-2022), for all patients.
 
-Risk categories: low below 5%, intermediate from 5%, high from 15%. The thresholds are assumptions; 15% is close to the 15.4% incidence in Powell et al. (2022).
+Risk categories: low below 5%, intermediate from 5%, high from 15%. The thresholds are assumptions; 15% is close to the 15.4% incidence in [Powell et al. (2022)](../background/references.md#powell-2022).
 
 ## Candidate 5: cardiovascular events under androgen deprivation
 
-The ESC guideline states that no dedicated risk calculator exists for patients under androgen deprivation (Lyon et al., 2022). This model is a first one, built on the HERO trial (Shore et al., 2020).
+The ESC guideline states that no dedicated risk calculator exists for patients under androgen deprivation ([Lyon et al., 2022](../background/references.md#lyon-2022)). This model is a first one, built on the HERO trial ([Shore et al., 2020](../background/references.md#shore-2020)).
 
 The event is a major adverse cardiovascular event within 364 days of therapy start: myocardial infarction, stroke or cardiovascular death. The model is a proportional hazards model like candidate 2: risk = 1 − (1 − r0)^HR. It differs in three points:
 
@@ -142,8 +142,8 @@ The event is a major adverse cardiovascular event within 364 days of therapy sta
 
 | Risk factor | Hazard ratio | Basis |
 |---|---|---|
-| Earlier myocardial infarction or stroke, under a GnRH agonist | 4.57 | Shore et al. (2020), Table 3: 8 of 45 against 11 of 263 |
-| Earlier myocardial infarction or stroke, under a GnRH antagonist | 1.29 | Shore et al. (2020), Table 3: 3 of 84 against 15 of 538 |
+| Earlier myocardial infarction or stroke, under a GnRH agonist | 4.57 | [Shore et al. (2020)](../background/references.md#shore-2020), Table 3: 8 of 45 against 11 of 263 |
+| Earlier myocardial infarction or stroke, under a GnRH antagonist | 1.29 | [Shore et al. (2020)](../background/references.md#shore-2020), Table 3: 3 of 84 against 15 of 538 |
 | Age, per 10 years from 71 | 1.4 | assumption |
 | Diabetes | 1.5 | assumption |
 | Arterial hypertension | 1.4 | assumption |
@@ -194,7 +194,7 @@ The models describe the risk without an intervention. `data.load` therefore read
 - The effects of age, ECOG and geriatric domains in candidate 1 are assumptions, not estimates.
 - Trial rates refer to the whole treatment period and are used as 90-day risks.
 - The lung toxicity risk factors were found for trastuzumab deruxtecan and are applied to single-agent chemotherapy as well.
-- Dose and enrolment in Japan, two risk factors in Powell et al. (2022), are not in the schema. All patients are treated as receiving the standard dose.
+- Dose and enrolment in Japan, two risk factors in [Powell et al. (2022)](../background/references.md#powell-2022), are not in the schema. All patients are treated as receiving the standard dose.
 - The models use only part of the baseline record. Fields such as bilirubin, blood values, earlier therapy lines and starting dose are not used yet.
 - Candidate 2 gives the risk within 730 days. The engine follows patients for up to ten years, so a few events fall outside the window.
 - No lung toxicity risk for checkpoint inhibitors yet, because the references give a rate but no risk model.

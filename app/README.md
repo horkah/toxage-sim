@@ -48,6 +48,8 @@ Without just, the same commands are `uv sync`, `uv run python app/manage.py migr
 
 `load_cohort` replaces the stored data sets unless `--keep` is given; `--scenarios` limits the scenarios. The database is the file `app/db.sqlite3`, which is not under version control. After a change of the storage model in development, delete this file and run `migrate` again.
 
+Citations such as "[Basch et al. (2022)](../background/references.md#basch-2022)" link to their entry in the reference list. In the Markdown files the links are part of the text; `uv run python app/manage.py link_citations` adds the missing ones, and a test fails while one is missing. Notes from the configuration files (basis, source) get their links when the app shows them.
+
 ## Tests
 
 ```bash
@@ -234,6 +236,7 @@ Only one demo changes the app at a time. While it runs, a demo started in anothe
 | `explorer/tour.py` | State of the app for the tours; notes and restores the state around a demo |
 | `explorer/static/explorer/style.css` | Layout and colours for bright and dark mode |
 | `explorer/management/commands/load_cohort.py` | Generates and stores a data set from the command line |
+| `explorer/management/commands/link_citations.py` | Links the citations of all Markdown files to their entries in `background/references.md` |
 | `../Dockerfile`, `../docker-compose.yml` | Container image and its start |
 | `explorer/tests/` | Tests |
 

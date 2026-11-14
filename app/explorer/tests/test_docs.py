@@ -1,3 +1,5 @@
+import re
+
 from django.test import SimpleTestCase
 
 from explorer import docs
@@ -54,3 +56,56 @@ class RenderTest(SimpleTestCase):
         text = "# A\nintro\n## Run\n```\n# not a heading\n```\n### Sub\nx\n## Keep\ny\n"
         self.assertEqual(docs.without(text, ("Run",)), "# A\nintro\n## Keep\ny")
         self.assertEqual(docs.without(text, ()), text)
+
+
+class CitationTest(SimpleTestCase):
+    """Citations such as "Basch et al. (2022)" link to the entry in the reference list."""
+
+    def test_every_entry_has_an_anchor_and_its_pdf_only_if_it_is_in_the_repository(self):
+        text = (docs.REPO / docs.REFERENCES).read_text(encoding="utf-8")
+        entries = [line for line in text.splitlines() if docs.ANCHOR.match(line)]
+        self.assertEqual(len(entries), len(docs.reference_ids()))
+        self.assertIn("basch-2022", docs.reference_ids())
+        self.assertIn("lizee-2019", docs.reference_ids())
+        papers = {p.name for p in (docs.REPO / "background" / "papers").glob("*.pdf")}
+        linked = set()
+        for entry in entries:
+            for name in re.findall(r"PDF: \[([^\]]+)\]\(" + re.escape(docs.PAPERS_URL) + r"([^)]+)\)", entry):
+                self.assertEqual(name[0], name[1])
+                linked.add(name[1])
+        self.assertEqual(linked, papers)                    # every PDF of the repository, and no other
+
+    def test_all_markdown_files_have_their_citations_linked(self):
+        for path in docs.markdown_files():
+            text = (docs.REPO / path).read_text(encoding="utf-8")
+            self.assertEqual(docs.link_citations(text, path), text,
+                             f"{path}: run python manage.py link_citations")
+
+    def test_links_point_to_existing_entries(self):
+        for path in docs.markdown_files():
+            text = (docs.REPO / path).read_text(encoding="utf-8")
+            for target in re.findall(r"\]\((?:[./]*background/|)references\.md#([a-z0-9-]+)\)|\]\(#([a-z0-9-]+-\d{4})\)", text):
+                ref = target[0] or target[1]
+                self.assertIn(ref, docs.reference_ids(), path)
+
+    def test_linking(self):
+        self.assertEqual(docs.link_citations("as (Basch et al., 2022) and Shore et al. (2020), Lyon 2022.", "engine/README.md"),
+                         "as ([Basch et al., 2022](../background/references.md#basch-2022)) and "
+                         "[Shore et al. (2020)](../background/references.md#shore-2020), "
+                         "[Lyon 2022](../background/references.md#lyon-2022).")
+        self.assertEqual(docs.link_citations("de Bono et al. (2020)", "background/toxicity-report.md"),
+                         "[de Bono et al. (2020)](references.md#de-bono-2020)")
+        # Unknown references, headings, code and existing links stay.
+        for text in ("Smith et al. (2015)", "## Basch et al. (2022)", "`Basch 2022`", "[Basch 2022](x.md)"):
+            self.assertEqual(docs.link_citations(text, "README.md"), text)
+
+    def test_the_reference_list_of_the_app_has_the_anchors(self):
+        html, _ = docs.page(docs.DOCUMENTS["references"])
+        self.assertIn('<p id="basch-2022">Basch, E.', html)
+        self.assertIn(f'<a href="{docs.PAPERS_URL}Basch-2022', html)
+        html, _ = docs.page(docs.DOCUMENTS["report"])
+        self.assertIn('<a href="../references/#basch-2022">Basch et al., 2022</a>', html)
+
+    def test_cite_links_plain_text_of_the_app(self):
+        self.assertEqual(docs.cite("HR of Powell et al. (2022) & <b>", "/documents/references/"),
+                         'HR of <a href="/documents/references/#powell-2022">Powell et al. (2022)</a> &amp; &lt;b&gt;')
