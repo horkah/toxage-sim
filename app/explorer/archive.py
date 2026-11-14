@@ -41,6 +41,8 @@ class ArchiveError(ValueError):
 
 
 def _line(obj):
+    """One record as one line of JSON, compact and with the characters as they are
+    (not escaped)."""
     return json.dumps(obj, ensure_ascii=False, separators=(",", ":")) + "\n"
 
 
@@ -81,6 +83,7 @@ def lines(datasets=None):
 
 def gzipped(text_lines):
     """Compress text lines to a gzip stream, piece by piece."""
+    # wbits 31 = 16 + 15: deflate with a gzip header and trailer, as gzip files have.
     packer = zlib.compressobj(6, zlib.DEFLATED, 31)
     buffer = []
     size = 0
@@ -97,6 +100,8 @@ def gzipped(text_lines):
 
 
 def filename(dataset=None):
+    """Name of the archive file: the app, or one data set, and the local time of the
+    export."""
     stamp = timezone.localtime().strftime("%Y%m%d-%H%M")
     return f"toxage-sim-{'dataset-%d-' % dataset.pk if dataset else ''}{stamp}.jsonl.gz"
 
@@ -112,6 +117,8 @@ def _reader(fileobj):
 
 
 def _records(fileobj):
+    """Records of an archive file as (line number, record); empty lines are skipped.
+    Damaged files raise ArchiveError."""
     try:
         for number, text in enumerate(_reader(fileobj), 1):
             if text.strip():
@@ -124,6 +131,8 @@ def _records(fileobj):
 
 
 def _check(table, records, where):
+    """Raise ArchiveError if a record does not fit its table of the central schema;
+    where names the line."""
     for i, record in enumerate(records):
         found = toxage_schema.errors(table, record)
         if found:
@@ -131,12 +140,18 @@ def _check(table, records, where):
 
 
 class _Importer:
+    """Builds the data sets of an archive in the database, patients in batches, and
+    counts what it stored."""
     def __init__(self):
+        """Start with no data set; the archive's own data set ids map to the new
+        rows."""
         self.datasets = {}      # ref in the file -> Dataset
         self.patients = []      # pending (Patient, [course dicts])
         self.counts = {"datasets": 0, "patients": 0}
 
     def dataset(self, rec, number):
+        """Create the data set of a dataset record; the archive's creation time is
+        kept."""
         try:
             d = Dataset.objects.create(
                 name=str(rec["name"])[:80], n=int(rec["n"]), seed=int(rec["seed"]), status=Dataset.READY,
@@ -151,6 +166,8 @@ class _Importer:
         self.counts["datasets"] += 1
 
     def patient(self, rec, number):
+        """Check one patient record against the schema and keep it for the next
+        batch."""
         d = self.datasets.get(rec.get("dataset"))
         if d is None:
             raise ArchiveError(f"Line {number}: patient of an unknown data set.")
@@ -168,6 +185,7 @@ class _Importer:
             self.flush()
 
     def flush(self):
+        """Store the kept patients and their courses with two bulk inserts."""
         if not self.patients:
             return
         created = Patient.objects.bulk_create([p for p, _ in self.patients])

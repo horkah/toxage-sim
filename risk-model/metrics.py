@@ -19,10 +19,13 @@ def auc(risks, outcomes):
         mid_rank = (i + 1 + j) / 2
         rank_sum += mid_rank * sum(y for _, y in pairs[i:j])
         i = j
+    # Mann-Whitney U of the events, divided by the number of event/no-event pairs.
     return (rank_sum - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg)
 
 
 def brier(risks, outcomes):
+    """Brier score: mean squared difference between risk and outcome (lower is
+    better)."""
     return sum((p - y) ** 2 for p, y in zip(risks, outcomes)) / len(risks)
 
 
@@ -52,6 +55,8 @@ def calibration_groups(risks, outcomes, groups=10):
 
 
 def summary(risks, outcomes):
+    """All measures of one set of risks and outcomes, including observed against
+    expected."""
     outcomes = [int(y) for y in outcomes]
     observed = sum(outcomes) / len(outcomes)
     expected = sum(risks) / len(risks)

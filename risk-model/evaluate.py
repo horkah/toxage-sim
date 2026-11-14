@@ -60,6 +60,7 @@ def evaluate(baseline, outcomes, cfg=None):
 
 
 def _by_regimen(regimens, risks, outcomes):
+    """Summary of the metrics per regimen."""
     out = {}
     for name in dict.fromkeys(regimens):
         idx = [i for i, r in enumerate(regimens) if r == name]
@@ -68,10 +69,13 @@ def _by_regimen(regimens, risks, outcomes):
 
 
 def _fmt(v, pattern):
+    """A number for the report, a dash for None."""
     return "-" if v is None else format(v, pattern)
 
 
 def report(result):
+    """The evaluation as a text table: model against the regimen rate alone, per
+    model."""
     lines = []
     for name, r in result.items():
         lines.append(f"\n{name}: {r['model']['n']} patients, {r['model']['events']} events")
@@ -101,6 +105,7 @@ def report(result):
 
 
 def main():
+    """Command line: read generated data, evaluate the models and print the report."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--data", required=True, help="folder with baseline.csv and outcome.csv")
     parser.add_argument("--config", default=str(models.DEFAULT_CONFIG), help="model configuration")

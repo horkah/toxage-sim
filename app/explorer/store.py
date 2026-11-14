@@ -31,10 +31,13 @@ log = logging.getLogger(__name__)
 
 
 def _strip(record):
+    """A record without the key fields scenario_id and patient_id, which the Course
+    row holds."""
     return {k: v for k, v in record.items() if k not in KEYS}
 
 
 def _group(records):
+    """Records by (scenario, patient), without their key fields."""
     found = {}
     for r in records:
         found.setdefault((r["scenario_id"], r["patient_id"]), []).append(_strip(r))
@@ -48,6 +51,8 @@ def columns(rows):
 
 
 def _counts(data):
+    """Number of observation, event and alert records per scenario, kept in the
+    metadata of the data set."""
     counts = {s["scenario_id"]: {"observation": 0, "event": 0, "alert": 0} for s in data["scenario"]}
     for table in ("observation", "event", "alert"):
         for r in data[table]:
@@ -56,6 +61,7 @@ def _counts(data):
 
 
 def _progress(pk, share, message):
+    """Write the progress of a data set; the data page shows it."""
     Dataset.objects.filter(pk=pk).update(progress=share, message=message)
 
 
@@ -96,6 +102,8 @@ def _fill(dataset, scenarios, recalibrate, config):
 
 
 def _run(dataset, scenarios, recalibrate, config, in_thread):
+    """Fill a data set and record a failure on it. Runs in a thread unless the caller
+    waits."""
     try:
         _fill(dataset, scenarios, recalibrate, config)
     except Exception as error:     # the reason is shown to the user on the data page
@@ -162,6 +170,8 @@ def compact():
 
 
 def delete_dataset(dataset):
+    """Delete one data set with its patients and courses, then give the space back to
+    the disk."""
     dataset.delete()
     cohort.clear_cache()
     compact()
@@ -184,6 +194,7 @@ def delete_scenario(dataset, scenario_id):
 
 
 def delete_all():
+    """Delete every data set; parameter changes stay."""
     Dataset.objects.all().delete()
     cohort.clear_cache()
     compact()
@@ -200,6 +211,8 @@ def database_size():
 # Reading records ----------------------------------------------------------------
 
 def _courses(dataset, scenario_id, patient_id=None):
+    """Course rows of one scenario of a data set in patient order, optionally of one
+    patient."""
     found = Course.objects.filter(patient__dataset=dataset, scenario_id=scenario_id).order_by(
         "patient__patient_id")
     return found.filter(patient__patient_id=patient_id) if patient_id else found
@@ -253,6 +266,7 @@ def csv_lines(dataset, table, scenario_ids):
     writer = csv.writer(buffer)
 
     def line(values):
+        """One row as a line of CSV text; the buffer is reused for every line."""
         writer.writerow(values)
         text = buffer.getvalue()
         buffer.seek(0)

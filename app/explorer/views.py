@@ -117,6 +117,8 @@ def _intervention_sections(dataset, scenario, ids, models):
 
 
 def explorer(request):
+    """The explorer: cohort, filters, patient and the four views, all from the query
+    string."""
     data = _load(request)
     if data is None:
         return render(request, "explorer/empty.html", {"section": "explore"})
@@ -208,6 +210,8 @@ def random_patient(request):
 
 
 def disclaimer(request):
+    """The disclaimer and terms; accepting them sets the cookie, for the session or
+    one year."""
     target = request.GET.get("next") or request.POST.get("next") or reverse("explorer")
     if not url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()}):
         target = reverse("explorer")
@@ -229,6 +233,7 @@ def disclaimer(request):
 
 
 def about(request):
+    """Page About: project, authors and credits, version and build."""
     return render(request, "explorer/about.html", {"section": "about"})
 
 

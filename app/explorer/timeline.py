@@ -19,6 +19,7 @@ GRADED_EVENTS = [("iv-lung", ILD, "Lung toxicity by grade"), ("iv-heart", CV, "C
 
 
 def event_name(kind):
+    """Readable name of an event type."""
     return EVENT_NAMES.get(kind, kind.replace("_", " "))
 
 
@@ -216,6 +217,7 @@ def grade_shift(events, ids):
 # One patient over time -------------------------------------------------------
 
 def _week(day):
+    """Week of a day after therapy start, as used on the x axis (day 1 is week 0)."""
     return _r((day - 1) / 7, 2)
 
 
@@ -253,6 +255,8 @@ SYMPTOMS = [("pro_fatigue", "fatigue", "t3"), ("pro_diarrhoea", "diarrhoea", "ob
 
 
 def _points(observations, field):
+    """Points [week, value] of one observation field, without the weeks where it is
+    missing."""
     return [[w, v] for w, v in zip(observations["week"], observations[field]) if v is not None]
 
 

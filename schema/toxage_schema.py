@@ -82,6 +82,7 @@ def validate(table, records):
 
 
 def _to_cell(value):
+    """A value as text of a CSV cell: empty for None, true/false for booleans."""
     if value is None:
         return ""
     if isinstance(value, bool):
@@ -90,6 +91,7 @@ def _to_cell(value):
 
 
 def _from_cell(text, spec):
+    """The text of a CSV cell as a value of the type the schema gives the field."""
     types = spec.get("type", [])
     types = [types] if isinstance(types, str) else types
     if text == "" and "null" in types:

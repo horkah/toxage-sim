@@ -25,6 +25,7 @@ REPO = Path(__file__).resolve().parents[2]
 
 
 def _version():
+    """Version from pyproject.toml, '0' if it cannot be read."""
     try:
         with open(REPO / "pyproject.toml", "rb") as f:
             return tomllib.load(f)["project"]["version"]
@@ -43,6 +44,7 @@ def stamp(text, zone=None):
 
 
 def _git():
+    """Build stamp from the last commit of a git working copy, None without git."""
     try:
         out = subprocess.run(["git", "-C", str(REPO), "log", "-1", "--format=%ct %h"],
                              capture_output=True, text=True, timeout=3, check=True).stdout.strip()
@@ -52,6 +54,7 @@ def _git():
 
 
 def _build():
+    """The build stamp: environment, BUILD file, git, or 'dev', in this order."""
     if os.environ.get("TOXAGE_BUILD"):
         return os.environ["TOXAGE_BUILD"].strip()
     try:

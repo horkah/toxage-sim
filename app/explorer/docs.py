@@ -17,6 +17,8 @@ REPO = Path(settings.REPO_DIR)
 
 @dataclass(frozen=True)
 class Document:
+    """One document of the repository that the app shows: key in the address, title,
+    group, file."""
     key: str
     title: str
     group: str
@@ -27,6 +29,7 @@ class Document:
     omit: tuple = ()
 
     def text(self):
+        """The Markdown text of the document."""
         return (REPO / self.path).read_text(encoding="utf-8")
 
 
@@ -83,6 +86,8 @@ def inline(text, base=""):
         html = escape(part, quote=False)
 
         def link(match):
+            """Replace a Markdown link by an HTML link, or by its text if the target
+            is not shown in the app."""
             address = _link(match.group(2), base)
             label = match.group(1)
             return f'<a href="{escape(address)}">{label}</a>' if address else label
@@ -95,10 +100,12 @@ def inline(text, base=""):
 
 
 def slug(text):
+    """Anchor of a heading: lower case, other characters as hyphens."""
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
 def _cells(line):
+    """Cells of one Markdown table row, without the outer bars."""
     return [c.strip() for c in line.strip().strip("|").split("|")]
 
 
@@ -108,6 +115,7 @@ def render(text, base=""):
     out, headings, paragraph, i = [], [], [], 0
 
     def flush():
+        """Write the collected lines as one paragraph."""
         if paragraph:
             out.append(f"<p>{inline(' '.join(paragraph), base)}</p>")
             paragraph.clear()
@@ -209,6 +217,7 @@ def page(document):
 
 @functools.lru_cache(maxsize=64)
 def _headings(key):
+    """Headings of a document, computed once per process."""
     return tuple(page(DOCUMENTS[key])[1])
 
 

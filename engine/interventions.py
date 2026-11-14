@@ -15,6 +15,7 @@ SOURCES = TARGETED + ("symptom_report",)   # order of priority for an alert
 
 
 def _sigmoid(x):
+    """Logistic function: maps a log-odds value to a probability."""
     return 1 / (1 + math.exp(-x))
 
 

@@ -6,10 +6,12 @@
 
 const W = 460;
 
+// Escape text for HTML and SVG.
 export function esc(value) {
   return String(value).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
+// A round step (1, 2, 2.5 or 5 times a power of ten) at least as large as raw.
 export function niceStep(raw) {
   if (!(raw > 0)) return 1;
   const magnitude = 10 ** Math.floor(Math.log10(raw));
@@ -33,6 +35,7 @@ export function scale(d0, d1, r0, r1) {
   return (v) => (d1 === d0 ? (r0 + r1) / 2 : r0 + ((v - d0) * (r1 - r0)) / (d1 - d0));
 }
 
+// A value as text of an axis or a tooltip: percent, whole number or two decimals.
 export function fmt(value, format) {
   if (value === null || value === undefined) return "–";
   if (format === "pct") return `${+(100 * value).toFixed(1)}%`;
@@ -62,16 +65,19 @@ export function withParams(href, params) {
   return url.pathname + url.search;
 }
 
+// An SVG text element at (x, y).
 function text(x, y, content, cls = "", extra = "") {
   return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" class="${cls}" ${extra}>${esc(content)}</text>`;
 }
 
+// The legend below a chart: one swatch per series, and the selected patient if marked.
 function legend(items, highlighted, what = "selected patient") {
   const entries = items.map((s) => `<span><i class="sw s-${esc(s.cls)}"></i>${esc(s.name)}</span>`);
   if (highlighted) entries.push(`<span><i class="sw s-hl"></i>${esc(what)}</span>`);
   return entries.length ? `<div class="legend">${entries.join("")}</div>` : "";
 }
 
+// Bar chart, vertical or horizontal, grouped or stacked; categories can be links that set a filter.
 function bars(spec) {
   const { categories: cats, series, stacked, horizontal, highlight } = spec;
   const counts = spec.counts || [];
@@ -152,6 +158,7 @@ function bars(spec) {
   return { height, svg: parts.join(""), legend: legend(series, highlight !== null && highlight !== undefined, spec.highlight_name) };
 }
 
+// Axes, grid and labels of a chart with numeric x and y; returns the scales for the marks.
 function frame(spec, height, left = 50, bottom = 40) {
   const x = spec.x, y = spec.y;
   const xt = niceTicks(x.min, x.max), yt = niceTicks(y.min, y.max);
@@ -172,6 +179,7 @@ function frame(spec, height, left = 50, bottom = 40) {
   return { sx, sy, parts, xt, yt };
 }
 
+// Line chart: series as lines or steps, optional dots, a diagonal, a marker and vertical event lines.
 function line(spec) {
   const height = 270;
   const { sx, sy, parts, xt, yt } = frame(spec, height);
@@ -202,6 +210,7 @@ function line(spec) {
   return { height, svg: parts.join(""), legend: legend(spec.series.concat(spec.marker_legend || []), !!m) };
 }
 
+// Scatter plot of patients, coloured by outcome; points select a patient, the selected one has a crosshair.
 function scatter(spec) {
   const height = 290;
   const { sx, sy, parts } = frame(spec, height);
@@ -232,7 +241,9 @@ function chartData() {
   return data;
 }
 
+// The element <tox-chart chart="id">: draws the chart with that id from the chart data of the page.
 export class ToxChart extends (globalThis.HTMLElement ?? class {}) {
+  // Draw the chart when the element enters the page.
   connectedCallback() {
     const spec = chartData()[this.getAttribute("chart")];
     if (!spec) return;
@@ -249,6 +260,7 @@ export class ToxChart extends (globalThis.HTMLElement ?? class {}) {
     this.addEventListener("click", (event) => this.follow(event));
   }
 
+  // A click on a point selects the patient, a click on a category applies its filter.
   follow(event) {
     const target = event.target.closest("[data-id], [data-link]");
     if (!target) return;

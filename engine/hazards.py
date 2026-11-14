@@ -147,6 +147,8 @@ class HazardTable:
     """Target hazards and time weights per regimen, prepared once."""
 
     def __init__(self, regimens, params, calibration=None):
+        """Prepare the hazard coefficient and the weekly weights of every event type
+        for every regimen."""
         self.weeks = params["simulation"]["weeks"]
         window = params["simulation"]["calibration_weeks"]
         self.params = params
@@ -175,6 +177,8 @@ class HazardTable:
                     if stop is not None and types[event_type]["chemotherapy"]:
                         weights = [w if i < stop else 0.0 for i, w in enumerate(weights)]
                 factor = self.calibration.get(name, {}).get(event_type, 1.0)
+                # A share p with at least one event within the window is a cumulative
+                # hazard of -ln(1 - p); the weekly weights split it over the weeks.
                 rows.append((event_type, -math.log(1 - p) * factor, weights))
             self.rows[name] = rows
 

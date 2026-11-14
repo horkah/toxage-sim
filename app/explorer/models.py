@@ -16,6 +16,8 @@ from django.db import models
 
 
 class Dataset(models.Model):
+    """One generated cohort: its state while it is made, its scenarios, and the
+    settings it was made with."""
     RUNNING, READY, FAILED = "running", "ready", "failed"
 
     name = models.CharField(max_length=80)
@@ -31,26 +33,32 @@ class Dataset(models.Model):
     calibrated = models.BooleanField(default=False)
 
     class Meta:
+        """Newest first; the explorer shows the newest by default."""
         ordering = ["-created", "-pk"]
 
     def __str__(self):
+        """The name, e.g. in the admin and in messages."""
         return self.name
 
     @property
     def ready(self):
+        """True once the data set is complete and can be explored."""
         return self.status == self.READY
 
 
 class Patient(models.Model):
+    """One patient of a data set with the baseline record of the central schema."""
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, related_name="patients")
     patient_id = models.CharField(max_length=32)
     baseline = models.JSONField()
 
     class Meta:
+        """In order of the patient id; one id once per data set."""
         ordering = ["patient_id"]
         constraints = [models.UniqueConstraint(fields=["dataset", "patient_id"], name="patient_once_per_dataset")]
 
     def __str__(self):
+        """The patient id."""
         return self.patient_id
 
 
@@ -65,6 +73,8 @@ class Course(models.Model):
     observations = models.JSONField(default=dict)
 
     class Meta:
+        """One course per patient and scenario; scenario_id is indexed for the views
+        of one scenario."""
         constraints = [models.UniqueConstraint(fields=["patient", "scenario_id"], name="course_once_per_scenario")]
         indexes = [models.Index(fields=["scenario_id"])]
 
@@ -76,4 +86,5 @@ class Setting(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
+        """The key of the parameter file."""
         return self.key

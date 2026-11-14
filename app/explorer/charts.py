@@ -43,6 +43,7 @@ def rate(rows, key):
 
 
 def mean(values):
+    """Mean of the values that are not None, None if there are none."""
     values = [v for v in values if v is not None]
     return sum(values) / len(values) if values else None
 
@@ -58,10 +59,13 @@ def percentile(values, value):
 
 
 def _pct(x):
+    """Share as percent for labels, with float noise removed (0.07 -> 7, not
+    7.000000000000001)."""
     return float(f"{100 * x:.6g}")
 
 
 def _r(x, digits=4):
+    """Round for the JSON of a chart; keeps None."""
     return None if x is None else round(x, digits)
 
 
@@ -81,12 +85,14 @@ def grouping(field, rows):
         key = index.get
     elif field.kind == "bool":
         labels, links = ["no", "yes"], [{name: "false"}, {name: "true"}]
+        # Category index of a value of a boolean field: no 0, yes 1, missing None.
         def key(v): return None if v is None else int(v)
     elif field.integer and field.minimum is not None and field.maximum is not None \
             and field.maximum - field.minimum <= 10:
         low, high = int(field.minimum), int(field.maximum)
         labels = [str(v) for v in range(low, high + 1)]
         links = [{f"{name}_min": v, f"{name}_max": v} for v in range(low, high + 1)]
+        # Category index of a small whole number: its distance from the lowest value.
         def key(v): return None if v is None else int(v) - low
     else:
         present = sorted(r[name] for r in rows if r.get(name) is not None)
@@ -117,12 +123,15 @@ def grouping(field, rows):
             count += 1
 
         def key(v):
+            """Category index of a number: its bin, values below the first or above
+            the last bin go to the edge bins."""
             if v is None:
                 return None
             return min(count - 1, max(0, int((v - start) // step)))
     if field.nullable:
         labels, links = labels + ["not recorded"], links + [None]
         missing, inner = len(labels) - 1, key
+        # Missing values go to the category 'not recorded', all others as before.
         def key(v): return missing if v is None else inner(v)
     return labels, key, links
 
@@ -150,6 +159,7 @@ def _scored(rows, model, patient):
 
 
 def _empty(chart_type, title):
+    """Spec of a chart without data; the browser shows a short note instead."""
     return {"type": chart_type, "title": title, "empty": True}
 
 
@@ -286,6 +296,8 @@ def scatter(rows, x, y, outcome, patient=None, title=""):
                 f"Patient {patient['patient_id']} is not in this chart: no value for {missing}.")
 
     def axis(key, label, fmt):
+        """Axis spec: risks start at 0 and end at a round value, other numbers span
+        their values."""
         values = [r[key] for r in rows] + ([patient[key]] if shown else [])
         if fmt == "pct":
             return {"label": label, "format": fmt, "min": 0, "max": nice_max(max(values))}

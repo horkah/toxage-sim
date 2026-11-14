@@ -44,6 +44,7 @@ def solve(a, b):
 
 
 def inverse(a):
+    """Inverse of a square matrix, column by column with solve()."""
     n = len(a)
     columns = [solve(a, [1.0 if i == j else 0.0 for i in range(n)]) for j in range(n)]
     return [[columns[j][i] for j in range(n)] for i in range(n)]
@@ -68,6 +69,7 @@ def fit(x, y, link="logit", offset=None, start=None, max_iter=50, tol=1e-9):
             mu, d = _inverse_link(eta, link)
             mu = min(max(mu, _EPS), 1 - _EPS)
             d = max(d, _EPS)
+            # Weight and working response of iteratively reweighted least squares.
             w = d * d / (mu * (1 - mu))
             z = eta - oi + (yi - mu) / d
             for i in range(k):

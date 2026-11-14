@@ -78,6 +78,7 @@ def score(records, models):
 
 
 def clear_cache():
+    """Forget the stored rows and events, e.g. after a change of parameters or data."""
     _CACHE.clear()
 
 
@@ -103,6 +104,7 @@ def risk_models():
 
 
 def scenario_ids(dataset):
+    """Ids of the scenarios of a data set, in their order."""
     return [s["scenario_id"] for s in dataset.scenarios]
 
 
@@ -155,6 +157,7 @@ def normalise_id(text):
 
 
 def find(rows, patient_id):
+    """The row of one patient, or None."""
     return next((r for r in rows if r["patient_id"] == patient_id), None)
 
 

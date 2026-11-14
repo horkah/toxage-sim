@@ -27,6 +27,7 @@ USUAL_CARE = "usual_care"
 
 
 def _read(name):
+    """Read one JSON file of the engine configuration."""
     with open(ENGINE_DIR / "config" / name, encoding="utf-8") as f:
         return json.load(f)
 
@@ -37,10 +38,13 @@ def load_config():
 
 
 def load_interventions():
+    """The intervention scenarios and their parameters as stored in the repository."""
     return _read("interventions.json")
 
 
 def load_calibration():
+    """Calibration factors per regimen and event type, empty if calibrate.py has not
+    written any."""
     path = ENGINE_DIR / "config" / "calibration.json"
     return _read("calibration.json")["factors"] if path.exists() else {}
 
@@ -184,6 +188,8 @@ def summary(data, scenario_id=USUAL_CARE):
 
 
 def print_summary(data):
+    """Print key rates per regimen (usual care) and per scenario after a run from the
+    command line."""
     if any(s["scenario_id"] == USUAL_CARE for s in data["scenario"]):
         print("\nUsual care, by regimen")
         print(f"{'regimen':<28}{'n':>6}{'severe':>8}{'severe':>8}{'lung':>7}{'heart':>8}{'dose':>9}{'stopped':>9}{'died':>7}")
@@ -202,6 +208,8 @@ def print_summary(data):
 
 
 def main():
+    """Command line: generate a cohort, write the tables as CSV files and print a
+    summary."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--n", type=int, default=3000, help="number of patients, split equally over the three tumour types")
     parser.add_argument("--seed", type=int, default=1, help="random seed")

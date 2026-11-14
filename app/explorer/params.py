@@ -25,6 +25,8 @@ NOTES = ("basis", "description", "source", "comment")
 
 @dataclass(frozen=True)
 class Source:
+    """One parameter file of the repository: key, title, path, and the key under
+    which its values lie."""
     key: str
     title: str
     path: str
@@ -32,6 +34,7 @@ class Source:
     intro: str = ""
 
     def default(self):
+        """The values of the file as they are in the repository."""
         with open(REPO / self.path, encoding="utf-8") as f:
             data = json.load(f)
         return data[self.root] if self.root else data
@@ -51,6 +54,7 @@ ENGINE = ("regimens", "parameters", "interventions")
 
 
 def is_leaf(value):
+    """True for a value, False for a group of values (a dictionary)."""
     return not isinstance(value, dict)
 
 
@@ -64,6 +68,8 @@ def leaves(data, prefix=()):
 
 
 def is_note(path):
+    """True for keys that explain a value (basis, source, ...); they are shown, not
+    edited."""
     return path[-1] in NOTES
 
 
@@ -73,6 +79,7 @@ def anchor(path):
 
 
 def changes(key):
+    """The stored changes of one parameter file as {path: value}."""
     setting = Setting.objects.filter(pk=key).first()
     return dict(setting.value) if setting else {}
 
@@ -174,6 +181,8 @@ def reset(key=None, path=None):
 
 
 def _store(key, changed):
+    """Store the changes of one file, or delete its row when nothing differs from the
+    defaults."""
     if changed:
         Setting.objects.update_or_create(pk=key, defaults={"value": changed})
     else:

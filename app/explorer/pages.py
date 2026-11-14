@@ -20,6 +20,7 @@ def changes_data(view):
     """Views that change data or parameters are closed in read-only mode."""
     @wraps(view)
     def wrapped(request, *args, **kwargs):
+        """The view itself, or 403 in read-only mode."""
         if settings.READ_ONLY:
             return HttpResponseForbidden("The app runs in read-only mode.")
         return view(request, *args, **kwargs)
@@ -33,6 +34,8 @@ def fetched(request):
 
 
 def _int(text, default, low, high):
+    """A whole number from a form or query value, limited to [low, high]; default if
+    it is not a number."""
     try:
         return max(low, min(high, int(text)))
     except (TypeError, ValueError):
@@ -53,6 +56,8 @@ def _changed_list(changes):
 
 
 def data(request, message=None, error=None):
+    """Page Data: stored data sets, the form to generate one, the archive. message
+    and error come from an import."""
     store.mark_interrupted()
     datasets = list(Dataset.objects.all())
     active = cohort.active(request)
@@ -83,6 +88,7 @@ def data(request, message=None, error=None):
 @require_POST
 @changes_data
 def data_generate(request):
+    """Start generating a data set from the form; the page then follows the progress."""
     n = _int(request.POST.get("n"), 1500, 3, MAX_PATIENTS)
     seed = _int(request.POST.get("seed"), 1, 0, 2**31 - 1)
     store.generate(n, seed, request.POST.getlist("scenarios"), request.POST.get("name", ""),
@@ -136,6 +142,8 @@ def _data_page(request, **kwargs):
 @require_POST
 @changes_data
 def archive_import(request):
+    """Import an uploaded archive, adding its data sets or replacing everything;
+    errors are shown on the page."""
     upload = request.FILES.get("archive")
     if upload is None:
         return _data_page(request, error="Please choose an archive file.")
@@ -153,6 +161,7 @@ def archive_import(request):
 
 
 def _table(request):
+    """The table of the records page from the query, baseline if unknown."""
     table = request.GET.get("table")
     return table if table in store.TABLES else "baseline"
 
@@ -204,12 +213,14 @@ def export(request, pk, table):
 # Parameters ----------------------------------------------------------------------
 
 def _source(key):
+    """The parameter source of a key, 404 if unknown."""
     if key not in params.SOURCES:
         raise Http404
     return params.SOURCES[key]
 
 
 def parameters(request, key="parameters"):
+    """Page of one parameter file: shows the values, saves changes and resets them."""
     source = _source(key)
     posted, errors, saved = None, {}, False
     if request.method == "POST":
@@ -247,6 +258,8 @@ def parameters(request, key="parameters"):
 # Reference: schema and documents -------------------------------------------------
 
 def _reference(request, template, **context):
+    """Render a page of the reference section with its side bar: schema tables and
+    documents."""
     return render(request, template, {
         "section": "reference",
         "groups": docs.groups(),
@@ -257,6 +270,8 @@ def _reference(request, template, **context):
 
 
 def schema(request):
+    """Page Data schema: every table and field of the central schema with type,
+    values, unit and meaning."""
     tables = []
     for name in toxage_schema.TABLES:
         spec = toxage_schema.load(name)
@@ -281,6 +296,8 @@ def schema(request):
 
 
 def documents(request, key=None):
+    """Reference overview without key, else one document rendered from Markdown with
+    its headings."""
     if key is None:
         return _reference(request, "explorer/documents.html", page="index")
     if key not in docs.DOCUMENTS:

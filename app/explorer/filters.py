@@ -17,6 +17,8 @@ GROUPS = {"baseline": "Patient", "outcome": "Outcome"}
 
 @dataclass(frozen=True)
 class Filter:
+    """One filter of the cohort: the query key, its label and group, and how it is
+    entered."""
     key: str
     label: str
     group: str
@@ -27,6 +29,7 @@ class Filter:
 
 
 def specs(models):
+    """All filters: one per schema field of baseline and outcome, one per risk model."""
     found = [
         Filter(f.name, f.label, GROUPS[f.table], f.kind, f.choices, f.unit)
         for f in fields()
@@ -39,6 +42,7 @@ def specs(models):
 
 
 def _number(text):
+    """A finite number from the text of a form field, else None."""
     try:
         value = float(text)
     except (TypeError, ValueError):
@@ -68,6 +72,7 @@ def parse(query, filter_specs):
 
 
 def matches(row, active):
+    """True if a row meets every active condition."""
     for key, condition in active.items():
         value = row.get(key)
         if isinstance(condition, set):
@@ -85,6 +90,7 @@ def matches(row, active):
 
 
 def apply(rows, active):
+    """The rows that meet every active condition."""
     return [r for r in rows if matches(r, active)]
 
 
@@ -107,6 +113,7 @@ def form(filter_specs, query, active):
 
 
 def _bound(value):
+    """A bound of a range as short text: 60 rather than 60.0."""
     return f"{value:g}"
 
 

@@ -13,6 +13,7 @@ LAB_EVENTS = ("neutropenia", "febrile_neutropenia", "anaemia", "thrombocytopenia
 
 
 def _clip(value, low, high):
+    """The value limited to [low, high]."""
     return max(low, min(high, value))
 
 

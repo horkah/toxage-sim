@@ -30,6 +30,7 @@ const PATIENCE = 240000;   // the demo gives up waiting for a result after this 
 
 // Pure helpers, exported for the tests ---------------------------------------
 
+// Number of words of a text.
 export function words(text) {
   return (text.match(/\S+/g) || []).length;
 }
@@ -68,6 +69,7 @@ export function applies(step, mode, readOnly, mem) {
   return true;
 }
 
+// The value limited to [low, high].
 export function clamp(value, low, high) {
   return Math.min(high, Math.max(low, value));
 }
@@ -88,27 +90,33 @@ const browser = typeof document !== "undefined" && typeof sessionStorage !== "un
 let state = null;       // { mode, i, acted, shownAt, doneAt, paused, mem }
 let panel = null, ring = null, timer = null, run = 0;
 
+// A JSON value from session storage, fallback if missing or blocked.
 function read(key, fallback = null) {
   try { return JSON.parse(sessionStorage.getItem(key)) ?? fallback; } catch { return fallback; }
 }
+// Keep the tour state in session storage, so that it survives a full page load.
 function save() {
   try {
     if (state) sessionStorage.setItem(KEY, JSON.stringify(state));
     else sessionStorage.removeItem(KEY);
   } catch { /* storage blocked: the tour ends with the page */ }
 }
+// A speed value from local storage, limited to its range, else its default.
 function setting(name) {
   const s = SPEED[name];
   let value = NaN;
   try { value = parseFloat(localStorage.getItem(s.key)); } catch { /* blocked */ }
   return Number.isFinite(value) ? clamp(value, s.min, s.max) : s.fallback;
 }
+// Keep a speed value in local storage; an empty value removes it.
 function store(key, value) {
   try { if (value === "") localStorage.removeItem(key); else localStorage.setItem(key, value); } catch { /* blocked */ }
 }
+// The CSRF token of the page for the POST requests of the tour.
 function csrf() {
   return document.querySelector("[name=csrfmiddlewaretoken]")?.value || "";
 }
+// POST to an endpoint of the tour and return its JSON, {} on an error.
 async function post(url) {
   const response = await fetch(url, { method: "POST", headers: { "X-CSRFToken": csrf() } });
   return response.ok ? response.json() : {};
@@ -124,6 +132,7 @@ const api = {
   get mode() { return state.mode; },
   get mem() { return state.mem; },
   get readOnly() { return document.body.dataset.readOnly === "1"; },
+  // The element of a selector; {A} etc. stand for remembered values; null if none or invalid.
   q(selector) {
     try { return document.querySelector(fill(selector, state.mem)); } catch { return null; }
   },
@@ -131,6 +140,7 @@ const api = {
   on(url) { return onPage(location.href, fill(url, state.mem)); },
   go(url) { location.href = fill(url, state.mem); },
   click(selector) { api.q(selector)?.click(); },
+  // Set a field like a user does: value, then input and change events.
   fill(selector, value) {
     const el = api.q(selector);
     if (!el) return;
@@ -138,19 +148,23 @@ const api = {
     el.dispatchEvent(new Event("input", { bubbles: true }));
     el.dispatchEvent(new Event("change", { bubbles: true }));
   },
+  // Tick or untick a box by a click, so that the page reacts as to a user.
   check(selector, checked = true) {
     const el = api.q(selector);
     if (el && el.checked !== checked) el.click();
   },
+  // The state of the app on the server: data sets, changed parameters, snapshot.
   async state() {
     try { return await (await fetch("/tour/state/")).json(); } catch { return { datasets: [], changes: {} }; }
   },
 };
 
+// All steps; a function so that tests and future variants can choose them.
 function steps() {
   return STEPS;
 }
 
+// Open the groups that hide an element and scroll it to the middle of the window.
 function reveal(el) {
   // Open the groups that hide the target, e.g. a filter group or the menu.
   // The handle of a group is visible while the group is closed, so it opens nothing.
@@ -161,6 +175,7 @@ function reveal(el) {
   el.scrollIntoView({ block: "center", behavior: "instant" });
 }
 
+// Place the hint next to its target and the ring around it, or in the corner without a target.
 function position() {
   if (!panel) return;
   const step = steps()[state.i];
@@ -181,17 +196,20 @@ function position() {
   }
 }
 
+// A range slider of a speed setting with its current value.
 function slider(name, label, unit) {
   const s = SPEED[name];
   return `<label><span>${label}: <output>${setting(name)}</output> ${unit}</span>
     <input type="range" data-speed="${name}" min="${s.min}" max="${s.max}" step="${s.step}" value="${setting(name)}"></label>`;
 }
 
+// Both speed sliders of the demo.
 function speedControls() {
   return `<div class="tour-speed">${slider("read", "Reading time", "seconds per 20 words")}
     ${slider("pause", "Pause after each step", "seconds")}</div>`;
 }
 
+// Save a speed setting while its slider moves, and show the value.
 function bindSpeed(root) {
   for (const input of root.querySelectorAll("[data-speed]")) {
     input.addEventListener("input", () => {
@@ -209,6 +227,7 @@ function hold() {
   save();
 }
 
+// Show or hide the controls of the demo; showing them holds the demo five seconds longer.
 function toggleControls() {
   state.controls = !state.controls;
   state.holdUntil = state.controls ? Date.now() + HOLD : 0;
@@ -218,6 +237,7 @@ function toggleControls() {
   position();
 }
 
+// Draw the hint of a step: header, text, task, note and the buttons of the mode.
 function show(step, note = "", free = false) {
   if (!panel) {
     ring = document.createElement("div");
@@ -272,6 +292,7 @@ function show(step, note = "", free = false) {
   requestAnimationFrame(position);
 }
 
+// Remove hint and ring from the page.
 function hide() {
   clearTimeout(timer);
   panel?.remove();
@@ -290,6 +311,7 @@ async function settled() {
   }
 }
 
+// Wait until the result of a step is there; the demo gives up after PATIENCE, the tutorial waits.
 async function until(step, patient) {
   // Wait for the result of a step. Returns false if the tour moved on meanwhile.
   const mine = run, started = Date.now();
@@ -304,6 +326,7 @@ async function until(step, patient) {
   }
 }
 
+// All text of a hint, for its reading time.
 function hintText(step) {
   return [step.title, ...step.text, step.do || ""].join(" ");
 }
@@ -329,6 +352,7 @@ async function reading(step) {
   }
 }
 
+// Wait the pause after a step of the demo, longer while paused or while the controls are shown.
 async function pausing() {
   const mine = run;
   for (;;) {
@@ -348,6 +372,7 @@ async function pausing() {
   }
 }
 
+// Go to the next (by 1) or previous (by -1) step that applies.
 function move(by) {
   // Go to the next (or previous) step that applies.
   let i = state.i + by;
@@ -379,10 +404,12 @@ function next() {
   }
 }
 
+// True if the user is typing in a field, where the arrow keys belong to the field.
 function typing(target) {
   return target.closest?.("input, select, textarea, [contenteditable]") !== null;
 }
 
+// The right arrow key goes to the next step.
 function onKey(event) {
   if (!state || event.key !== "ArrowRight" || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
   if (typing(event.target) || document.querySelector("dialog[open]")) return;
@@ -391,12 +418,14 @@ function onKey(event) {
 }
 
 let touch = null;
+// Note where a finger touched the screen.
 function onTouchStart(event) {
   const t = event.touches[0];
   // Swipes inside wide tables and form fields scroll or change them.
   touch = event.touches.length === 1 && !event.target.closest(".scroll, input, select, textarea")
     ? { x: t.clientX, y: t.clientY } : null;
 }
+// A swipe to the left goes to the next step.
 function onTouchEnd(event) {
   if (!touch || !state) return;
   const t = event.changedTouches[0];
@@ -404,6 +433,7 @@ function onTouchEnd(event) {
   touch = null;
 }
 
+// Run the current step: go to its page, show the hint, act or wait, then go on.
 async function play() {
   const mine = ++run;
   clearTimeout(timer);
@@ -456,6 +486,7 @@ async function play() {
   play();
 }
 
+// End of the tour: the demo starts its next round, unless it was stopped; then the state before it comes back.
 async function finish(stopped = false) {
   run++;
   const demo = state.mode === "demo";
@@ -481,6 +512,7 @@ async function finish(stopped = false) {
   message(demo ? "Demo" : "Tutorial", text, needsRestore ? "/" : null);
 }
 
+// A dialog with a message; closing it can load a page.
 function message(title, text, reload) {
   const dialog = document.createElement("dialog");
   dialog.className = "tour-dialog";
@@ -490,6 +522,7 @@ function message(title, text, reload) {
   dialog.showModal();
 }
 
+// Buttons of the hint, and a click on the text of a demo hint that shows or hides the controls.
 async function onPanelClick(event) {
   const action = event.target.closest("[data-tour]")?.dataset.tour;
   if (!action) {
@@ -529,6 +562,7 @@ async function begin(mode, round = 1) {
   save();
 }
 
+// Start a tour from its first step.
 export async function start(mode) {
   if (state) { run++; hide(); }
   await begin(mode);
@@ -536,6 +570,7 @@ export async function start(mode) {
   play();
 }
 
+// The offer of the tours after the disclaimer, once per browser session.
 function welcome() {
   const dialog = document.createElement("dialog");
   dialog.className = "tour-dialog";
@@ -568,6 +603,7 @@ function welcome() {
   dialog.showModal();
 }
 
+// A note on top of the page when a demo did not finish, with a button to bring the state back.
 function unfinished() {
   // A demo that did not reach its end, e.g. because the tab was closed.
   const note = document.createElement("div");
@@ -581,6 +617,7 @@ function unfinished() {
   document.body.prepend(note);
 }
 
+// Set up the tours on a page: buttons, keys, swipes, and a running tour or the offer.
 function init() {
   if (!document.querySelector(".mainnav")) return;      // not on the disclaimer
   document.addEventListener("click", (event) => {

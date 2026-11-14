@@ -65,11 +65,16 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
     p_death = 1 - math.exp(-h_death)
 
     def stop(day, reason, week):
+        """End the therapy on a day for a reason, once; later calls keep the first
+        end."""
         nonlocal stopped, end_day, end_reason, stop_week
         if not stopped:
             stopped, end_day, end_reason, stop_week = True, day, reason, week
 
     def apply(action, week, day):
+        """Carry out an action on the dose after an event and return what was
+        actually done: a dose reduction below the lowest level becomes a
+        discontinuation."""
         nonlocal dose, interrupted_until
         if stopped:
             return "none"
@@ -236,6 +241,7 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
 
         # 4. Death, loss to follow-up, end of therapy.
         if death_day is None and draws.u("death", week) < p_death:
+            # A random day of the week, but not before the last recognised event.
             death_day = max(first_day + int(draws.u("death_day", week) * 7), last_day)
             stop(death_day, "death", week)
         if death_day is not None:

@@ -21,6 +21,8 @@ import models  # noqa: E402
 
 
 def _ci(coef, se):
+    """95% confidence interval of a ratio from a log coefficient and its standard
+    error."""
     return [round(math.exp(coef - 1.96 * se), 4), round(math.exp(coef + 1.96 * se), 4)]
 
 
@@ -151,6 +153,8 @@ def fit(baseline, outcomes, cfg=None, label="data"):
 
 
 def main():
+    """Command line: fit the models on generated data and write the fitted
+    configuration."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--data", required=True, help="folder with baseline.csv and outcome.csv")
     parser.add_argument("--out", required=True, help="output JSON file")

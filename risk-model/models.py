@@ -18,19 +18,24 @@ DEFAULT_CONFIG = MODEL_DIR / "config" / "models.json"
 
 
 def load_config(path=DEFAULT_CONFIG):
+    """The model configuration from a JSON file, by default the literature
+    configuration."""
     with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
 def _logit(p):
+    """Log-odds of a probability."""
     return math.log(p / (1 - p))
 
 
 def _sigmoid(x):
+    """Logistic function: probability of a log-odds value."""
     return 1 / (1 + math.exp(-x))
 
 
 def category(risk, thresholds):
+    """Risk category (low, intermediate, high) by the thresholds of a model."""
     if risk >= thresholds["high_from"]:
         return "high"
     if risk >= thresholds["intermediate_from"]:
@@ -67,6 +72,8 @@ def severe_toxicity_terms(patient, cfg):
 
 
 def severe_toxicity_risk(patient, cfg):
+    """Probability of severe toxicity within 90 days: regimen rate on the log-odds
+    scale plus the patient's terms."""
     m = cfg["severe_toxicity_90d"]
     x = _logit(m["regimen_rates"][patient["regimen"]]["rate"])
     for _, _, ratio in severe_toxicity_terms(patient, cfg):
@@ -97,6 +104,7 @@ ILD_LABELS = {
 
 
 def ild_applicable(patient, cfg):
+    """True if the lung model has a rate for the patient's regimen."""
     return patient["regimen"] in cfg["ild"]["regimen_rates"]
 
 
@@ -187,6 +195,8 @@ ADT_LABELS = {"gnrh_agonist": "GnRH agonist", "gnrh_antagonist": "GnRH antagonis
 
 
 def cv_applicable(patient, cfg):
+    """True if the patient has a type of androgen deprivation that the cardiovascular
+    model covers."""
     return patient.get("adt_type") in cfg["cardiovascular"]["adt_rates"]
 
 
@@ -263,6 +273,8 @@ class Scorer:
     app uses it, is in toxage_risk.py."""
 
     def __init__(self, cfg=None):
+        """Prepare the baseline risks r0 of all regimens and types of androgen
+        deprivation once."""
         self.cfg = cfg or load_config()
         self.ild_r0 = {r: ild_baseline_risk(r, self.cfg) for r in self.cfg["ild"]["regimen_rates"]}
         self.cv_r0 = {a: cv_baseline_risk(a, self.cfg) for a in self.cfg["cardiovascular"]["adt_rates"]}

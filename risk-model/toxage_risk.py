@@ -57,6 +57,7 @@ class RiskModel:
     source = ""
 
     def __init__(self, cfg=None):
+        """Keep the model configuration; the default is the literature configuration."""
         self.cfg = cfg if cfg is not None else calc.load_config()
 
     def applies(self, patient):
@@ -77,16 +78,21 @@ class RiskModel:
         raise NotImplementedError
 
     def describe(self):
+        """The attributes of the model as a dictionary, e.g. for documentation and
+        tests."""
         return {key: getattr(self, key) for key in (
             "id", "name", "outcome", "onset", "window_days", "ratio_kind",
             "candidate", "source")}
 
 
 def _factors(pairs):
+    """Factor records with readable labels from (name, ratio) pairs."""
     return [Factor(name, FACTOR_LABELS.get(name, name), ratio) for name, ratio in pairs]
 
 
 class SevereToxicityModel(RiskModel):
+    """Candidate 1: any severe adverse event (grade 3 to 5) within 90 days, logistic
+    model."""
     id = "severe90"
     name = "Severe toxicity, 90 days"
     outcome = "severe_toxicity_90d"
@@ -97,12 +103,16 @@ class SevereToxicityModel(RiskModel):
     source = "regimen rate from the trials; effects of age, ECOG and geriatric domains assumed"
 
     def reference_risk(self, patient):
+        """The published rate of the regimen."""
         return self.cfg["severe_toxicity_90d"]["regimen_rates"][patient["regimen"]]["rate"]
 
     def risk(self, patient):
+        """The modelled risk of the patient."""
         return calc.severe_toxicity_risk(patient, self.cfg)
 
     def factors(self, patient):
+        """Age, ECOG and geriatric domains as odds ratios; 1 where a factor does not
+        apply."""
         applied = {name: ratio for name, _, ratio in calc.severe_toxicity_terms(patient, self.cfg)}
         return _factors([
             ("age", applied.get("age", 1.0)),
@@ -112,6 +122,8 @@ class SevereToxicityModel(RiskModel):
 
 
 class LungToxicityModel(RiskModel):
+    """Candidate 2: lung toxicity (ILD) under trastuzumab deruxtecan and single-agent
+    chemotherapy, proportional hazards."""
     id = "ild"
     name = "Lung toxicity"
     outcome = "ild"
@@ -121,22 +133,30 @@ class LungToxicityModel(RiskModel):
     source = "hazard ratios of Powell et al. (2022), set to the regimen rate of Modi et al. (2022)"
 
     def __init__(self, cfg=None):
+        """Read the time window and prepare the baseline risk r0 of every covered
+        regimen."""
         super().__init__(cfg)
         self.window_days = self.cfg["ild"]["window_days"]
         self._r0 = {r: calc.ild_baseline_risk(r, self.cfg) for r in self.cfg["ild"]["regimen_rates"]}
 
     def applies(self, patient):
+        """True for the covered regimens."""
         return calc.ild_applicable(patient, self.cfg)
 
     def reference_risk(self, patient):
+        """Risk of a patient without risk factors on the same regimen, None if not
+        covered."""
         return self._r0.get(patient["regimen"])
 
     def risk(self, patient):
+        """The modelled risk, None if the model does not apply."""
         if not self.applies(patient):
             return None
         return calc.ild_risk(patient, self.cfg, self._r0[patient["regimen"]])
 
     def factors(self, patient):
+        """The six published risk factors as hazard ratios; empty if the model does
+        not apply."""
         if not self.applies(patient):
             return []
         applied = {name: ratio for name, _, ratio in calc.ild_terms(patient, self.cfg)}
@@ -144,6 +164,8 @@ class LungToxicityModel(RiskModel):
 
 
 class CardiovascularModel(RiskModel):
+    """Candidate 5: major cardiovascular events within one year under androgen
+    deprivation, proportional hazards."""
     id = "cv"
     name = "Cardiovascular events"
     outcome = "cv_event_1y"
@@ -154,22 +176,30 @@ class CardiovascularModel(RiskModel):
               "effects of age, diabetes, hypertension, smoking and renal function assumed")
 
     def __init__(self, cfg=None):
+        """Read the time window and prepare the baseline risk r0 of both types of
+        androgen deprivation."""
         super().__init__(cfg)
         self.window_days = self.cfg["cardiovascular"]["window_days"]
         self._r0 = {a: calc.cv_baseline_risk(a, self.cfg) for a in self.cfg["cardiovascular"]["adt_rates"]}
 
     def applies(self, patient):
+        """True for men with prostate cancer under a GnRH agonist or antagonist."""
         return calc.cv_applicable(patient, self.cfg)
 
     def reference_risk(self, patient):
+        """Risk of a man of the reference age without risk factors on the same type,
+        None if not covered."""
         return self._r0.get(patient.get("adt_type"))
 
     def risk(self, patient):
+        """The modelled risk, None if the model does not apply."""
         if not self.applies(patient):
             return None
         return calc.cv_risk(patient, self.cfg, self._r0[patient["adt_type"]])
 
     def factors(self, patient):
+        """Earlier event, age and the yes-or-no factors as hazard ratios; empty if
+        the model does not apply."""
         if not self.applies(patient):
             return []
         applied = {name: ratio for name, _, ratio in calc.cv_terms(patient, self.cfg)}
@@ -191,6 +221,7 @@ def load(cfg=None):
 # of None are left out.
 
 def _pairs(risks, events):
+    """Risks and outcomes (as 0 or 1) of the pairs that have a risk."""
     pairs = [(r, int(bool(e))) for r, e in zip(risks, events) if r is not None]
     return [r for r, _ in pairs], [e for _, e in pairs]
 

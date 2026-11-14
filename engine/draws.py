@@ -14,6 +14,8 @@ _PURPOSES = {}
 
 
 def _mix(x):
+    """SplitMix64 finaliser: turns a 64-bit number into a well-mixed one, so that
+    nearby inputs give unrelated outputs."""
     x &= _MASK
     x ^= x >> 30
     x = (x * 0xBF58476D1CE4E5B9) & _MASK
@@ -30,7 +32,13 @@ def purpose(name):
 
 
 class Draws:
+    """The fixed random numbers of one patient: the same seed, patient, purpose and
+    week give the same number."""
     def __init__(self, seed, index):
+        """Base value of the patient from the seed and the patient's index in the
+        cohort."""
+        # 0x9E37... is 2^64 divided by the golden ratio: it spreads consecutive
+        # seeds and indices far apart before mixing.
         self.base = _mix(seed * 0x9E3779B97F4A7C15 + index + 1)
 
     def key(self, name, week=0):
@@ -39,10 +47,12 @@ class Draws:
 
     def u(self, name, week=0):
         """Uniform number in [0, 1)."""
+        # The top 53 bits divided by 2^53: every double in [0, 1) with full precision.
         return (self.key(name, week) >> 11) / 9007199254740992.0
 
     def normal(self, name, week=0):
         """Standard normal number."""
+        # Inverse of the normal distribution; u is kept away from 0, where it is infinite.
         return _NORMAL.inv_cdf(min(max(self.u(name, week), 1e-12), 1 - 1e-12))
 
     def pick(self, name, probabilities, week=0):

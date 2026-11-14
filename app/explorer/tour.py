@@ -18,6 +18,7 @@ SNAPSHOT = "tour_snapshot"
 
 
 def has_snapshot():
+    """True if a demo noted the state of the app and has not restored it yet."""
     return Setting.objects.filter(pk=SNAPSHOT).exists()
 
 
@@ -78,6 +79,7 @@ def restore_snapshot():
 
 @require_POST
 def snapshot(request):
+    """POST: note the state before a demo; does nothing in read-only mode."""
     if settings.READ_ONLY:
         return JsonResponse({"read_only": True, "taken": False})
     return JsonResponse({"read_only": False, "taken": take_snapshot(request)})
@@ -85,6 +87,8 @@ def snapshot(request):
 
 @require_POST
 def restore(request):
+    """POST: bring back the state noted before the demo, and the data set the browser
+    had chosen then."""
     cookie = restore_snapshot()
     response = JsonResponse({"restored": cookie is not False})
     if cookie is False:

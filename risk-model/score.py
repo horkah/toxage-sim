@@ -17,6 +17,7 @@ from data import toxage_schema  # noqa: E402
 
 
 def score_all(baseline, cfg=None):
+    """Risk score records of all patients, checked against the schema."""
     model = models.Scorer(cfg)
     scores = [model.score(p) for p in baseline]
     toxage_schema.validate("risk_score", scores)
@@ -24,6 +25,8 @@ def score_all(baseline, cfg=None):
 
 
 def main():
+    """Command line: read baseline records, score them and write the risk score
+    table."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--baseline", required=True, help="baseline CSV file")
     parser.add_argument("--out", required=True, help="output CSV file")

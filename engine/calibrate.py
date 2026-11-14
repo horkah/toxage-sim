@@ -72,6 +72,8 @@ def calibrate(config=None, write=True, progress=None):
                 if target <= 0:
                     continue
                 rate = rates[name].get(event_type, 0.0)
+                # Ratio of the cumulative hazards of target and realised share: the
+                # factor that would hit the target if the hazard acted alone.
                 step = 2.0 if rate <= 0 else math.log(1 - target) / math.log(1 - min(rate, 0.999))
                 step = max(0.5, min(2.0, step)) ** 0.8  # damped, because the rates are noisy
                 factors[name][event_type] = factors[name].get(event_type, 1.0) * step

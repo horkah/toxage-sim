@@ -11,23 +11,29 @@ TUMOURS = ("pancreas", "prostate", "breast")
 
 
 def _clip(value, low, high):
+    """The value limited to [low, high]."""
     return max(low, min(high, value))
 
 
 def _sigmoid(x):
+    """Logistic function: maps a log-odds value to a probability."""
     return 1 / (1 + math.exp(-x))
 
 
 def _choice(rng, probabilities):
+    """One key of a {key: probability} mapping, drawn with these weights."""
     keys = list(probabilities)
     return rng.choices(keys, weights=[probabilities[k] for k in keys])[0]
 
 
 def _lognormal(rng, median, sigma):
+    """A draw from a log-normal distribution with the given median."""
     return rng.lognormvariate(math.log(median), sigma)
 
 
 def _regimen(rng, subgroup, frailty, age, bilirubin, lung_problem, params):
+    """The regimen of a patient: chosen by subgroup, frailty, age, bilirubin and lung
+    problems as in the parameters."""
     c = params["treatment_choice"]
     if subgroup == "pancreas_metastatic":
         m = c["pancreas_nalirifox"]

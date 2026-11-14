@@ -11,6 +11,8 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
 def _valid(name):
+    """The name if it is a known time zone (a leading ':' as in TZ=:Europe/Berlin is
+    allowed), else None."""
     name = (name or "").strip().lstrip(":")
     if not name:
         return None

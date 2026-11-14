@@ -57,10 +57,12 @@ export function matches(text, query) {
 
 const browser = typeof document !== "undefined" && typeof window !== "undefined";
 
+// A setting of this browser from local storage, "" if none or if storage is blocked.
 function load(key) {
   try { return localStorage.getItem(STORE + key) || ""; } catch { return ""; }
 }
 
+// Keep a setting in local storage; an empty value removes it.
 function save(key, value) {
   try {
     if (value) localStorage.setItem(STORE + key, value);
@@ -68,15 +70,18 @@ function save(key, value) {
   } catch { /* storage blocked: the setting lasts for this page only */ }
 }
 
+// Show a setting on the page: as data attribute of <html>, which the style sheet reads.
 function apply(key, value) {
   if (value) document.documentElement.dataset[key] = value;
   else delete document.documentElement.dataset[key];
 }
 
+// The CSRF token of the page, which Django needs with every POST.
 function csrf() {
   return document.querySelector("[name=csrfmiddlewaretoken]")?.value || "";
 }
 
+// Show a short message at the bottom right for about three seconds.
 export function toast(text) {
   const box = document.querySelector(".toasts");
   if (!box || !text) return;
@@ -110,6 +115,7 @@ export function confirmDialog({ title, text, action }) {
 // "action" or "method" hides the property of the same name of its form.
 const attr = (el, name) => el?.getAttribute(`data-${name}`) ?? null;
 
+// The warning to ask before a form is sent, or null: from the button or the form.
 function question(form, submitter) {
   // The question of a button or a form; data-confirm-if names a radio value that needs it.
   const source = attr(submitter, "confirm") ? submitter : form;
@@ -135,6 +141,7 @@ function count(by) {
 
 const here = () => location.pathname + location.search;
 
+// Note what a swap would lose: which groups are open, scroll positions, the focused field and its text.
 function remember(root) {
   // What the swap should keep: open groups, scroll positions, focus.
   const open = {};
@@ -153,6 +160,7 @@ function remember(root) {
   return { open, scroll, focus };
 }
 
+// Put the noted state back into the new content of the page.
 function restore(root, kept) {
   for (const [id, open] of Object.entries(kept.open)) {
     const d = root.querySelector(`details[id="${CSS.escape(id)}"]`);
@@ -178,6 +186,7 @@ function restore(root, kept) {
   }
 }
 
+// Put the parts of a loaded page into the current one: the main part (or only one part) and the navigation.
 function swap(doc, only) {
   const main = document.getElementById("main");
   const next = doc.getElementById("main");
@@ -193,6 +202,8 @@ function swap(doc, only) {
     const nav = document.getElementById("nav"), newNav = doc.getElementById("nav");
     if (nav && newNav) nav.replaceWith(document.adoptNode(newNav));
     main.dataset.page = next.dataset.page;
+    // adoptNode moves the parsed nodes into this document; custom elements such
+    // as <tox-chart> are upgraded and drawn when they are inserted.
     main.replaceChildren(...[...next.childNodes].map((n) => document.adoptNode(n)));
     restore(main, kept);
   }
@@ -253,6 +264,7 @@ export async function visit(href, options = {}) {
   else if (!(options.keepScroll ?? samePage)) window.scrollTo(0, 0);
 }
 
+// A click on a link of the app: load the page in place instead of a full page load.
 function onClick(event) {
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   const link = event.target.closest("a[href]");
@@ -265,6 +277,7 @@ function onClick(event) {
   visit(url.href);
 }
 
+// A form is sent: ask first if it deletes something, then send it in place.
 async function onSubmit(event) {
   const form = event.target;
   if (event.defaultPrevented || form.hasAttribute("data-native") || form.getAttribute("method") === "dialog") return;
@@ -276,12 +289,16 @@ async function onSubmit(event) {
   if (!swappable(action, location.origin)) {
     if (asked) {
       event.preventDefault();
+      // The prototype's submit: works even if a field named "submit" hides it,
+      // and sends without a new submit event, so the question is not asked again.
       if (await confirmDialog(asked)) HTMLFormElement.prototype.submit.call(form);
     }
     return;
   }
   event.preventDefault();
   if (asked && !await confirmDialog(asked)) return;
+  // FormData with the submitter includes the name and value of the clicked button,
+  // e.g. action=reset_source on the parameters page, as a normal submit would.
   if (method === "get") {
     visit(formUrl(action.href, new FormData(form, submitter)));
   } else {
@@ -291,6 +308,7 @@ async function onSubmit(event) {
 
 // Forms with data-auto apply on every change. Text fields wait for a pause.
 let typing = null;
+// A field of a form with data-auto changed: send the form at once.
 function onChange(event) {
   const form = event.target.form;
   if (!form || !form.hasAttribute("data-auto") || event.target.matches("[data-find]")) return;
@@ -303,6 +321,7 @@ function onChange(event) {
   form.requestSubmit();
 }
 
+// Typing: narrow the parameter list, or send a search field after a short pause.
 function onInput(event) {
   const el = event.target;
   if (el.matches("[data-find]")) return find(el);
@@ -313,6 +332,7 @@ function onInput(event) {
   }
 }
 
+// Hide the rows that do not match the search, and the groups without any match.
 function find(input) {
   const query = input.value.trim();
   const rows = document.querySelectorAll(input.dataset.find);
@@ -339,6 +359,7 @@ function revealHash() {
   target.scrollIntoView({ block: target.tagName === "TR" ? "center" : "start" });
 }
 
+// After every load or swap: messages, settings, polling of running data sets, the parameter search.
 function settle(root) {
   for (const note of root.querySelectorAll("[data-toast]")) {
     toast(note.textContent.trim());
@@ -364,6 +385,7 @@ function settle(root) {
   if (search?.value) find(search);
 }
 
+// Listen to the page once: links, forms, settings, popovers, history and anchors.
 function init() {
   document.addEventListener("click", onClick);
   document.addEventListener("submit", onSubmit);
