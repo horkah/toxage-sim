@@ -286,6 +286,29 @@ class AboutTest(TestCase):
         self.assertContains(response, "Authors and credits")
         self.assertContains(self.client.get("/schema/"), f"toxage-sim {VERSION} · build {BUILD}")
 
+    def test_about_page_on_data_protection_and_the_database(self):
+        response = self.client.get("/about/")
+        self.assertContains(response, 'id="privacy"')
+        self.assertContains(response, "uses no outside services")
+        self.assertContains(response, "never asks for personal information")
+        self.assertContains(response, "SQLite database")
+
+    def test_app_name(self):
+        page = self.client.get("/about/")
+        self.assertContains(page, '<span class="brand-name">toxage<b>-sim</b></span>', count=2)    # top bar, title
+        self.assertContains(page, "<title>About · toxage-sim</title>", html=False)
+        self.assertNotContains(page, "-demo")
+
+    @override_settings(READ_ONLY=True)
+    def test_a_read_only_installation_is_named_demo(self):
+        from toxage_app.version import VERSION
+        page = self.client.get("/about/")
+        self.assertContains(page, '<span class="brand-name">toxage<b>-sim-demo</b></span>', count=2)
+        self.assertContains(page, "<title>About · toxage-sim-demo</title>", html=False)
+        self.assertContains(page, f"toxage-sim-demo {VERSION}")                 # footer
+        self.assertContains(page, 'data-app-name="toxage-sim-demo"')
+        self.assertContains(page, 'aria-label="toxage-sim-demo, start"')
+
     def test_every_build_loads_new_scripts(self):
         from urllib.parse import quote
         from toxage_app.version import BUILD, VERSION

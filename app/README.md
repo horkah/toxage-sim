@@ -16,7 +16,7 @@ Then open http://localhost:8000, accept the terms, and generate a first data set
 |---|---|---|
 | `TOXAGE_ALLOWED_HOSTS` | Host names under which the app is reached, separated by commas | `*` |
 | `TOXAGE_CSRF_TRUSTED_ORIGINS` | Addresses with scheme from which forms may be sent; needed behind a proxy with HTTPS | empty |
-| `TOXAGE_READ_ONLY` | `1`: data and parameters can be viewed but not changed; only the demo makes its changes and takes them back | `0` |
+| `TOXAGE_READ_ONLY` | `1`: data and parameters can be viewed but not changed; only the demo makes its changes and takes them back. The app then shows its name as toxage-sim-demo | `0` |
 | `TOXAGE_SECRET_KEY` | Secret key; without it one is created once and kept in the data folder | created |
 | `TOXAGE_DATA_DIR` | Folder of the database and the secret key | `/data` |
 | `TOXAGE_DEBUG` | `1` for development (`just serve` sets it); off by default | `0` |
@@ -225,6 +225,7 @@ Only one demo changes the app at a time. While it runs, a demo started in anothe
 | `explorer/cohort.py` | Loads the patients, adds the risks of all models, describes the schema fields |
 | `explorer/filters.py` | Filters built from schema and risk models |
 | `explorer/charts.py` | Data of the risk charts and key numbers |
+| `explorer/brand.py` | The displayed name of the app (toxage-sim, or toxage-sim-demo when read-only), for all templates |
 | `explorer/timeline.py` | Data of the charts over time and across scenarios, and the table of endpoints |
 | `explorer/survival.py` | Endpoints, Kaplan-Meier and Aalen-Johansen estimates, restricted means and the paired comparison of scenarios |
 | `explorer/views.py`, `middleware.py` | Explorer, random patient, about, disclaimer |

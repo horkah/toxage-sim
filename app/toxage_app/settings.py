@@ -60,7 +60,8 @@ TEMPLATES = [{
     "BACKEND": "django.template.backends.django.DjangoTemplates",
     "APP_DIRS": True,
     "OPTIONS": {"context_processors": ["django.template.context_processors.request",
-                                       "explorer.tour.context"]},
+                                       "explorer.tour.context",
+                                       "explorer.brand.context"]},
 }]
 
 # SQLite in one file. Write-ahead logging lets pages be read while a data set

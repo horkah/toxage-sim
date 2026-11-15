@@ -589,7 +589,7 @@ export async function start(mode) {
 function welcome() {
   const dialog = document.createElement("dialog");
   dialog.className = "tour-dialog";
-  dialog.innerHTML = `<h2>Welcome to the toxage-sim explorer</h2>
+  dialog.innerHTML = `<h2>Welcome to the explorer</h2>
     <p>The app shows synthetic patients with advanced cancer, their risk of severe side effects of therapy,
       and what early detection could change. Two guided tours explain every part of it.</p>
     <div class="tour-choice">
@@ -605,6 +605,7 @@ function welcome() {
     <label class="check"><input type="checkbox" data-off> Do not offer this at start again
       <small>The menu has both tours at any time, and a setting to bring this offer back.</small></label>
     <div class="tour-buttons"><button type="button" data-choice="">Not now</button></div>`;
+  dialog.querySelector("h2").textContent = `Welcome to the ${document.body.dataset.appName || "toxage-sim"} explorer`;
   document.body.append(dialog);
   bindSpeed(dialog);
   dialog.addEventListener("click", (event) => {

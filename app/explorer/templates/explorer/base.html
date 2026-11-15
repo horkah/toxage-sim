@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}toxage-sim{% endblock %}</title>
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
   <script>
     try {
       for (const key of ["theme", "textsize"]) {
@@ -18,12 +18,12 @@
   <script type="module" src="{% static 'explorer/charts.js' %}?v={{ app_version }}-{{ app_build|urlencode:'' }}"></script>
   {% block tour %}<script type="module" src="{% static 'explorer/tour.js' %}?v={{ app_version }}-{{ app_build|urlencode:'' }}"></script>{% endblock %}
 </head>
-<body data-read-only="{{ read_only|yesno:'1,0' }}" data-tour-snapshot="{{ tour_snapshot|yesno:'1,0' }}" data-section="{{ section }}">
+<body data-app-name="{{ app_name }}" data-read-only="{{ read_only|yesno:'1,0' }}" data-tour-snapshot="{{ tour_snapshot|yesno:'1,0' }}" data-section="{{ section }}">
   <div class="loadbar" aria-hidden="true"></div>
   <header class="topbar">
-    <a class="brand" href="{% url 'explorer' %}" aria-label="toxage-sim, start">
+    <a class="brand" href="{% url 'explorer' %}" aria-label="{{ app_name }}, start">
       <img src="{% static 'explorer/img/logo.svg' %}" alt="" width="30" height="30">
-      <span>toxage<b>-sim</b></span>
+      {% include "explorer/brand_name.html" %}
     </a>
     {% block nav %}
     <nav class="mainnav" id="nav" aria-label="Sections">
@@ -82,7 +82,7 @@
     <span class="footer-note"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"/></svg>
       Synthetic data only. A research demonstrator, not a medical device, not for clinical use.
       <a href="{% url 'disclaimer' %}">Disclaimer and terms</a></span>
-    <a class="footer-version" href="{% url 'about' %}" title="About this app">toxage-sim {{ app_version }} · build {{ app_build }}</a>
+    <a class="footer-version" href="{% url 'about' %}" title="About this app">{{ app_name }} {{ app_version }} · build {{ app_build }}</a>
   </footer>
   <dialog class="confirm" id="confirm" aria-labelledby="confirm-title">
     <form method="dialog">

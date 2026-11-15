@@ -1,6 +1,6 @@
 {% extends "explorer/base.html" %}
 {% load explorer_tags %}
-{% block title %}{% if patient %}{{ patient.patient_id }} · {% endif %}Explore · toxage-sim{% endblock %}
+{% block title %}{% if patient %}{{ patient.patient_id }} · {% endif %}Explore · {{ app_name }}{% endblock %}
 
 {% block content %}
 <div class="context" id="context">

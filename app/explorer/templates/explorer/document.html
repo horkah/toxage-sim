@@ -1,5 +1,5 @@
 {% extends "explorer/reference_base.html" %}
-{% block title %}{{ document.title }} · toxage-sim{% endblock %}
+{% block title %}{{ document.title }} · {{ app_name }}{% endblock %}
 {% block reference %}
 <p class="crumbs"><a href="{% url 'documents' %}">Reference</a> › {{ document.group }}</p>
 <article class="panel doc">

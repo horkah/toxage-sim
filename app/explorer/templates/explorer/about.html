@@ -1,12 +1,12 @@
 {% extends "explorer/base.html" %}
 {% load static %}
-{% block title %}About · toxage-sim{% endblock %}
+{% block title %}About · {{ app_name }}{% endblock %}
 {% block content %}
 <div class="page">
   <section class="hero">
     <img src="{% static 'explorer/img/logo.svg' %}" alt="" width="88" height="88">
     <div>
-      <h1>toxage<b>-sim</b></h1>
+      <h1>{% include "explorer/brand_name.html" %}</h1>
       <p class="lead">Synthetic patients, risk models and early detection of toxicity from systemic cancer therapy.</p>
       <p class="version-line"><span class="badge accent">Version {{ app_version }}</span> <span class="badge">Build {{ app_build }}</span></p>
     </div>
@@ -45,14 +45,29 @@
     </dl>
   </section>
 
+  <section class="panel" id="privacy">
+    <h2>Data protection</h2>
+    <h3>Server and network</h3>
+    <p>The app runs on a server protected by a firewall and uses no outside services. Everything your browser
+      loads, including fonts, scripts and charts, comes from this server. There are no analytics, no tracking
+      and no advertising.</p>
+    <h3>Your information</h3>
+    <p>The app never asks for personal information: there are no user accounts and no fields for names,
+      addresses or health data, and all patients shown are synthetic. It keeps only what it needs to work:
+      cookies for the accepted terms, the chosen data set and a running demo, and your settings such as theme
+      and text size in this browser. Apart from the connection data that every web server needs to deliver a
+      page, the app processes no personal data.</p>
+  </section>
+
   <section class="panel">
     <h2>Version</h2>
     <dl class="facts-list">
       <dt>App version</dt><dd>{{ app_version }}</dd>
       <dt>Build</dt><dd>{{ app_build }} <span class="muted">(date and time of the build in the time zone of the server, {{ time_zone }}, and the commit)</span></dd>
       <dt>Terms of use</dt><dd><a href="{% url 'disclaimer' %}">Disclaimer and terms</a></dd>
-      <dt>Technology</dt><dd>Django, plain JavaScript and SVG charts. No external services, no tracking.
-        Settings stay in this browser; data stay on the server of this installation.</dd>
+      <dt>Technology</dt><dd>Django, plain JavaScript and SVG charts. Data sets and parameter changes are kept
+        in an SQLite database, a single file on the server of this installation. See also
+        <a href="#privacy">data protection</a>.</dd>
     </dl>
   </section>
 </div>
