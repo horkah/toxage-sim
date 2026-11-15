@@ -505,6 +505,23 @@ class EngineTest(unittest.TestCase):
         self.assertTrue(all(not self.outcome[s][i]["participating"]
                             for i in self.baseline if i not in flagged))
 
+    def test_model_guided_start_uses_the_risk_models(self):
+        s, stand_in = "model_guided_start", "risk_adapted_start"
+        flagged = {i for i, o in self.outcome[s].items() if o["high_risk_flag"]}
+        self.assertAlmostEqual(len(flagged) / len(self.baseline), 0.3, delta=0.02)
+        # The flag follows the model for severe toxicity, not the stand-in.
+        scorer = generate.risk_models.Scorer()
+        risk = {i: scorer.score(p)["severe_toxicity_90d_risk"] for i, p in self.baseline.items()}
+        self.assertGreater(min(risk[i] for i in flagged), max(risk[i] for i in risk if i not in flagged) - 1e-12)
+        self.assertNotEqual(flagged, {i for i, o in self.outcome[stand_in].items() if o["high_risk_flag"]})
+        self.assertLess(self.rate("severe_toxicity_90d", lambda p: True, s),
+                        self.rate("severe_toxicity_90d", lambda p: True, USUAL))
+        # Patients who are not flagged or do not take part have the course of usual care.
+        for i, o in self.outcome[s].items():
+            if not (o["high_risk_flag"] and o["participating"]):
+                self.assertEqual(without(o, "scenario_id", "high_risk_flag", "cost_intervention"),
+                                 without(self.outcome[USUAL][i], "scenario_id", "high_risk_flag", "cost_intervention"))
+
     def test_scenarios_order_by_effect(self):
         events = {s: sum(e["grade"] >= 3 for ev in self.events[s].values() for e in ev) for s in self.scenarios}
         self.assertLess(events["symptom_monitoring"], events[USUAL])

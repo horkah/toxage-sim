@@ -79,7 +79,7 @@ class TooLarge(Exception):
 # A scenario not listed, or any scenario without usual care as base, counts as
 # a complete course.
 BYTES_PER_COURSE = 5500
-EXTRA_BYTES = {"risk_adapted_start": 1600, "symptom_monitoring": 1600, "lung_monitoring": 200,
+EXTRA_BYTES = {"risk_adapted_start": 1600, "model_guided_start": 1600, "symptom_monitoring": 1600, "lung_monitoring": 200,
                "cardiovascular_monitoring": 600, "combined": 2500, "perfect_detection": 4500}
 
 

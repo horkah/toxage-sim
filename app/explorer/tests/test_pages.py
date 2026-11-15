@@ -27,7 +27,7 @@ class DataTest(CohortTestCase):
         self.assertContains(response, self.dataset.name)
         self.assertContains(response, "shown in the explorer")
         self.assertContains(response, "Generate a data set")
-        self.assertContains(response, "delete scenario", count=7)
+        self.assertContains(response, "delete scenario", count=8)
         self.assertEqual(response.context["section"], "data")
 
     def test_generate_with_chosen_scenarios_and_name(self):
@@ -84,7 +84,7 @@ class DataTest(CohortTestCase):
         self.assertNotIn("combined", cohort.scenario_ids(self.dataset))
         self.assertNotIn("combined", self.dataset.metadata["records"])
         self.assertFalse(Course.objects.filter(scenario_id="combined").exists())
-        self.assertEqual(Course.objects.count(), 6 * self.n)
+        self.assertEqual(Course.objects.count(), 7 * self.n)
         self.assertFalse(store.delete_scenario(self.dataset, "unknown"))
 
     def test_a_busy_database_does_not_turn_a_deletion_into_an_error(self):
@@ -161,7 +161,7 @@ class DataTest(CohortTestCase):
         self.assertContains(response, f'href="/?dataset={self.dataset.pk}&amp;scenario=combined"')
         self.assertContains(response, f'href="/data/{self.dataset.pk}/archive/"')
         self.assertContains(response, 'data-confirm-title="Delete this data set?"')
-        self.assertContains(response, 'data-confirm-title="Delete this scenario?"', count=7)
+        self.assertContains(response, 'data-confirm-title="Delete this scenario?"', count=8)
 
     def test_records_of_every_table(self):
         for table in store.TABLES:
@@ -190,7 +190,7 @@ class DataTest(CohortTestCase):
         self.assertEqual(len(lines), self.n + 1)
         self.assertIn("attachment", response["Content-Disposition"])
         every = self.client.get(f"/data/{self.dataset.pk}/export/outcome.csv")
-        self.assertEqual(len(b"".join(every.streaming_content).decode().splitlines()), 7 * self.n + 1)
+        self.assertEqual(len(b"".join(every.streaming_content).decode().splitlines()), 8 * self.n + 1)
         baseline = self.client.get(f"/data/{self.dataset.pk}/export/baseline.csv")
         self.assertEqual(len(b"".join(baseline.streaming_content).decode().splitlines()), self.n + 1)
         self.assertEqual(self.client.get(f"/data/{self.dataset.pk}/export/x.csv").status_code, 404)
@@ -477,7 +477,7 @@ class DiskLimitTest(CohortTestCase):
         # (5.5 KB for usual care and 11 KB for what the other six add).
         with mock.patch.object(store, "used_bytes", return_value=90e6):
             response = self.client.post("/data/generate/", {"n": "1500", "seed": "4"})
-            self.assertContains(response, "Not generated: the new data set would need about 25 MB, "
+            self.assertContains(response, "Not generated: the new data set would need about 27 MB, "
                                           "but only 10 MB of the limit of 100 MB are free")
             self.assertContains(response, "Delete other data sets, or choose fewer patients or scenarios.")
             self.assertFalse(Dataset.objects.filter(seed=4).exists())

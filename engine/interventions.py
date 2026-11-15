@@ -24,6 +24,20 @@ def predictor_score(patient, latent, draws, params, iv, perfect=False):
     return signal + iv["risk_adapted_start"]["predictor_noise_sd"] * draws.normal("predictor")
 
 
+def model_scores(patient, scorer):
+    """Scores of the risk models for the start of therapy: the risk of severe
+    toxicity (candidate 1) and the risk of severe neutropenia without G-CSF
+    (candidate 3, None if it does not cover the regimen). scorer is a
+    models.Scorer of the risk models."""
+    import models as risk_models
+    severe = risk_models.severe_toxicity_risk(patient, scorer.cfg)
+    neutropenia = None
+    if patient["regimen"] in scorer.neutropenia_r0:
+        neutropenia = risk_models.neutropenia_risk(dict(patient, gcsf_prophylaxis=False), scorer.cfg,
+                                                   scorer.neutropenia_r0[patient["regimen"]])
+    return {"severe": severe, "neutropenia": neutropenia}
+
+
 def flag_threshold(scores, iv):
     """Score from which a patient counts as high risk: the given share of the
     cohort is flagged."""
@@ -34,8 +48,10 @@ def flag_threshold(scores, iv):
     return ordered[min(len(ordered) - 1, int((1 - share) * len(ordered)))]
 
 
-def plan(patient, latent, regimen, draws, scenario, params, iv, score, threshold):
-    """Return the settings of one patient in one scenario."""
+def plan(patient, latent, regimen, draws, scenario, params, iv, score, threshold, model=None):
+    """Return the settings of one patient in one scenario. model holds the
+    scores of the risk models (model_scores) when the scenario uses them as
+    predictor."""
     perfect = scenario["perfect"]
     components = set(scenario["components"])
     part = iv["participation"]
@@ -70,7 +86,11 @@ def plan(patient, latent, regimen, draws, scenario, params, iv, score, threshold
             if patient["starting_dose_level"] > ras["reduced_level"] and (
                     draws.u("adapted_dose") < ras["reduced_start_probability"]):
                 adapted["starting_dose_level"] = ras["reduced_level"]
-            wants_gcsf = regimen["severe_event_rates"].get("neutropenia", 0) >= ras["gcsf_from_neutropenia_rate"]
+            if model is not None:
+                # The risk model decides for the single patient.
+                wants_gcsf = (model["neutropenia"] or 0.0) >= ras["gcsf_from_model_risk"]
+            else:
+                wants_gcsf = regimen["severe_event_rates"].get("neutropenia", 0) >= ras["gcsf_from_neutropenia_rate"]
             if wants_gcsf and not patient["gcsf_prophylaxis"] and (
                     draws.u("adapted_gcsf") < ras["gcsf_probability"]):
                 adapted["gcsf_prophylaxis"] = True

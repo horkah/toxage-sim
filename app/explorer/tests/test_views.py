@@ -192,7 +192,7 @@ class ExplorerTest(CohortTestCase):
         self.assertContains(response, "Cost per QALY gained")
         self.assertContains(response, "Early recognition: Lung monitoring")
         table = response.context["sections"][0]["table"]
-        self.assertEqual(len(table), 7)
+        self.assertEqual(len(table), 8)
         survival = response.context["sections"][1]
         self.assertEqual((survival["id"], survival["title"]), ("survival", "Survival and time to event"))
         self.assertEqual(survival["endpoint_names"], ["Lung monitoring", "Usual care"])

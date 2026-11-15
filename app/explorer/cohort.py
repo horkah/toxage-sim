@@ -20,7 +20,7 @@ DATASET_COOKIE = "toxage_dataset"
 # Rows and events of the scenarios used last, least recently used out. The
 # limit counts patients over all entries: rows take about 5.5 KB and events
 # about 1.3 KB per patient and scenario, so 60 000 patients are about 400 MB.
-# One data set of 1500 patients under seven scenarios needs 2 x 10 500.
+# One data set of 1500 patients under eight scenarios needs 2 x 12 000.
 CACHE_PATIENTS = int(os.environ.get("TOXAGE_CACHE_PATIENTS", 60000))
 _CACHE = OrderedDict()      # key -> (value, number of patients)
 _CACHE_LOCK = threading.Lock()

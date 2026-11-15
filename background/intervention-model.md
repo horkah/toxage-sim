@@ -216,11 +216,12 @@ This makes statements on the level of single patients possible, for example: "In
 | Scenario | Content | Purpose |
 |---|---|---|
 | Usual care | No intervention | Reference |
-| Risk-adapted start | Prediction at therapy start, adapted dose, prophylaxis and supportive measures for flagged patients | Candidate 1 |
+| Risk-adapted start | Prediction at therapy start by a stand-in with adjustable accuracy; adapted dose, prophylaxis and supportive measures for flagged patients | What a predictor of a given accuracy achieves |
+| Model-guided start | The same actions, but the risk models decide: candidate 1 flags, candidate 3 decides on G-CSF | What the risk models achieve |
 | Symptom monitoring | Weekly reports with alerts for all event types | The intervention of PRO-TECT |
 | Lung monitoring | Oxygen saturation and symptoms at home for patients on trastuzumab deruxtecan, with a detection model | Candidate 2 |
 | Cardiovascular monitoring | Blood pressure and chest symptoms at home for men under androgen deprivation, with a detection model | Candidate 5 |
-| Combined | All four | Joint effect |
+| Combined | Risk-adapted start and the three kinds of monitoring | Joint effect |
 | Perfect detection | As combined, with full participation and a detector that knows the truth | Upper limit |
 
 Further scenarios come from varying single parameters, for example uptake, sensitivity or false alert rate. This shows which step of the chain limits the benefit.
@@ -293,7 +294,7 @@ The engine implements the model with the parameters in `engine/config/interventi
 | Component | Status in the engine |
 |---|---|
 | Participation: uptake, adherence, dropout, attendance, loss to follow-up | Implemented. Uptake and adherence depend on frailty and age. |
-| Prediction at therapy start | Stand-in: true patient-related risk plus noise. A fixed share of the cohort is flagged. |
+| Prediction at therapy start | Two predictors: a stand-in (true patient-related risk plus noise) and the risk models (candidate 1 for the flag, candidate 3 for G-CSF). A fixed share of the cohort is flagged. |
 | Detection during therapy | Lung monitoring: the detection model of the risk models reads the generated oxygen saturation and symptoms. Symptom and cardiovascular monitoring: stand-ins with a sensitivity per stage, the share of events that show in symptoms, and false alerts per report. |
 | Perfect detector | Implemented as scenario. |
 | Natural course in stages | Implemented. Usual care recognises an event at a fixed day and grade; monitoring can recognise it at an earlier stage. |
@@ -305,7 +306,7 @@ The engine implements the model with the parameters in `engine/config/interventi
 | Alert fatigue | Implemented per patient: earlier false alerts lower the probability of action. The workload of the team is not modelled. |
 | Link from dose received to tumour control | Parameter exists, switched off. |
 | Same patients, same chance | Implemented with fixed random numbers per patient, purpose and week. |
-| Scenarios | The seven scenarios of section 4.2. |
+| Scenarios | The eight scenarios of section 4.2. |
 
 The check against GAP70+ holds: flagged patients who take part in the risk-adapted start have severe toxicity within 90 days in 55% against 74% in usual care, a relative risk of 0.74.
 
@@ -313,7 +314,7 @@ Open parts:
 
 - Values from the literature for participation, the effect of early treatment, hospital stays and the remaining unit costs; quality-of-life weights for pancreatic and prostate cancer.
 - The choice of a GnRH antagonist as an action at therapy start.
-- Real risk models in place of the remaining stand-ins.
+- Detection models for symptom monitoring and cardiovascular monitoring in place of their stand-ins.
 - A link from time on therapy to survival, without which an intervention changes survival only through deaths from toxicity.
 
 ## 7. Ideas for later

@@ -55,7 +55,7 @@ class ArchiveTest(CohortTestCase):
         self.assertEqual([r["type"] for r in lines].count("patient"), self.n)
         self.assertEqual(lines[-1], {"type": "end", "datasets": 1, "patients": self.n})
         patient = next(r for r in lines if r["type"] == "patient")
-        self.assertEqual(len(patient["courses"]), 7)
+        self.assertEqual(len(patient["courses"]), 8)
 
     def test_replace_brings_back_exactly_what_was_exported(self):
         before = self.snapshot()
@@ -79,7 +79,7 @@ class ArchiveTest(CohortTestCase):
         self.assertContains(response, f"Imported 1 data set with {self.n} patients.")
         self.assertEqual(Dataset.objects.count(), 2)
         self.assertEqual(Patient.objects.count(), 2 * self.n)
-        self.assertEqual(Course.objects.count(), 2 * 7 * self.n)
+        self.assertEqual(Course.objects.count(), 2 * 8 * self.n)
         self.assertEqual(params.changes("parameters"), {"simulation/weeks": 104})
         copy = Dataset.objects.exclude(pk=self.dataset.pk).get()
         self.assertEqual(list(store.records(copy, "event", "combined")),

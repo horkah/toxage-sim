@@ -112,7 +112,7 @@ The app then shows the new model in the status bar, as a tab for the charts, in 
 
 `models.Scorer` computes all models at once and returns one record of the risk_score table of the schema, with the risk, the published rate of the regimen (for candidate 5 of the type of androgen deprivation, brought to cardiovascular events) and a risk category per model. `score.py` writes this table as CSV. `Scorer.explain` returns the starting risk and the factors of a patient as a dictionary.
 
-The risk models do not import the engine and do not read its parameters.
+The risk models do not import the engine and do not read its parameters. The engine imports the risk models: its scenario "model-guided start" flags patients with candidate 1 and decides on G-CSF with candidate 3, and its lung monitoring uses the detection model.
 
 ## Candidate 1: any severe toxicity in 90 days
 

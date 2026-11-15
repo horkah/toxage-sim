@@ -24,7 +24,7 @@ python3 engine/calibrate.py
 python3 -m unittest discover engine/tests
 ```
 
-`calibrate.py` matches the event rates of usual care to the literature and writes `config/calibration.json`. It takes about one minute and has to be run again after every change of the model or its parameters. The engine needs Python 3 and no further packages.
+`calibrate.py` matches the event rates of usual care to the literature and writes `config/calibration.json`. It takes about one minute and has to be run again after every change of the model or its parameters. The engine needs Python 3 and no further packages. It imports the risk models of this repository for the model-guided start and for lung monitoring.
 
 ## Files
 
@@ -34,7 +34,7 @@ python3 -m unittest discover engine/tests
 | `population.py` | Baseline characteristics and choice of therapy |
 | `hazards.py` | Weekly hazards of adverse events |
 | `draws.py` | Fixed random numbers per patient, purpose and week |
-| `interventions.py` | What a scenario means for one patient: participation, adapted start, detection |
+| `interventions.py` | What a scenario means for one patient: participation, adapted start by stand-in or risk models, detection |
 | `course.py` | Course of one patient in weekly steps under one scenario, and the outcome summary |
 | `measurements.py` | Weekly observations derived from the course; the home measurements that the detection model reads |
 | `calibrate.py` | Calibration against the literature |
@@ -197,10 +197,11 @@ In the scenario "usual care" this gives the same events and grades as the litera
 |---|---|
 | `usual_care` | No intervention |
 | `risk_adapted_start` | A risk prediction at therapy start flags 30% of the patients as high risk. Flagged patients who take part get a reduced starting dose (probability 0.5), G-CSF with regimens that cause severe neutropenia in 20% or more (0.7), thromboprophylaxis with a Khorana score of 2 or more (0.7), supportive measures (all hazards except lung toxicity and cardiovascular events × 0.75) and weekly symptom reports. |
+| `model_guided_start` | As the risk-adapted start, but the [risk models](../risk-model/) decide. The model for severe toxicity (candidate 1) gives the score; the 30% with the highest risk are flagged. A flagged patient gets G-CSF if the model for severe neutropenia (candidate 3) gives a risk of 20% or more without G-CSF. |
 | `symptom_monitoring` | All patients are offered weekly symptom reports during therapy. An alert leads to contact and, if the patient attends and the team acts, to recognition on the next day. |
 | `lung_monitoring` | Patients on trastuzumab deruxtecan are offered home monitoring of oxygen saturation and symptoms with a detection model for lung toxicity. |
 | `cardiovascular_monitoring` | Men with prostate cancer under androgen deprivation are offered home monitoring of blood pressure and chest symptoms with a detection model. It can catch cardiovascular events that have a warning phase, and hypertension. |
-| `combined` | All four |
+| `combined` | Risk-adapted start, symptom monitoring, lung monitoring and cardiovascular monitoring |
 | `perfect_detection` | As combined, with full participation, a predictor without noise, detection of every event at its first stage, early treatment that always works, and no false alerts. Cardiovascular events without a warning phase and major bleedings cannot be seen in advance and remain. Upper limit. |
 
 The components of a scenario and all their parameters are in `config/interventions.json`. A new scenario is a new entry there.
@@ -209,7 +210,7 @@ The components of a scenario and all their parameters are in `config/interventio
 
 **Detection during therapy.** Lung monitoring uses the detection model of the [risk models](../risk-model/): each week it reads the oxygen saturation, cough and breathlessness of the patient, the same values that the observation table holds, and alerts by a published rule. Its true and false alerts follow from the measurements. Symptom monitoring and cardiovascular monitoring use stand-ins: a sensitivity per stage of an event, times the share of events of a type that show in symptoms, plus a rate of false alerts.
 
-**Stand-in for the prediction at therapy start.** The prediction is the true patient-related risk plus noise; the noise sets its accuracy.
+**Prediction at therapy start.** The risk-adapted start uses a stand-in: the true patient-related risk plus noise; the noise sets its accuracy. The model-guided start uses the risk models with their literature configuration, as a clinic could. Comparing the two shows how far the models are from a predictor that knows part of the truth.
 
 **Participation.** Whether a patient takes part depends on frailty and age. Reports are missing in some weeks, more often in frail patients. Each week a patient can drop out of the monitoring for good. After an alert the patient may not attend, and the team may not act. Every earlier false alert of a patient makes it a little less likely that the team acts on the next alert (alert fatigue). In all scenarios, including usual care, a patient on therapy can be lost to follow-up: therapy ends, and only events of grade 4 or 5 are still recognised.
 

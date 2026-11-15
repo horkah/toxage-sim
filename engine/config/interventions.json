@@ -130,10 +130,11 @@
     "reduced_level": 0.8,
     "gcsf_probability": 0.7,
     "gcsf_from_neutropenia_rate": 0.2,
+    "gcsf_from_model_risk": 0.2,
     "thromboprophylaxis_probability": 0.7,
     "supportive_hazard_ratio": 0.75,
     "closer_monitoring": true,
-    "basis": "assumption, oriented on GAP70+ (Mohile et al., 2021): 48.7% started with reduced intensity in the intervention arm, relative risk of severe toxicity 0.74; GAIN found 50.5% against 60.6% (Dale et al., 2023). G-CSF is offered from a regimen rate of 20%, the threshold of febrile neutropenia risk from which guidelines recommend primary prophylaxis (Lyman et al., 2011). The predictor is a stand-in: the true patient-related risk plus noise. Flagged patients with a Khorana score from the threshold of the guideline get thromboprophylaxis with the given probability, which is an assumption (Key et al., 2020)."
+    "basis": "assumption, oriented on GAP70+ (Mohile et al., 2021): 48.7% started with reduced intensity in the intervention arm, relative risk of severe toxicity 0.74; GAIN found 50.5% against 60.6% (Dale et al., 2023). G-CSF is offered from a regimen rate of 20%, the threshold of febrile neutropenia risk from which guidelines recommend primary prophylaxis (Lyman et al., 2011). The predictor is a stand-in: the true patient-related risk plus noise. Flagged patients with a Khorana score from the threshold of the guideline get thromboprophylaxis with the given probability, which is an assumption (Key et al., 2020). With the predictor 'risk_model' the risk models take the place of the stand-in: candidate 1 gives the score for the flag, and a flagged patient gets G-CSF if candidate 3 gives a risk of severe neutropenia without G-CSF from gcsf_from_model_risk, the guideline threshold."
   },
   "efficacy": {
     "progression_hazard_ratio_per_dose_step": 1.0,
@@ -263,6 +264,16 @@
       "components": [
         "risk_adapted_start"
       ],
+      "predictor": "stand_in",
+      "perfect": false
+    },
+    "model_guided_start": {
+      "title": "Model-guided start",
+      "description": "As the risk-adapted start, but the risk models decide: the model for severe toxicity flags the patients at high risk, and the model for severe neutropenia decides who of them gets G-CSF.",
+      "components": [
+        "risk_adapted_start"
+      ],
+      "predictor": "risk_model",
       "perfect": false
     },
     "symptom_monitoring": {
@@ -298,6 +309,7 @@
         "lung_monitoring",
         "cardiovascular_monitoring"
       ],
+      "predictor": "stand_in",
       "perfect": false
     },
     "perfect_detection": {
@@ -309,6 +321,7 @@
         "lung_monitoring",
         "cardiovascular_monitoring"
       ],
+      "predictor": "stand_in",
       "perfect": true
     }
   },

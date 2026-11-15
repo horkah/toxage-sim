@@ -12,6 +12,7 @@ from pathlib import Path
 ENGINE_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(ENGINE_DIR.parent))
 sys.path.insert(0, str(ENGINE_DIR))
+sys.path.insert(0, str(ENGINE_DIR.parent / "risk-model"))
 
 from schema import toxage_schema  # noqa: E402
 import course  # noqa: E402
@@ -20,6 +21,7 @@ import interventions  # noqa: E402
 import measurements  # noqa: E402
 import population  # noqa: E402
 from draws import Draws  # noqa: E402
+import models as risk_models  # noqa: E402  (risk models, for the scenarios that use them)
 
 # Tables of the central schema that the engine writes.
 TABLES = ("scenario", "baseline", "observation", "event", "alert", "outcome")
@@ -57,18 +59,27 @@ def default_config():
             "interventions": load_interventions(), "calibration": load_calibration()}
 
 
-def cohort(n, seed, regimens, params, iv):
+MODEL = "risk_model"    # predictor of a scenario: the risk models instead of the stand-in
+
+
+def cohort(n, seed, regimens, params, iv, risk_config=None):
     """Return the patients with everything that is the same in all scenarios:
-    (baseline record, latent values, fixed random numbers, predictor scores)."""
+    (baseline record, latent values, fixed random numbers, predictor scores).
+    The scores hold the stand-in with and without noise and the scores of the
+    risk models; risk_config is a configuration of the risk models, by default
+    the literature configuration."""
     rng = random.Random(seed)
+    scorer = risk_models.Scorer(risk_config)
     patients = []
     for index, (patient, latent) in enumerate(population.draw_cohort(rng, n, regimens, params)):
         draws = Draws(seed, index)
         scores = {perfect: interventions.predictor_score(patient, latent, draws, params, iv, perfect)
                   for perfect in (False, True)}
+        scores[MODEL] = interventions.model_scores(patient, scorer)
         patients.append((patient, latent, draws, scores))
     thresholds = {perfect: interventions.flag_threshold([s[perfect] for *_, s in patients], iv)
                   for perfect in (False, True)}
+    thresholds[MODEL] = interventions.flag_threshold([s[MODEL]["severe"] for *_, s in patients], iv)
     return patients, thresholds
 
 
@@ -79,8 +90,12 @@ def run(patients, thresholds, scenario_id, regimens, params, iv, table, weeks=No
     for patient, latent, draws, scores in patients:
         regimen = regimens[patient["regimen"]]
         perfect = scenario["perfect"]
-        plan = interventions.plan(patient, latent, regimen, draws, scenario, params, iv,
-                                  scores[perfect], thresholds[perfect])
+        if scenario.get("predictor") == MODEL and not perfect:
+            plan = interventions.plan(patient, latent, regimen, draws, scenario, params, iv,
+                                      scores[MODEL]["severe"], thresholds[MODEL], scores[MODEL])
+        else:
+            plan = interventions.plan(patient, latent, regimen, draws, scenario, params, iv,
+                                      scores[perfect], thresholds[perfect])
         plan["scenario_id"] = scenario_id
         rows, mult = table.for_patient(plan["patient"], latent, plan["general_factor"])
         result = course.simulate(draws, latent, regimen, params, iv, plan, rows, weeks)
@@ -101,7 +116,7 @@ def generate(n, seed, scenarios=None, validate=True, config=None, progress=None)
     if not isinstance(weeks, int) or isinstance(weeks, bool) or weeks < 1:
         raise ValueError(f"simulation weeks must be a whole number of at least 1, not {weeks!r}")
     table = hazards.HazardTable(regimens, params, config["calibration"])
-    patients, thresholds = cohort(n, seed, regimens, params, iv)
+    patients, thresholds = cohort(n, seed, regimens, params, iv, config.get("risk_models"))
     data = {name: [] for name in TABLES}
     data["baseline"] = [p for p, *_ in patients]
     for scenario_id in scenarios:

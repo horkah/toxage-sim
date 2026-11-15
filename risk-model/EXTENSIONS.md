@@ -69,7 +69,7 @@ Open ideas for the risk models of candidates 1 to 5. Each item says what it need
 
 | # | Extension | Needs |
 |---|---|---|
-| B.1 | **Role in the intervention scenarios.** The engine flags patients at therapy start with a stand-in: the true patient-related risk plus noise (`engine/interventions.py`). Candidate 1 could take its place, and candidate 3 could decide on G-CSF, so that a scenario shows what these models achieve. The same holds for the detection model of 2.1 and the detection stand-in. | risk model, engine |
+| B.1 | **Further roles in the intervention scenarios.** Candidate 1 flags patients and candidate 3 decides on G-CSF in the scenario "model-guided start", and the detection model drives lung monitoring. Next: candidate 5 for the choice of a GnRH antagonist, candidate 4 for closer monitoring of patients at risk of diarrhoea, and a fitted configuration in place of the literature one. | risk model, engine |
 | B.2 | Risk under an intervention: the models describe usual care. A scenario with an adapted start or monitoring lowers the observed rates. | risk model, engine |
 | B.3 | Uncertainty per patient: propagate the confidence intervals of the ratios ([Powell et al., 2022](../background/references.md#powell-2022); [Lyman et al., 2011](../background/references.md#lyman-2011)) and the sampling error of the trial rates into a risk interval. | risk model |
 | B.4 | Position of a patient in a reference population: percentile of the risk among patients with the same regimen or tumour type. The app needs this for the comparison view. | risk model or app |

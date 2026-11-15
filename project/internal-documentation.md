@@ -16,7 +16,7 @@ Technical and organisational details that go beyond the public [README](../READM
 |---|---|---|
 | `background/` | Literature, report, concepts | 37 references, report with ten risk model candidates, intervention model, 20 PDFs |
 | `schema/` | Central data schema | scenario, baseline, observation, event, alert and outcome table (version 0.4.0), risk_score table (version 0.2.0), Python loader, validator, CSV reader and writer |
-| `engine/` | Synthetic data generator | weekly microsimulation until death or ten years, six subgroups, eleven regimens, five event categories modelled in detail (severe toxicity, lung toxicity, neutropenia, diarrhoea, cardiovascular events), seven intervention scenarios, calibration, tests |
+| `engine/` | Synthetic data generator | weekly microsimulation until death or ten years, six subgroups, eleven regimens, five event categories modelled in detail (severe toxicity, lung toxicity, neutropenia, diarrhoea, cardiovascular events), eight intervention scenarios, calibration, tests |
 | `risk-model/` | Toxicity risk model | common interface, baseline models for candidates 1 to 5, fitting, evaluation, tests, list of extensions |
 | `app/` | Inspection app | Django app with disclaimer, explorer (risk, characteristics, course over time, interventions), data sets, parameters, schema and documents, tutorial and demo; Docker image; tests |
 | `project/` | Project management, internal documentation | prompt log, start prompt, this file |
