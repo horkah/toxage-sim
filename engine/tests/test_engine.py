@@ -81,7 +81,8 @@ class EngineTest(unittest.TestCase):
     def test_config_matches_schema(self):
         self.assertEqual(set(self.regimens), set(toxage_schema.allowed_values("baseline", "regimen")))
         types = set(self.params["hazards"]["event_types"]) | {hazards.ILD}
-        self.assertEqual(types, set(toxage_schema.allowed_values("event", "event_type")))
+        # Major bleeding has no rate of a regimen: it comes with thromboprophylaxis.
+        self.assertEqual(types | {hazards.BLEEDING}, set(toxage_schema.allowed_values("event", "event_type")))
         for regimen in self.regimens.values():
             self.assertLessEqual(set(regimen["severe_event_rates"]), types)
         self.assertIn(USUAL, self.iv["scenarios"])
@@ -203,6 +204,44 @@ class EngineTest(unittest.TestCase):
                            rate("severe_diarrhoea_90d", "gemcitabine_nab_paclitaxel") + 0.05)
         self.assertEqual(rate("severe_diarrhoea_90d", "olaparib"), 0)
         self.assertEqual(rate("severe_neutropenia_90d", "olaparib"), 0)
+
+    def test_khorana_score_and_venous_thromboembolism(self):
+        # Key et al. (2020): 2 points for pancreatic cancer; 10.2% symptomatic events
+        # within three months of chemotherapy without prophylaxis.
+        for p in self.data["baseline"]:
+            points = 2 * (p["tumour_type"] == "pancreas") + (p["platelets_10e9_l"] >= 350) + (
+                p["haemoglobin_g_dl"] < 10) + (p["white_cells_10e9_l"] > 11) + (p["bmi"] >= 35)
+            self.assertEqual(p["khorana_score"], points)
+            if p["thromboprophylaxis"]:
+                self.assertGreaterEqual(p["khorana_score"], 2)
+        pancreas = lambda p: p["tumour_type"] == "pancreas"
+        self.assertAlmostEqual(self.rate("vte", lambda p: pancreas(p) and not p["thromboprophylaxis"]), 0.102, delta=0.04)
+        self.assertEqual(self.rate("vte", lambda p: p["tumour_type"] == "breast"), 0)
+        for s in self.scenarios:
+            for pid, o in self.outcome[s].items():
+                days = [e["day"] for e in self.events[s].get(pid, []) if e["event_type"] == hazards.VTE]
+                self.assertEqual(o["vte"], bool(days))
+                self.assertEqual(o["vte_day"], min(days) if days else None)
+                bleeding = any(e["event_type"] == hazards.BLEEDING for e in self.events[s].get(pid, []))
+                self.assertEqual(o["major_bleeding"], bleeding)
+                if bleeding:
+                    self.assertTrue(self.baseline[pid]["thromboprophylaxis"] or s != USUAL)
+
+    def test_thromboprophylaxis_prevents_thrombosis_and_causes_bleeding(self):
+        # Everybody with a Khorana score of 2 or more gets prophylaxis, against nobody.
+        rates = {}
+        for probability in (0.0, 1.0):
+            config = copy.deepcopy(self.config)
+            config["parameters"]["treatment_choice"]["thromboprophylaxis"]["probability"] = probability
+            data = generate.generate(3000, 9, [USUAL], validate=False, config=config)
+            ids = {p["patient_id"] for p in data["baseline"] if p["tumour_type"] == "pancreas"}
+            rows = [o for o in data["outcome"] if o["patient_id"] in ids]
+            rates[probability] = (sum(o["vte"] for o in rows) / len(rows),
+                                  sum(o["major_bleeding"] for o in rows) / len(rows))
+        # Hazard ratio 0.41; 1.7 percentage points more major bleeding within 180 days.
+        self.assertAlmostEqual(rates[1.0][0] / rates[0.0][0], 0.41, delta=0.17)
+        self.assertEqual(rates[0.0][1], 0)
+        self.assertAlmostEqual(rates[1.0][1], 0.017, delta=0.012)
 
     def test_false_alerts_make_the_team_act_less_often(self):
         # With a strong fatigue, fewer true alerts are acted on than without any.
@@ -455,13 +494,15 @@ class EngineTest(unittest.TestCase):
     def test_perfect_detection_is_the_upper_limit(self):
         s = "perfect_detection"
         self.assertTrue(all(o["participating"] for o in self.outcome[s].values()))
-        # Only a cardiovascular event without a warning phase can still be fatal.
+        # Only events without notice can still be fatal: a cardiovascular event
+        # without a warning phase, or a major bleeding.
+        sudden = (hazards.CV, hazards.BLEEDING)
         fatal = [e for events in self.events[s].values() for e in events if e["grade"] == 5]
-        self.assertTrue(all(e["event_type"] == hazards.CV and e["onset_day"] == e["usual_care_day"] for e in fatal))
+        self.assertTrue(all(e["event_type"] in sudden and e["onset_day"] == e["usual_care_day"] for e in fatal))
         self.assertLess(self.total("death_from_toxicity", s), self.total("death_from_toxicity", "combined"))
         self.assertEqual(self.total("false_alerts", s), 0)
         severe = [e for ev in self.events[s].values() for e in ev if e["grade"] >= 3]
-        self.assertTrue(all(e["event_type"] == hazards.CV for e in severe))
+        self.assertTrue(all(e["event_type"] in sudden for e in severe))
         self.assertGreaterEqual(self.total("qaly", s), self.total("qaly", "combined"))
 
 

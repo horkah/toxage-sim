@@ -43,6 +43,7 @@ The schema files hold the full description and unit of every field. The tables b
 | `prior_therapy_lines` | Earlier therapy lines | integer | 0 or more |
 | `starting_dose_level` | Starting dose level | number | 0.1–1.0 |
 | `gcsf_prophylaxis` | G-CSF prophylaxis | boolean |  |
+| `thromboprophylaxis` | Thromboprophylaxis | boolean |  |
 | `immunosuppressive_medication` | Immunosuppressive medication | boolean |  |
 | `ugt1a1_28_homozygous` | UGT1A1*28 homozygous | boolean |  |
 | `adt_type` | Androgen deprivation | string or null | `gnrh_agonist`, `gnrh_antagonist` |
@@ -61,6 +62,7 @@ The schema files hold the full description and unit of every field. The tables b
 | `white_cells_10e9_l` | White blood cells | number | 0 or more |
 | `haemoglobin_g_dl` | Haemoglobin | number | 0 or more |
 | `platelets_10e9_l` | Platelets | integer | 0 or more |
+| `khorana_score` | Khorana score | integer | 0–6 |
 | `spo2_percent` | Oxygen saturation | integer | 70–100 |
 | `lung_comorbidity` | Lung comorbidity | boolean |  |
 | `diabetes` | Diabetes | boolean |  |
@@ -203,7 +205,7 @@ Risks are probabilities. The `ild_`, `neutropenia_` and `diarrhoea_` fields are 
 
 The schema files are JSON Schema (draft 2020-12), so any language can read them. All fields are flat, so a table can be stored as CSV with the field names as header. In CSV, null is an empty cell and booleans are `true` and `false`.
 
-Each schema file carries a `version`, currently 0.6.0 for baseline, 0.5.0 for outcome, 0.4.0 for the other four tables of the engine and 0.3.0 for risk_score. Adding an optional field raises the minor version. Renaming or removing a field, or changing its meaning, raises the major version. Changes that leave the data as they are, such as a new `title`, raise the patch version.
+Each schema file carries a `version`, currently 0.7.0 for baseline, 0.6.0 for outcome, 0.5.0 for event, 0.4.0 for the other three tables of the engine and 0.3.0 for risk_score. Adding an optional field raises the minor version. Renaming or removing a field, or changing its meaning, raises the major version. Changes that leave the data as they are, such as a new `title`, raise the patch version.
 
 Every field has a `title`, which the app shows as its label, and a `unit` where one applies.
 

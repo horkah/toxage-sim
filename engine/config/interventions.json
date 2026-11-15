@@ -39,9 +39,11 @@
       "peripheral_neuropathy": 14,
       "hypertension": 10,
       "immune_related": 7,
+      "venous_thromboembolism": 2,
+      "major_bleeding": 0,
       "other": 4
     },
-    "basis": "assumption: days an event spends in each grade before it reaches the grade at which usual care recognises it. Lung toxicity instead uses the published recognition delay (Powell et al., 2022). Cardiovascular events have a warning phase of their own, see the engine parameters."
+    "basis": "assumption: days an event spends in each grade before it reaches the grade at which usual care recognises it. Lung toxicity instead uses the published recognition delay (Powell et al., 2022). Cardiovascular events have a warning phase of their own, see the engine parameters. A major bleeding comes without notice."
   },
   "detection": {
     "symptom_report": {
@@ -61,6 +63,8 @@
         "immune_related": 0.6,
         "interstitial_lung_disease": 0.6,
         "cardiovascular_event": 0.4,
+        "venous_thromboembolism": 0.5,
+        "major_bleeding": 0.0,
         "other": 0.6
       },
       "false_alerts_per_report": 0.1,
@@ -125,9 +129,10 @@
     "reduced_level": 0.8,
     "gcsf_probability": 0.7,
     "gcsf_from_neutropenia_rate": 0.2,
+    "thromboprophylaxis_probability": 0.7,
     "supportive_hazard_ratio": 0.75,
     "closer_monitoring": true,
-    "basis": "assumption, oriented on GAP70+ (Mohile et al., 2021): 48.7% started with reduced intensity in the intervention arm, relative risk of severe toxicity 0.74; GAIN found 50.5% against 60.6% (Dale et al., 2023). G-CSF is offered from a regimen rate of 20%, the threshold of febrile neutropenia risk from which guidelines recommend primary prophylaxis (Lyman et al., 2011). The predictor is a stand-in: the true patient-related risk plus noise."
+    "basis": "assumption, oriented on GAP70+ (Mohile et al., 2021): 48.7% started with reduced intensity in the intervention arm, relative risk of severe toxicity 0.74; GAIN found 50.5% against 60.6% (Dale et al., 2023). G-CSF is offered from a regimen rate of 20%, the threshold of febrile neutropenia risk from which guidelines recommend primary prophylaxis (Lyman et al., 2011). The predictor is a stand-in: the true patient-related risk plus noise. Flagged patients with a Khorana score from the threshold of the guideline get thromboprophylaxis with the given probability, which is an assumption (Key et al., 2020)."
   },
   "efficacy": {
     "progression_hazard_ratio_per_dose_step": 1.0,
@@ -253,7 +258,7 @@
     },
     "risk_adapted_start": {
       "title": "Risk-adapted start",
-      "description": "A risk prediction at therapy start flags patients at high risk. Flagged patients who take part get an adapted starting dose, G-CSF, supportive measures and closer monitoring.",
+      "description": "A risk prediction at therapy start flags patients at high risk. Flagged patients who take part get an adapted starting dose, G-CSF, thromboprophylaxis with a Khorana score of 2 or more, supportive measures and closer monitoring.",
       "components": [
         "risk_adapted_start"
       ],

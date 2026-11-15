@@ -104,7 +104,7 @@ What the care team does after a flag or an alert. Each action has a probability 
 |---|---|---|
 | Reduced starting dose or less intensive regimen | Lower hazard of all dose-dependent events | Dose level and its effect on the hazard |
 | G-CSF prophylaxis | Lower hazard of neutropenia and febrile neutropenia | Yes, with the published effect |
-| Thromboprophylaxis for patients with a Khorana score of 2 or more | Lower hazard of venous thromboembolism, about one percentage point more major bleeding ([Key et al., 2020](references.md#key-2020)) | No; the engine has no venous thromboembolism |
+| Thromboprophylaxis for patients with a Khorana score of 2 or more | Lower hazard of venous thromboembolism, about one percentage point more major bleeding ([Key et al., 2020](references.md#key-2020)) | Yes, with the published effect and bleeding risk |
 | GnRH antagonist instead of an agonist for men with cardiovascular disease ([Tilki et al., 2024](references.md#tilki-2024)) | Lower hazard of cardiovascular events, by an uncertain amount | No |
 | Supportive measures, for example nutrition, review of medication, physiotherapy | Lower general hazard, fewer falls | No |
 | Closer monitoring | Earlier recognition of all events | No |
@@ -193,7 +193,7 @@ An honest model includes the ways in which an intervention can do harm.
 
 - **False alerts.** They cause contacts, diagnostics and sometimes an unnecessary pause of therapy.
 - **Alert fatigue.** The more alerts per nurse, the lower the share that leads to action. The guideline asks for protected time for the nurses who handle alerts ([Di Maio et al., 2022](references.md#di-maio-2022)). The engine models a simple form: every earlier false alert of a patient lowers the probability that the team acts on the next one.
-- **Harm from preventive drugs.** Thromboprophylaxis raises major bleeding by about one percentage point ([Key et al., 2020](references.md#key-2020)).
+- **Harm from preventive drugs.** Thromboprophylaxis raises major bleeding by one to two percentage points ([Key et al., 2020](references.md#key-2020)). The engine generates this excess, and a bleeding can be fatal.
 - **Undertreatment of the tumour.** Dose reductions and pauses for flagged patients can lower the effect of the cancer therapy. The model has an optional link from dose received to the hazard of progression. The default is no effect, in line with GAP70+, where survival did not differ. The link can be switched on to test how sensitive the result is.
 - **Burden for the patient.** Weekly reporting takes effort. This shows in dropout from the intervention.
 
@@ -297,7 +297,7 @@ The engine implements the model with the parameters in `engine/config/interventi
 | Detection during therapy | Stand-in: sensitivity per stage, share of events that show in symptoms, false alerts per report. It does not read the generated measurements. |
 | Perfect detector | Implemented as scenario. |
 | Natural course in stages | Implemented. Usual care recognises an event at a fixed day and grade; monitoring can recognise it at an earlier stage. |
-| Actions at therapy start | Reduced starting dose, G-CSF, supportive measures, closer monitoring. |
+| Actions at therapy start | Reduced starting dose, G-CSF, thromboprophylaxis, supportive measures, closer monitoring. |
 | Actions after an alert | Recognition on the next day, early treatment that stops the worsening with a given probability, milder change of therapy at lower grade. |
 | Consequences | Unplanned visits, hospital days, intensive care days, duration of events, death from toxicity. |
 | Costs and quality-adjusted life years | Implemented. Utilities and the costs of symptom reports and visits come from the literature, the other unit costs are placeholders. |
@@ -312,7 +312,6 @@ The check against GAP70+ holds: flagged patients who take part in the risk-adapt
 Open parts:
 
 - Values from the literature for participation, the effect of early treatment, hospital stays and the remaining unit costs; quality-of-life weights for pancreatic and prostate cancer.
-- Venous thromboembolism with the Khorana score and thromboprophylaxis as an action at therapy start.
 - The choice of a GnRH antagonist as an action at therapy start.
 - Real risk models in place of the stand-ins.
 - A link from time on therapy to survival, without which an intervention changes survival only through deaths from toxicity.

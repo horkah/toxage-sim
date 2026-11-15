@@ -117,6 +117,8 @@ The subgroups differ in age, earlier therapy lines, time since diagnosis, blood 
 | Regimen | Subgroup; in pancreatic cancer frailty, age and bilirubin; in HER2-low breast cancer lung problems |
 | Starting dose level | Frailty, age |
 | G-CSF prophylaxis | Regimen (docetaxel) |
+| Khorana score | Tumour type, platelets, haemoglobin, white cells, body mass index |
+| Thromboprophylaxis | Khorana score of 2 or more (10% of these patients) |
 | Immunosuppressive medication | Regimen (always with abiraterone, which is given with prednisone) |
 | UGT1A1*28 homozygous | – |
 
@@ -138,7 +140,7 @@ The subgroups differ in age, earlier therapy lines, time since diagnosis, blood 
 
 ### Event types
 
-`neutropenia`, `febrile_neutropenia`, `anaemia`, `thrombocytopenia`, `diarrhoea`, `peripheral_neuropathy`, `hypertension`, `immune_related`, `interstitial_lung_disease`, `cardiovascular_event`, `other`.
+`neutropenia`, `febrile_neutropenia`, `anaemia`, `thrombocytopenia`, `diarrhoea`, `peripheral_neuropathy`, `hypertension`, `immune_related`, `interstitial_lung_disease`, `cardiovascular_event`, `venous_thromboembolism`, `major_bleeding`, `other`.
 
 The engine generates events that reach grade 3 to 5 in usual care, and interstitial lung disease of any grade. With monitoring such an event can be recognised at grade 1 or 2.
 
@@ -154,6 +156,7 @@ These mechanisms make the data behave like real data rather than like independen
 4. **Treatment by indication.** Fitter and younger pancreatic patients more often get NALIRIFOX. Patients with lung problems less often get trastuzumab deruxtecan. Men with an earlier cardiovascular event more often get a GnRH antagonist instead of an agonist. Frail and older patients more often start with a reduced dose. Regimen and dose are therefore not independent of the patient's risk.
 5. **Type-specific risk factors.** Neutropenia and febrile neutropenia follow the published model of [Lyman et al. (2011)](../background/references.md#lyman-2011): earlier chemotherapy, an age of 65 or older, raised AST, alkaline phosphatase or bilirubin, lower renal function, fewer white cells and immunosuppressive medication raise the hazard, G-CSF lowers it. In patients with two copies of UGT1A1*28, sacituzumab govitecan and the irinotecan in NALIRIFOX cause more neutropenia and diarrhoea: both act through SN-38, which these patients break down slowly. Low haemoglobin and renal impairment raise the hazard of anaemia. Diabetes raises the hazard of neuropathy, cardiovascular disease that of hypertension. The six published risk factors raise the hazard of lung toxicity under trastuzumab deruxtecan. For cardiovascular events an earlier event raises the hazard under a GnRH agonist and under an antagonist, as HERO ([Shore et al., 2020](../background/references.md#shore-2020)) and PRONOUNCE ([Lopes et al., 2021](../background/references.md#lopes-2021)) show together; age, diabetes, hypertension, smoking, renal function, cardiovascular disease without an event and frailty add to it.
 6. **Time patterns.** Neutropenia, diarrhoea and unspecified events occur mainly in the first weeks: older patients had their first severe toxicity after a median of 22 days ([Extermann et al., 2012](../background/references.md#extermann-2012)), and two thirds of first neutropenic events fall into the first cycle ([Lyman et al., 2011](../background/references.md#lyman-2011)). Anaemia, low platelets, hypertension and immune-related events peak around week 8. Neuropathy grows with time on therapy. Lung toxicity follows the published onset distribution. Cardiovascular events have a constant hazard while the patient is on therapy. Toxicity from docetaxel ends after 18 weeks.
+   Venous thromboembolism occurs with the pancreatic regimens (10.2% within three months without prophylaxis) and with olaparib (4%). Thromboprophylaxis lowers its hazard to 0.41 and brings 1.7 percentage points of major bleeding within 26 weeks ([Key et al., 2020](../background/references.md#key-2020)). A major bleeding comes without notice.
 7. **Feedback.** A severe event can lead to an interruption, a dose reduction or the end of therapy. A lower dose lowers the hazard of later events. A patient who stops therapy has no further therapy-related events.
 8. **Competing events.** Progression, the planned end of therapy and death end the time at risk.
 9. **Delayed recognition.** Lung toxicity has a true onset day and a recognition day. In 53% of cases recognition is delayed, with a median of 43 days. Therapy continues until recognition.
@@ -193,12 +196,12 @@ In the scenario "usual care" this gives the same events and grades as the litera
 | Scenario | Content |
 |---|---|
 | `usual_care` | No intervention |
-| `risk_adapted_start` | A risk prediction at therapy start flags 30% of the patients as high risk. Flagged patients who take part get a reduced starting dose (probability 0.5), G-CSF with regimens that cause severe neutropenia in 20% or more (0.7), supportive measures (all hazards except lung toxicity and cardiovascular events × 0.75) and weekly symptom reports. |
+| `risk_adapted_start` | A risk prediction at therapy start flags 30% of the patients as high risk. Flagged patients who take part get a reduced starting dose (probability 0.5), G-CSF with regimens that cause severe neutropenia in 20% or more (0.7), thromboprophylaxis with a Khorana score of 2 or more (0.7), supportive measures (all hazards except lung toxicity and cardiovascular events × 0.75) and weekly symptom reports. |
 | `symptom_monitoring` | All patients are offered weekly symptom reports during therapy. An alert leads to contact and, if the patient attends and the team acts, to recognition on the next day. |
 | `lung_monitoring` | Patients on trastuzumab deruxtecan are offered home monitoring of oxygen saturation and symptoms with a detection model for lung toxicity. |
 | `cardiovascular_monitoring` | Men with prostate cancer under androgen deprivation are offered home monitoring of blood pressure and chest symptoms with a detection model. It can catch cardiovascular events that have a warning phase, and hypertension. |
 | `combined` | All four |
-| `perfect_detection` | As combined, with full participation, a predictor without noise, detection of every event at its first stage, early treatment that always works, and no false alerts. Cardiovascular events without a warning phase cannot be seen in advance and remain. Upper limit. |
+| `perfect_detection` | As combined, with full participation, a predictor without noise, detection of every event at its first stage, early treatment that always works, and no false alerts. Cardiovascular events without a warning phase and major bleedings cannot be seen in advance and remain. Upper limit. |
 
 The components of a scenario and all their parameters are in `config/interventions.json`. A new scenario is a new entry there.
 
@@ -301,6 +304,8 @@ The effects of the scenarios follow from the assumed parameters of the intervent
 | Participation, adherence, dropout, attendance, loss to follow-up | Assumption |
 | Accuracy of the stand-ins for prediction and detection, false alerts | Assumption |
 | Effect of early treatment, adapted start and supportive measures | Assumption, checked against GAP70+ ([Mohile et al., 2021](../background/references.md#mohile-2021)) |
+| Rate of venous thromboembolism, Khorana score, effect of thromboprophylaxis and its bleeding risk | Literature ([Key et al., 2020](../background/references.md#key-2020); [de Bono et al., 2020](../background/references.md#de-bono-2020)) |
+| Effect of the Khorana points on the hazard, share with thromboprophylaxis in usual care, grades of thromboembolism and bleeding | Assumption |
 | Alert fatigue | Assumption |
 | Hospital stays and duration of events by grade | Assumption |
 | Quality-of-life weights | Literature ([Lloyd et al., 2006](../background/references.md#lloyd-2006)), found for metastatic breast cancer and used for all three tumours |
@@ -318,6 +323,8 @@ The effects of the scenarios follow from the assumed parameters of the intervent
 - The rate of HERO is applied to all five prostate regimens. HERO treated men with advanced prostate cancer with androgen deprivation alone.
 - Cardiovascular events start only while the regimen runs, although androgen deprivation continues after it. A patient has at most one cardiovascular event.
 - The event types are treated as independent apart from the shared patient factors.
+- Venous thromboembolism has a rate only for the pancreatic regimens and olaparib; the other regimens have none in the references. Its effect of thromboprophylaxis comes from a trial of mixed tumours and is used for as long as the therapy runs, the bleeding risk for 26 weeks.
+- Bleeding exists only as the excess under thromboprophylaxis. Bleeding without an anticoagulant and contraindications to one are not modelled.
 - The median onset of lung toxicity is earlier than published, because many patients stop therapy before.
 - Two published risk factors for lung toxicity are not modelled: dose above the standard dose and enrolment in Japan.
 - A regimen is one unit. Only the end of docetaxel after 18 weeks is modelled as a part of a combination.
@@ -339,7 +346,7 @@ The effects of the scenarios follow from the assumed parameters of the intervent
 - A link from time on therapy and dose received to progression and survival, so that fewer stops of therapy can show as a gain.
 - Drug components of a regimen with their own schedules and dose levels.
 - Cycle-based blood counts with a low point between cycles.
-- Further event types from the report: venous thromboembolism with the Khorana score and thromboprophylaxis for patients at high risk ([Key et al., 2020](../background/references.md#key-2020)), QT prolongation, hypokalaemia, single immune-related organs.
+- Further event types from the report: QT prolongation, hypokalaemia, single immune-related organs.
 - Events that stay at grade 1 or 2 in usual care.
 - The single domains of the geriatric assessment, falls, LDH and the diastolic blood pressure, which the CRASH score uses ([Extermann et al., 2012](../background/references.md#extermann-2012)).
 - Lung toxicity that depends on the therapy line and the dose: 10.5% in an earlier line against 15% in heavily pretreated patients ([Swain et al., 2022](../background/references.md#swain-2022)).

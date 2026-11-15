@@ -189,6 +189,14 @@ def draw_patient(rng, index, tumour, regimens, params):
     )
 
     liver = _liver_values(rng, subgroup, obstruction, params)
+    k = p["khorana_score"]
+    # From the values as they stand in the record, so that the score can be checked.
+    khorana = (k["site_points"][tumour] + (round(platelets) >= k["platelets_from_10e9_l"])
+               + (round(clip(hb, h["minimum"], h["maximum"]), 1) < k["haemoglobin_below_g_dl"])
+               + (round(white_cells, 2) > k["white_cells_above_10e9_l"])
+               + (round(clip(bmi, b["minimum"], b["maximum"]), 1) >= k["bmi_from"]))
+    tp = params["treatment_choice"]["thromboprophylaxis"]
+    thromboprophylaxis = khorana >= tp["from_khorana_score"] and rng.random() < tp["probability"]
     immunosuppressed = regimens[regimen]["corticosteroid"] or (
         rng.random() < p["immunosuppressive_medication"]["probability"])
     ugt1a1 = rng.random() < p["ugt1a1_28_homozygous"]["probability"]
@@ -201,6 +209,7 @@ def draw_patient(rng, index, tumour, regimens, params):
         "prior_therapy_lines": lines,
         "starting_dose_level": sd["reduced_level"] if reduced else 1.0,
         "gcsf_prophylaxis": gcsf,
+        "thromboprophylaxis": thromboprophylaxis,
         "immunosuppressive_medication": immunosuppressed,
         "ugt1a1_28_homozygous": ugt1a1,
         "age_years": age,
@@ -218,6 +227,7 @@ def draw_patient(rng, index, tumour, regimens, params):
         "white_cells_10e9_l": round(white_cells, 2),
         "haemoglobin_g_dl": round(clip(hb, h["minimum"], h["maximum"]), 1),
         "platelets_10e9_l": round(platelets),
+        "khorana_score": khorana,
         "spo2_percent": spo2,
         "lung_comorbidity": lung,
         "diabetes": diabetes,

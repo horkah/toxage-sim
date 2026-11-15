@@ -9,6 +9,10 @@ from statistics import NormalDist
 
 ILD = "interstitial_lung_disease"
 CV = "cardiovascular_event"
+VTE = "venous_thromboembolism"
+BLEEDING = "major_bleeding"
+# Event types whose hazard does not depend on the dose of the cancer therapy.
+DOSE_FREE = (CV, BLEEDING)
 # Event types with risk factors of their own. The general patient factor, the
 # dose and the supportive measures of a risk-adapted start do not act on them.
 OWN_FACTORS = (ILD, CV)
@@ -95,6 +99,11 @@ def multipliers(patient, latent, params, regimen=None):
         result["peripheral_neuropathy"] *= sp["peripheral_neuropathy"]["diabetes"]
     if patient["cardiovascular_disease"]:
         result["hypertension"] *= sp["hypertension"]["cardiovascular_disease"]
+    m = sp[VTE]
+    site = params["population"]["khorana_score"]["site_points"][patient["tumour_type"]]
+    result[VTE] *= m["per_khorana_point_above_site"] ** (patient["khorana_score"] - site)
+    if patient["thromboprophylaxis"]:
+        result[VTE] *= m["thromboprophylaxis"]
 
     result[ILD] = ild_multiplier(patient, params) if regimen.get("ild_risk_factors") else 1.0
     result[CV] = cardiovascular_multiplier(patient, latent, params)
@@ -226,6 +235,11 @@ class HazardTable:
         if general_factor != 1.0:
             mult = {t: m if t in OWN_FACTORS else m * general_factor for t, m in mult.items()}
         rows = [(t, h * mult[t], w) for t, h, w in self.rows[patient["regimen"]]]
+        if patient["thromboprophylaxis"]:
+            # The excess of major bleeding under an anticoagulant, the same in every week.
+            b = self.params["hazards"]["bleeding"]
+            weights = [1.0 / b["weeks"] if w < b["weeks"] else 0.0 for w in range(self.weeks)]
+            rows.append((BLEEDING, -math.log(1 - b["excess_risk"]), weights))
         return rows, mult
 
 

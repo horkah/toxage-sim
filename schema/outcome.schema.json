@@ -3,7 +3,7 @@
   "$id": "toxage-sim/outcome",
   "title": "Outcome record",
   "description": "Summary of the course of one patient in one scenario, derived from the event, alert and observation records. One record per scenario and patient. Days count from therapy start (day 1).",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -27,6 +27,9 @@
     "cv_onset_day",
     "cv_event_day",
     "cv_grade",
+    "vte",
+    "vte_day",
+    "major_bleeding",
     "treatment_end_day",
     "treatment_end_reason",
     "death_day",
@@ -190,6 +193,26 @@
       "minimum": 1,
       "maximum": 5,
       "description": "CTCAE grade at which the cardiovascular event was recognised. Grades 1 and 2 are a warning phase treated in time. Null if there was none."
+    },
+    "vte": {
+      "title": "Venous thromboembolism",
+      "type": "boolean",
+      "description": "A venous thromboembolism was recognised during follow-up."
+    },
+    "vte_day": {
+      "title": "Day of venous thromboembolism",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "unit": "days",
+      "description": "Day on which the venous thromboembolism was recognised. Null if there was none."
+    },
+    "major_bleeding": {
+      "title": "Major bleeding",
+      "type": "boolean",
+      "description": "A major bleeding under thromboprophylaxis was recognised during follow-up."
     },
     "treatment_end_day": {
       "title": "Day of therapy end",

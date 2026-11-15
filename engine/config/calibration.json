@@ -3,105 +3,112 @@
   "patients": 30000,
   "factors": {
     "nalirifox": {
-      "neutropenia": 0.9988,
-      "anaemia": 4.3681,
-      "thrombocytopenia": 3.7203,
-      "diarrhoea": 1.6612,
-      "peripheral_neuropathy": 8.0531,
-      "other": 1.8478
+      "neutropenia": 1.0053,
+      "anaemia": 4.4736,
+      "thrombocytopenia": 3.7955,
+      "diarrhoea": 1.5952,
+      "peripheral_neuropathy": 8.8705,
+      "venous_thromboembolism": 1.7673,
+      "other": 1.8165
     },
     "gemcitabine_nab_paclitaxel": {
-      "neutropenia": 0.881,
-      "anaemia": 3.7714,
-      "thrombocytopenia": 3.6861,
-      "diarrhoea": 1.32,
-      "peripheral_neuropathy": 9.4169,
-      "other": 1.5817
+      "neutropenia": 0.8162,
+      "anaemia": 3.6548,
+      "thrombocytopenia": 3.4399,
+      "diarrhoea": 1.2037,
+      "peripheral_neuropathy": 8.3179,
+      "venous_thromboembolism": 1.4006,
+      "other": 1.4677
     },
     "adt_docetaxel": {
-      "neutropenia": 1.6545,
-      "febrile_neutropenia": 1.1585,
-      "anaemia": 1.9887,
-      "hypertension": 1.8283,
-      "cardiovascular_event": 1.2891,
-      "other": 1.3247
+      "neutropenia": 1.4718,
+      "febrile_neutropenia": 1.3221,
+      "anaemia": 1.5374,
+      "hypertension": 1.6406,
+      "cardiovascular_event": 1.1795,
+      "other": 1.2779
     },
     "adt_docetaxel_abiraterone": {
-      "neutropenia": 0.8776,
-      "hypertension": 1.4047,
-      "peripheral_neuropathy": 9.8706,
-      "cardiovascular_event": 0.9036,
-      "other": 1.1341
+      "neutropenia": 0.9806,
+      "hypertension": 1.5349,
+      "peripheral_neuropathy": 10.5662,
+      "cardiovascular_event": 0.9422,
+      "other": 1.1956
     },
     "adt_docetaxel_darolutamide": {
-      "neutropenia": 1.529,
-      "febrile_neutropenia": 1.7013,
-      "anaemia": 1.6968,
-      "hypertension": 1.4273,
-      "cardiovascular_event": 0.7417,
-      "other": 1.2783
+      "neutropenia": 1.5686,
+      "febrile_neutropenia": 1.4129,
+      "anaemia": 1.447,
+      "hypertension": 1.6915,
+      "cardiovascular_event": 1.1576,
+      "other": 1.2317
     },
     "lu_psma_617": {
-      "anaemia": 1.6778,
-      "thrombocytopenia": 1.3554,
-      "cardiovascular_event": 1.3957,
-      "other": 1.1551
+      "anaemia": 1.9329,
+      "thrombocytopenia": 1.171,
+      "cardiovascular_event": 1.4688,
+      "other": 1.2326
     },
     "olaparib": {
-      "anaemia": 1.8522,
-      "cardiovascular_event": 1.4372,
-      "other": 1.1889
+      "anaemia": 1.6884,
+      "venous_thromboembolism": 1.4307,
+      "cardiovascular_event": 1.2499,
+      "other": 1.2139
     },
     "trastuzumab_deruxtecan": {
-      "neutropenia": 0.5581,
-      "anaemia": 1.8668,
-      "other": 1.4758,
-      "interstitial_lung_disease": 0.8242
+      "neutropenia": 0.5342,
+      "anaemia": 1.9742,
+      "other": 1.4811,
+      "interstitial_lung_disease": 0.811
     },
     "chemotherapy_single_agent": {
-      "neutropenia": 0.6452,
-      "anaemia": 2.5814,
-      "other": 1.7981,
-      "interstitial_lung_disease": 3.2319
+      "neutropenia": 0.6302,
+      "anaemia": 2.6367,
+      "other": 1.7413,
+      "interstitial_lung_disease": 2.8936
     },
     "pembrolizumab_chemotherapy": {
-      "immune_related": 3.4724,
-      "other": 1.8011
+      "immune_related": 2.9963,
+      "other": 1.7552
     },
     "sacituzumab_govitecan": {
-      "neutropenia": 0.5982,
-      "febrile_neutropenia": 0.6695,
-      "anaemia": 2.7337,
-      "thrombocytopenia": 2.5276,
-      "diarrhoea": 1.6382,
-      "other": 2.3074
+      "neutropenia": 0.6491,
+      "febrile_neutropenia": 0.6458,
+      "anaemia": 2.5207,
+      "thrombocytopenia": 2.1727,
+      "diarrhoea": 1.8079,
+      "other": 2.2009
     }
   },
   "check": {
     "nalirifox": {
       "neutropenia": {
         "target": 0.24,
-        "realised": 0.2389
+        "realised": 0.2395
       },
       "anaemia": {
         "target": 0.11,
-        "realised": 0.1098
+        "realised": 0.1097
       },
       "thrombocytopenia": {
         "target": 0.016,
-        "realised": 0.0158
+        "realised": 0.016
       },
       "diarrhoea": {
         "target": 0.2,
-        "realised": 0.1998
+        "realised": 0.1987
       },
       "peripheral_neuropathy": {
         "target": 0.03,
-        "realised": 0.0296
+        "realised": 0.03
+      },
+      "venous_thromboembolism": {
+        "target": 0.102,
+        "realised": 0.1008
       },
       "other": {
-        "target": 0.7483,
-        "realised": 0.7476
+        "target": 0.7197,
+        "realised": 0.7205
       }
     },
     "gemcitabine_nab_paclitaxel": {
@@ -111,189 +118,197 @@
       },
       "anaemia": {
         "target": 0.17,
-        "realised": 0.1689
+        "realised": 0.1703
       },
       "thrombocytopenia": {
         "target": 0.108,
-        "realised": 0.1065
+        "realised": 0.1079
       },
       "diarrhoea": {
         "target": 0.05,
-        "realised": 0.0502
+        "realised": 0.0503
       },
       "peripheral_neuropathy": {
         "target": 0.06,
-        "realised": 0.0597
+        "realised": 0.0579
+      },
+      "venous_thromboembolism": {
+        "target": 0.102,
+        "realised": 0.1018
       },
       "other": {
-        "target": 0.6529,
-        "realised": 0.6527
+        "target": 0.6134,
+        "realised": 0.613
       }
     },
     "adt_docetaxel": {
       "neutropenia": {
         "target": 0.342,
-        "realised": 0.3422
+        "realised": 0.3418
       },
       "febrile_neutropenia": {
         "target": 0.074,
-        "realised": 0.0747
+        "realised": 0.0734
       },
       "anaemia": {
         "target": 0.051,
-        "realised": 0.0506
+        "realised": 0.0519
       },
       "hypertension": {
         "target": 0.032,
-        "realised": 0.0313
-      },
-      "cardiovascular_event": {
-        "target": 0.0412,
-        "realised": 0.0397
-      },
-      "other": {
-        "target": 0.3198,
-        "realised": 0.3193
-      }
-    },
-    "adt_docetaxel_abiraterone": {
-      "neutropenia": {
-        "target": 0.1,
-        "realised": 0.0996
-      },
-      "hypertension": {
-        "target": 0.22,
-        "realised": 0.2203
-      },
-      "peripheral_neuropathy": {
-        "target": 0.01,
-        "realised": 0.0099
-      },
-      "cardiovascular_event": {
-        "target": 0.0412,
-        "realised": 0.041
-      },
-      "other": {
-        "target": 0.4447,
-        "realised": 0.4443
-      }
-    },
-    "adt_docetaxel_darolutamide": {
-      "neutropenia": {
-        "target": 0.337,
-        "realised": 0.3366
-      },
-      "febrile_neutropenia": {
-        "target": 0.078,
-        "realised": 0.078
-      },
-      "anaemia": {
-        "target": 0.048,
-        "realised": 0.0476
-      },
-      "hypertension": {
-        "target": 0.064,
-        "realised": 0.0646
-      },
-      "cardiovascular_event": {
-        "target": 0.0412,
-        "realised": 0.0413
-      },
-      "other": {
-        "target": 0.3509,
-        "realised": 0.35
-      }
-    },
-    "lu_psma_617": {
-      "anaemia": {
-        "target": 0.129,
-        "realised": 0.1293
-      },
-      "thrombocytopenia": {
-        "target": 0.079,
-        "realised": 0.0791
-      },
-      "cardiovascular_event": {
-        "target": 0.0412,
-        "realised": 0.0422
-      },
-      "other": {
-        "target": 0.385,
-        "realised": 0.3845
-      }
-    },
-    "olaparib": {
-      "anaemia": {
-        "target": 0.21,
-        "realised": 0.2103
+        "realised": 0.0329
       },
       "cardiovascular_event": {
         "target": 0.0412,
         "realised": 0.0412
       },
       "other": {
-        "target": 0.3531,
-        "realised": 0.3534
+        "target": 0.3198,
+        "realised": 0.3203
+      }
+    },
+    "adt_docetaxel_abiraterone": {
+      "neutropenia": {
+        "target": 0.1,
+        "realised": 0.0997
+      },
+      "hypertension": {
+        "target": 0.22,
+        "realised": 0.2196
+      },
+      "peripheral_neuropathy": {
+        "target": 0.01,
+        "realised": 0.0095
+      },
+      "cardiovascular_event": {
+        "target": 0.0412,
+        "realised": 0.0411
+      },
+      "other": {
+        "target": 0.4447,
+        "realised": 0.4445
+      }
+    },
+    "adt_docetaxel_darolutamide": {
+      "neutropenia": {
+        "target": 0.337,
+        "realised": 0.3364
+      },
+      "febrile_neutropenia": {
+        "target": 0.078,
+        "realised": 0.0783
+      },
+      "anaemia": {
+        "target": 0.048,
+        "realised": 0.0477
+      },
+      "hypertension": {
+        "target": 0.064,
+        "realised": 0.063
+      },
+      "cardiovascular_event": {
+        "target": 0.0412,
+        "realised": 0.0457
+      },
+      "other": {
+        "target": 0.3509,
+        "realised": 0.3505
+      }
+    },
+    "lu_psma_617": {
+      "anaemia": {
+        "target": 0.129,
+        "realised": 0.1285
+      },
+      "thrombocytopenia": {
+        "target": 0.079,
+        "realised": 0.0786
+      },
+      "cardiovascular_event": {
+        "target": 0.0412,
+        "realised": 0.0405
+      },
+      "other": {
+        "target": 0.385,
+        "realised": 0.385
+      }
+    },
+    "olaparib": {
+      "anaemia": {
+        "target": 0.21,
+        "realised": 0.2099
+      },
+      "venous_thromboembolism": {
+        "target": 0.04,
+        "realised": 0.0401
+      },
+      "cardiovascular_event": {
+        "target": 0.0412,
+        "realised": 0.0416
+      },
+      "other": {
+        "target": 0.3261,
+        "realised": 0.3264
       }
     },
     "trastuzumab_deruxtecan": {
       "neutropenia": {
         "target": 0.137,
-        "realised": 0.1371
+        "realised": 0.1374
       },
       "anaemia": {
         "target": 0.081,
-        "realised": 0.081
+        "realised": 0.0814
       },
       "other": {
         "target": 0.4023,
-        "realised": 0.4019
+        "realised": 0.4018
       },
       "interstitial_lung_disease": {
         "target": 0.1053,
-        "realised": 0.1069
+        "realised": 0.1058
       }
     },
     "chemotherapy_single_agent": {
       "neutropenia": {
         "target": 0.407,
-        "realised": 0.4071
+        "realised": 0.4056
       },
       "anaemia": {
         "target": 0.047,
-        "realised": 0.0473
+        "realised": 0.047
       },
       "other": {
         "target": 0.4231,
-        "realised": 0.4216
+        "realised": 0.4237
       },
       "interstitial_lung_disease": {
         "target": 0.0052,
-        "realised": 0.0053
+        "realised": 0.0052
       }
     },
     "pembrolizumab_chemotherapy": {
       "immune_related": {
         "target": 0.053,
-        "realised": 0.0531
+        "realised": 0.0532
       },
       "other": {
         "target": 0.6631,
-        "realised": 0.6636
+        "realised": 0.6622
       }
     },
     "sacituzumab_govitecan": {
       "neutropenia": {
         "target": 0.51,
-        "realised": 0.5101
+        "realised": 0.5105
       },
       "febrile_neutropenia": {
         "target": 0.06,
-        "realised": 0.0601
+        "realised": 0.0602
       },
       "anaemia": {
         "target": 0.08,
-        "realised": 0.0796
+        "realised": 0.0797
       },
       "thrombocytopenia": {
         "target": 0.02,
@@ -301,11 +316,11 @@
       },
       "diarrhoea": {
         "target": 0.1,
-        "realised": 0.0999
+        "realised": 0.1
       },
       "other": {
         "target": 0.0368,
-        "realised": 0.0368
+        "realised": 0.0361
       }
     }
   }

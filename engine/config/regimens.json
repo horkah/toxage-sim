@@ -1,5 +1,5 @@
 {
-  "description": "Regimens of the engine with reference values from the literature. severe_toxicity_rate: share of patients with at least one adverse event of grade 3 or higher. severe_event_rates: share with a grade 3 or higher event of that type. ild_rate: share with drug-related interstitial lung disease or pneumonitis of any grade; null means the sources give no rate and the engine generates none. cardiovascular_event_rate: share of patients with a major adverse cardiovascular event within 48 weeks under androgen deprivation with a GnRH agonist; null for regimens without androgen deprivation. median_treatment_weeks: median time to the end of treatment for reasons other than toxicity. max_treatment_weeks: planned end of treatment. chemotherapy_weeks: weeks during which the chemotherapy part of a combination is given; null means throughout. irinotecan: the regimen contains irinotecan or releases its active form SN-38, so the UGT1A1 genotype acts on neutropenia and diarrhoea. corticosteroid: the regimen includes a corticosteroid, which counts as immunosuppressive medication. ild_risk_factors: the published patient factors of lung toxicity apply to this regimen.",
+  "description": "Regimens of the engine with reference values from the literature. severe_toxicity_rate: share of patients with at least one adverse event of grade 3 or higher. severe_event_rates: share with a grade 3 or higher event of that type. ild_rate: share with drug-related interstitial lung disease or pneumonitis of any grade; null means the sources give no rate and the engine generates none. cardiovascular_event_rate: share of patients with a major adverse cardiovascular event within 48 weeks under androgen deprivation with a GnRH agonist; null for regimens without androgen deprivation. median_treatment_weeks: median time to the end of treatment for reasons other than toxicity. max_treatment_weeks: planned end of treatment. chemotherapy_weeks: weeks during which the chemotherapy part of a combination is given; null means throughout. irinotecan: the regimen contains irinotecan or releases its active form SN-38, so the UGT1A1 genotype acts on neutropenia and diarrhoea. corticosteroid: the regimen includes a corticosteroid, which counts as immunosuppressive medication. ild_risk_factors: the published patient factors of lung toxicity apply to this regimen. A rate of venous_thromboembolism among the severe_event_rates is the share with an event without thromboprophylaxis.",
   "regimens": {
     "nalirifox": {
       "tumour_type": "pancreas",
@@ -15,14 +15,15 @@
         "anaemia": 0.11,
         "thrombocytopenia": 0.016,
         "diarrhoea": 0.2,
-        "peripheral_neuropathy": 0.03
+        "peripheral_neuropathy": 0.03,
+        "venous_thromboembolism": 0.102
       },
       "ild_rate": null,
       "cardiovascular_event_rate": null,
       "irinotecan": true,
       "corticosteroid": false,
       "ild_risk_factors": false,
-      "source": "Wainberg et al. (2023), NAPOLI 3; thrombocytopenia from Nichetti et al. (2024). Neutropenia is the sum of the terms neutropenia (14%) and decreased neutrophil count (10%)."
+      "source": "Wainberg et al. (2023), NAPOLI 3; thrombocytopenia from Nichetti et al. (2024). Neutropenia is the sum of the terms neutropenia (14%) and decreased neutrophil count (10%).; venous thromboembolism: symptomatic events within three months of chemotherapy for advanced pancreatic cancer without prophylaxis, 10.2% (Key et al., 2020)"
     },
     "gemcitabine_nab_paclitaxel": {
       "tumour_type": "pancreas",
@@ -38,14 +39,15 @@
         "anaemia": 0.17,
         "thrombocytopenia": 0.108,
         "diarrhoea": 0.05,
-        "peripheral_neuropathy": 0.06
+        "peripheral_neuropathy": 0.06,
+        "venous_thromboembolism": 0.102
       },
       "ild_rate": null,
       "cardiovascular_event_rate": null,
       "irinotecan": false,
       "corticosteroid": false,
       "ild_risk_factors": false,
-      "source": "Wainberg et al. (2023), NAPOLI 3; thrombocytopenia from Nichetti et al. (2024). Neutropenia is the sum of the terms neutropenia (25%) and decreased neutrophil count (14%)."
+      "source": "Wainberg et al. (2023), NAPOLI 3; thrombocytopenia from Nichetti et al. (2024). Neutropenia is the sum of the terms neutropenia (25%) and decreased neutrophil count (14%).; venous thromboembolism: symptomatic events within three months of chemotherapy for advanced pancreatic cancer without prophylaxis, 10.2% (Key et al., 2020)"
     },
     "adt_docetaxel": {
       "tumour_type": "prostate",
@@ -142,14 +144,15 @@
       "median_survival_months": 18.5,
       "severe_toxicity_rate": 0.51,
       "severe_event_rates": {
-        "anaemia": 0.21
+        "anaemia": 0.21,
+        "venous_thromboembolism": 0.04
       },
       "ild_rate": null,
       "cardiovascular_event_rate": 0.062,
       "irinotecan": false,
       "corticosteroid": false,
       "ild_risk_factors": false,
-      "source": "de Bono et al. (2020), PROfound; median treatment duration 7.4 months; median survival of cohort A; cardiovascular event rate from the leuprolide arm of HERO (Shore et al., 2020), assumed to hold for androgen deprivation in this setting"
+      "source": "de Bono et al. (2020), PROfound; median treatment duration 7.4 months; median survival of cohort A; cardiovascular event rate from the leuprolide arm of HERO (Shore et al., 2020), assumed to hold for androgen deprivation in this setting; venous thromboembolism: pulmonary embolism in 4% (de Bono et al., 2020)"
     },
     "trastuzumab_deruxtecan": {
       "tumour_type": "breast",

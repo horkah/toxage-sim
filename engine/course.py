@@ -11,7 +11,7 @@ intervention changes something.
 """
 import math
 
-from hazards import CV, ILD, OWN_FACTORS
+from hazards import BLEEDING, CV, DOSE_FREE, ILD, OWN_FACTORS, VTE
 import interventions
 
 # Event types that count as severe neutropenia in the outcome record.
@@ -200,7 +200,7 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
         if status == "on_treatment" and death_day is None:
             effect = dose ** gamma
             for kind, coefficient, weights in hazard_rows:
-                h = coefficient * weights[week] * (1.0 if kind == CV else effect)
+                h = coefficient * weights[week] * (1.0 if kind in DOSE_FREE else effect)
                 if h <= 0 or (kind == ILD and ild) or (kind == CV and cv) or (
                         any(e["event_type"] == kind for e in pending)):
                     continue
@@ -281,6 +281,7 @@ def outcome(latent, course, iv):
     diarrhoea = [e["day"] for e in events if e["event_type"] == "diarrhoea" and e["grade"] >= 3 and e["day"] <= 90]
     ild, cv = course["ild"], course["cv"]
     major = bool(cv and cv["recognised"] and cv["grade"] >= 3)
+    vte = [e["day"] for e in events if e["event_type"] == VTE]
 
     costs, cons = iv["costs"], iv["consequences"]
     hospital_days = sum(e["hospital_days"] for e in events)
@@ -338,6 +339,9 @@ def outcome(latent, course, iv):
         "cv_onset_day": cv["onset_day"] if cv else None,
         "cv_event_day": cv["diagnosis_day"] if major else None,
         "cv_grade": cv["grade"] if cv and cv["recognised"] else None,
+        "vte": bool(vte),
+        "vte_day": min(vte) if vte else None,
+        "major_bleeding": any(e["event_type"] == BLEEDING for e in events),
         "treatment_end_day": course["end_day"],
         "treatment_end_reason": course["end_reason"],
         "death_day": course["death_day"],

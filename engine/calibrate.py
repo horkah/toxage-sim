@@ -32,6 +32,7 @@ def realised_rates(patients, thresholds, regimens, params, iv, calibration):
     counts = {name: {} for name in regimens}
     sizes = {name: 0 for name in regimens}
     agonists = {name: 0 for name in regimens}
+    unprotected = {name: 0 for name in regimens}
     for _, _, _, result, _ in generate.run(patients, thresholds, generate.USUAL_CARE,
                                            regimens, params, iv, table, weeks):
         patient = result["plan"]["patient"]
@@ -46,9 +47,16 @@ def realised_rates(patients, thresholds, regimens, params, iv, calibration):
             seen.add(hazards.ILD)
         if not agonist:
             seen.discard(hazards.CV)
+        # The published rate of venous thromboembolism holds without prophylaxis.
+        untreated = not patient["thromboprophylaxis"]
+        unprotected[name] += untreated
+        if not untreated:
+            seen.discard(hazards.VTE)
+        seen.discard(hazards.BLEEDING)
         for event_type in seen:
             counts[name][event_type] = counts[name].get(event_type, 0) + 1
-    size = lambda name, t: agonists[name] if t == hazards.CV else sizes[name]
+    size = lambda name, t: (agonists[name] if t == hazards.CV else
+                            unprotected[name] if t == hazards.VTE else sizes[name])
     return {name: {t: c / size(name, t) for t, c in counts[name].items()} for name in regimens}, table.targets
 
 

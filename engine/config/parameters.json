@@ -267,6 +267,18 @@
     "ugt1a1_28_homozygous": {
       "probability": 0.1,
       "basis": "assumption"
+    },
+    "khorana_score": {
+      "site_points": {
+        "pancreas": 2,
+        "prostate": 0,
+        "breast": 0
+      },
+      "platelets_from_10e9_l": 350,
+      "haemoglobin_below_g_dl": 10,
+      "white_cells_above_10e9_l": 11,
+      "bmi_from": 35,
+      "basis": "Key et al. (2020), Table 1. The use of red cell growth factors, which also gives a point, is not modelled."
     }
   },
   "treatment_choice": {
@@ -306,6 +318,11 @@
     "gcsf_probability_with_docetaxel": 0.5,
     "breast_triple_negative_pretreated": {
       "sacituzumab_govitecan": 1.0
+    },
+    "thromboprophylaxis": {
+      "from_khorana_score": 2,
+      "probability": 0.1,
+      "basis": "the threshold is the one of the guideline (Key et al., 2020), which says that prophylaxis may be offered; the share of patients who get it in usual care is an assumption"
     }
   },
   "hazards": {
@@ -357,6 +374,10 @@
       },
       "cardiovascular_event": {
         "shape": "constant",
+        "chemotherapy": false
+      },
+      "venous_thromboembolism": {
+        "shape": "early",
         "chemotherapy": false
       },
       "other": {
@@ -432,7 +453,11 @@
       "hypertension": {
         "cardiovascular_disease": 1.5
       },
-      "basis": "neutropenia and febrile neutropenia: odds ratios of the multivariable model of Lyman et al. (2011), Table 3, used as hazard ratios; bilirubin above 1 mg/dl is taken as above the upper limit of normal; the reference values of renal function and white cells are assumptions. G-CSF: Lyman et al. (2011), Table 2, 6.4% against 22.8% with a neutropenic event in the first cycle, as ratio of the cumulative hazards. Frailty acts on these two types as on all others; age and bilirubin act through the published factors instead of the general ones. UGT1A1: the size is an assumption; Bardia et al. (2021) and Gennari et al. (2021) report the higher risk for sacituzumab govitecan, and the same factor is applied to the irinotecan in NALIRIFOX. The other values are assumptions; directions follow the report (neuropathy and diabetes: Loprinzi et al., 2020)."
+      "venous_thromboembolism": {
+        "per_khorana_point_above_site": 1.25,
+        "thromboprophylaxis": 0.41
+      },
+      "basis": "neutropenia and febrile neutropenia: odds ratios of the multivariable model of Lyman et al. (2011), Table 3, used as hazard ratios; bilirubin above 1 mg/dl is taken as above the upper limit of normal; the reference values of renal function and white cells are assumptions. G-CSF: Lyman et al. (2011), Table 2, 6.4% against 22.8% with a neutropenic event in the first cycle, as ratio of the cumulative hazards. Frailty acts on these two types as on all others; age and bilirubin act through the published factors instead of the general ones. UGT1A1: the size is an assumption; Bardia et al. (2021) and Gennari et al. (2021) report the higher risk for sacituzumab govitecan, and the same factor is applied to the irinotecan in NALIRIFOX. The other values are assumptions; directions follow the report (neuropathy and diabetes: Loprinzi et al., 2020). Venous thromboembolism: thromboprophylaxis with the hazard ratio of apixaban against placebo in patients with a Khorana score of 2 or more (Key et al., 2020). The effect of each Khorana point beyond the points of the tumour site is an assumption; the guideline reports higher risks with higher scores across tumours, but no association within pancreatic cancer."
     },
     "dose_exponent": {
       "value": 2.0,
@@ -463,6 +488,16 @@
         "3": 0.5,
         "4": 0.35,
         "5": 0.15
+      },
+      "venous_thromboembolism": {
+        "3": 0.8,
+        "4": 0.15,
+        "5": 0.05
+      },
+      "major_bleeding": {
+        "3": 0.7,
+        "4": 0.25,
+        "5": 0.05
       },
       "basis": "assumption"
     },
@@ -534,6 +569,11 @@
         "sigma": 0.7,
         "basis": "assumption: share of events with a warning phase, such as unstable angina, a transient ischaemic attack or rising blood pressure, and its length in days"
       }
+    },
+    "bleeding": {
+      "excess_risk": 0.017,
+      "weeks": 26,
+      "basis": "Key et al. (2020): major bleeding in 3.5% with apixaban and 1.8% with placebo within 180 days. The engine generates the excess of 1.7 percentage points in patients with thromboprophylaxis, spread evenly over 26 weeks on therapy."
     }
   },
   "actions": {
@@ -571,6 +611,12 @@
         "interruption": 0.2,
         "dose_reduction": 0.1,
         "discontinuation": 0.0
+      },
+      "venous_thromboembolism": {
+        "none": 0.6,
+        "interruption": 0.3,
+        "dose_reduction": 0.0,
+        "discontinuation": 0.1
       }
     },
     "ild": {

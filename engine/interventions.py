@@ -74,6 +74,10 @@ def plan(patient, latent, regimen, draws, scenario, params, iv, score, threshold
             if wants_gcsf and not patient["gcsf_prophylaxis"] and (
                     draws.u("adapted_gcsf") < ras["gcsf_probability"]):
                 adapted["gcsf_prophylaxis"] = True
+            tp = params["treatment_choice"]["thromboprophylaxis"]
+            if patient["khorana_score"] >= tp["from_khorana_score"] and not patient["thromboprophylaxis"] and (
+                    draws.u("adapted_thromboprophylaxis") < ras["thromboprophylaxis_probability"]):
+                adapted["thromboprophylaxis"] = True
             result["patient"] = adapted
             result["general_factor"] = ras["supportive_hazard_ratio"]
             if ras["closer_monitoring"]:

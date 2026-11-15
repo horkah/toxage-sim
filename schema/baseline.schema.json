@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "toxage-sim/baseline",
   "title": "Baseline record",
-  "description": "One patient at the start of a systemic therapy line, as planned in usual care. One record per patient, shared by all scenarios. A scenario can adapt the starting dose and the G-CSF prophylaxis; the observation records show what was given.",
-  "version": "0.6.0",
+  "description": "One patient at the start of a systemic therapy line, as planned in usual care. One record per patient, shared by all scenarios. A scenario can adapt the starting dose, the G-CSF prophylaxis and the thromboprophylaxis; the observation records show the dose that was given.",
+  "version": "0.7.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,6 +14,7 @@
     "prior_therapy_lines",
     "starting_dose_level",
     "gcsf_prophylaxis",
+    "thromboprophylaxis",
     "immunosuppressive_medication",
     "ugt1a1_28_homozygous",
     "adt_type",
@@ -32,6 +33,7 @@
     "white_cells_10e9_l",
     "haemoglobin_g_dl",
     "platelets_10e9_l",
+    "khorana_score",
     "spo2_percent",
     "lung_comorbidity",
     "diabetes",
@@ -106,6 +108,11 @@
       "title": "G-CSF prophylaxis",
       "type": "boolean",
       "description": "G-CSF is given with each chemotherapy cycle to prevent neutropenia."
+    },
+    "thromboprophylaxis": {
+      "title": "Thromboprophylaxis",
+      "type": "boolean",
+      "description": "An anticoagulant is given to prevent venous thromboembolism."
     },
     "immunosuppressive_medication": {
       "title": "Immunosuppressive medication",
@@ -245,6 +252,13 @@
       "minimum": 0,
       "unit": "10^9/l",
       "description": "Platelet count."
+    },
+    "khorana_score": {
+      "title": "Khorana score",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 6,
+      "description": "Risk score for venous thromboembolism under chemotherapy: 2 points for pancreatic cancer, 1 point each for platelets of 350 or more, haemoglobin below 10 g/dl, white cells above 11 and a body mass index of 35 or more. 3 or more is high risk, 1 or 2 intermediate."
     },
     "spo2_percent": {
       "title": "Oxygen saturation",
