@@ -241,6 +241,14 @@ export const STEPS = [
     ],
   },
   {
+    title: "A chart in large",
+    url: "/",
+    target: 'tox-chart[chart="risk-hist"]',
+    text: [
+      "A double click (on a phone a double tap) on a chart, outside its bars and points, shows it large in place of the views. It stays large while filters, scenario or patient change, so their effect shows in it. A double click, Esc or a menu brings it back.",
+    ],
+  },
+  {
     title: "Calibration",
     url: "/",
     target: 'tox-chart[chart="calibration"]',

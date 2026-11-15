@@ -335,3 +335,8 @@ In the about screen, add a small text about data protection to keep users inform
 Also add a small comment for the technology section about the type of database used
 
 Also when the app is deployed with readonly = 1, you should rename the UI app name to "toxage-sim-demo" . Of course, under the hood and the url etc it's all the same name, but displayed next to the logo and in the status line etc, the '-demo' is added, in the same color as the '-sim' is already printed. Just introduce this app name somewhere globally for monochrome simple texts and then also for the logo style with two colors. To be reused.
+
+================================================================================
+2026-11-16 00:12 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+Now add a feature where each single plot can be toggled large/ focussed and back to normal. Only one plot can be shown large at a time, and the next thing will have them all normal again. By double clicking or double tapping on touch anywhere in the box of a graph including title and caption where no special clickable function sits starts this toggle large. There  the plot fills the whole main screen section except title menu patient selector and filters and status bottom line. You'll find the professional way to implement this. Pressing escape or double tapping / clicking again toggles back as well as any other menu action. But change of filtering keeps the plot in large / focus mode. Such that changes can be observed directly only in that plot
