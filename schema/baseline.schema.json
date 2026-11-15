@@ -3,7 +3,7 @@
   "$id": "toxage-sim/baseline",
   "title": "Baseline record",
   "description": "One patient at the start of a systemic therapy line, as planned in usual care. One record per patient, shared by all scenarios. A scenario can adapt the starting dose and the G-CSF prophylaxis; the observation records show what was given.",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -66,7 +66,8 @@
         "prostate_hormone_sensitive",
         "prostate_castration_resistant",
         "breast_her2_low",
-        "breast_triple_negative"
+        "breast_triple_negative",
+        "breast_triple_negative_pretreated"
       ],
       "description": "Disease setting within the tumour type."
     },
@@ -83,7 +84,8 @@
         "olaparib",
         "trastuzumab_deruxtecan",
         "chemotherapy_single_agent",
-        "pembrolizumab_chemotherapy"
+        "pembrolizumab_chemotherapy",
+        "sacituzumab_govitecan"
       ],
       "description": "Systemic therapy that starts on day 1."
     },
@@ -113,7 +115,7 @@
     "ugt1a1_28_homozygous": {
       "title": "UGT1A1*28 homozygous",
       "type": "boolean",
-      "description": "Two copies of the UGT1A1*28 gene variant, which slows the breakdown of the active form of irinotecan."
+      "description": "Two copies of the UGT1A1*28 gene variant, which slows the breakdown of SN-38, the active form of irinotecan and the payload of sacituzumab govitecan."
     },
     "adt_type": {
       "title": "Androgen deprivation",

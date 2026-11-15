@@ -1,5 +1,5 @@
 {
-  "description": "Regimens of the engine with reference values from the literature. severe_toxicity_rate: share of patients with at least one adverse event of grade 3 or higher. severe_event_rates: share with a grade 3 or higher event of that type. ild_rate: share with drug-related interstitial lung disease or pneumonitis of any grade; null means the sources give no rate and the engine generates none. cardiovascular_event_rate: share of patients with a major adverse cardiovascular event within 48 weeks under androgen deprivation with a GnRH agonist; null for regimens without androgen deprivation. median_treatment_weeks: median time to the end of treatment for reasons other than toxicity. max_treatment_weeks: planned end of treatment. chemotherapy_weeks: weeks during which the chemotherapy part of a combination is given; null means throughout. irinotecan: the regimen contains irinotecan, so the UGT1A1 genotype acts on neutropenia and diarrhoea. corticosteroid: the regimen includes a corticosteroid, which counts as immunosuppressive medication. ild_risk_factors: the published patient factors of lung toxicity apply to this regimen.",
+  "description": "Regimens of the engine with reference values from the literature. severe_toxicity_rate: share of patients with at least one adverse event of grade 3 or higher. severe_event_rates: share with a grade 3 or higher event of that type. ild_rate: share with drug-related interstitial lung disease or pneumonitis of any grade; null means the sources give no rate and the engine generates none. cardiovascular_event_rate: share of patients with a major adverse cardiovascular event within 48 weeks under androgen deprivation with a GnRH agonist; null for regimens without androgen deprivation. median_treatment_weeks: median time to the end of treatment for reasons other than toxicity. max_treatment_weeks: planned end of treatment. chemotherapy_weeks: weeks during which the chemotherapy part of a combination is given; null means throughout. irinotecan: the regimen contains irinotecan or releases its active form SN-38, so the UGT1A1 genotype acts on neutropenia and diarrhoea. corticosteroid: the regimen includes a corticosteroid, which counts as immunosuppressive medication. ild_risk_factors: the published patient factors of lung toxicity apply to this regimen.",
   "regimens": {
     "nalirifox": {
       "tumour_type": "pancreas",
@@ -209,6 +209,29 @@
       "corticosteroid": false,
       "ild_risk_factors": false,
       "source": "Cortes et al. (2022), KEYNOTE-355; treatment-related adverse events of grade 3 to 5; immune-mediated events of grade 3 or 4; median exposure 26.4 weeks"
+    },
+    "sacituzumab_govitecan": {
+      "tumour_type": "breast",
+      "subgroup": "breast_triple_negative_pretreated",
+      "lab_interval_weeks": 3,
+      "chemotherapy_weeks": null,
+      "max_treatment_weeks": null,
+      "median_treatment_weeks": 19.1,
+      "median_survival_months": 12.1,
+      "severe_toxicity_rate": 0.64,
+      "severe_event_rates": {
+        "neutropenia": 0.51,
+        "febrile_neutropenia": 0.06,
+        "anaemia": 0.08,
+        "thrombocytopenia": 0.02,
+        "diarrhoea": 0.1
+      },
+      "ild_rate": null,
+      "cardiovascular_event_rate": null,
+      "irinotecan": true,
+      "corticosteroid": false,
+      "ild_risk_factors": false,
+      "source": "Bardia et al. (2021), ASCENT; treatment-related adverse events, 45% of the patients with grade 3 and 19% with grade 4 as worst grade; median treatment duration 4.4 months"
     }
   },
   "whole_numbers": [

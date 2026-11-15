@@ -1,6 +1,6 @@
 {
   "description": "Configuration of the risk models for candidates 1 to 5. Every value states its basis: a literature value or an assumption of this project. This file is kept separate from the engine configuration on purpose, so that the risk model does not read the parameters that generated the data.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "basis": "literature and assumptions",
   "severe_toxicity_90d": {
     "description": "Candidate 1. Logistic model. The regimen rate is the risk of the reference patient; odds ratios shift the risk for patient factors.",
@@ -53,6 +53,10 @@
       "pembrolizumab_chemotherapy": {
         "rate": 0.681,
         "source": "Cortes et al. (2022), KEYNOTE-355, treatment-related"
+      },
+      "sacituzumab_govitecan": {
+        "rate": 0.64,
+        "source": "Bardia et al. (2021), ASCENT, treatment-related"
       }
     },
     "odds_ratios": {
@@ -217,6 +221,14 @@
         "prior_chemotherapy_share": 1.0,
         "gcsf_share": 0.0,
         "age_65_or_older_share": 0.25
+      },
+      "sacituzumab_govitecan": {
+        "rate": 0.539,
+        "source": "Bardia et al. (2021), ASCENT: neutropenia 51% and febrile neutropenia 6% of grade 3 or 4, combined as independent",
+        "prior_chemotherapy_share": 1.0,
+        "gcsf_share": 0.0,
+        "age_65_or_older_share": 0.2,
+        "irinotecan": true
       }
     },
     "regimen_shares_basis": "Shares of the trial patients with earlier chemotherapy, G-CSF prophylaxis and an age of 65 or older, used to set the risk of the reference patient. Earlier chemotherapy follows the inclusion criteria of the trials. The age shares are assumptions from the median ages of the trials. The G-CSF shares are assumptions; in PEACE-1 G-CSF was first recommended and later mandatory (Fizazi et al., 2022).",
@@ -263,7 +275,7 @@
       },
       "ugt1a1_28_homozygous_with_irinotecan": {
         "value": 2.0,
-        "basis": "assumption; the direction follows Bardia et al. (2021) and Gennari et al. (2021) for sacituzumab govitecan and is applied to regimens with irinotecan"
+        "basis": "the size is an assumption; Bardia et al. (2021) and Gennari et al. (2021) report the higher risk for sacituzumab govitecan, which releases SN-38, the active form of irinotecan, and the same factor is applied to regimens with irinotecan"
       }
     },
     "thresholds": {
@@ -307,6 +319,11 @@
       "gemcitabine_nab_paclitaxel": {
         "rate": 0.05,
         "source": "Wainberg et al. (2023), NAPOLI 3"
+      },
+      "sacituzumab_govitecan": {
+        "rate": 0.1,
+        "source": "Bardia et al. (2021), ASCENT",
+        "irinotecan": true
       }
     },
     "odds_ratios": {
@@ -324,7 +341,7 @@
       },
       "ugt1a1_28_homozygous_with_irinotecan": {
         "value": 2.0,
-        "basis": "assumption; the direction follows Bardia et al. (2021) and Gennari et al. (2021) for sacituzumab govitecan and is applied to regimens with irinotecan"
+        "basis": "the size is an assumption; Bardia et al. (2021) and Gennari et al. (2021) report the higher risk for sacituzumab govitecan, which releases SN-38, the active form of irinotecan, and the same factor is applied to regimens with irinotecan"
       }
     },
     "thresholds": {
@@ -343,7 +360,7 @@
     "categories": {
       "intermediate_from": 0.1,
       "high_from": 0.2,
-      "basis": "assumption; 0.2 is the rate with NALIRIFOX"
+      "basis": "assumption; 0.2 is the rate with NALIRIFOX, 0.1 the rate with sacituzumab govitecan"
     }
   },
   "cardiovascular": {

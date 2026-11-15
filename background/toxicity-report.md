@@ -563,7 +563,7 @@ Two kinds of model appear in every candidate:
 - **Detection signals.** Number of stools per day relative to the patient's own baseline, which is how the CTCAE grade is defined; weight; potassium; reported nausea and intake. Diarrhoea is in the core set of symptoms for weekly reports ([Di Maio et al., 2022](references.md#di-maio-2022)).
 - **Link to other candidates.** Low potassium is a correctable risk factor for QT prolongation (candidate 5).
 - **Value.** Severe diarrhoea and vomiting lower the utility of a health state by 0.103 ([Lloyd et al., 2006](references.md#lloyd-2006)).
-- **Risk model.** The published rate of the two pancreatic regimens, shifted by age, ECOG, albumin and the UGT1A1 genotype with assumed odds ratios. It has the weakest basis of the five models.
+- **Risk model.** The published rate of the two pancreatic regimens and of sacituzumab govitecan, shifted by age, ECOG, albumin and the UGT1A1 genotype with assumed odds ratios. It has the weakest basis of the five models.
 
 ### Candidate 5: cardiovascular events
 
@@ -639,7 +639,7 @@ Candidates 1 to 5 are implemented. They were chosen for these reasons:
 - Candidate 1 applies to all three patient groups, has the largest set of reference rates, two randomised trials showing that acting on the risk reduces toxicity, and a published score to compare with.
 - Candidate 2 has well described risk factors, a clear time window, simple signals that can be measured at home, a measured delay in current care and a first rule for home measurements.
 - Candidate 3 has a published and validated model with effect sizes for every factor, and an action with a known effect, G-CSF.
-- Candidate 4 completes the picture for the pancreatic regimens, where diarrhoea decides between NALIRIFOX and gemcitabine plus nab-paclitaxel. Its predictors have no published effect sizes.
+- Candidate 4 completes the picture for the pancreatic regimens, where diarrhoea decides between NALIRIFOX and gemcitabine plus nab-paclitaxel, and for sacituzumab govitecan. Its predictors have no published effect sizes.
 - Candidate 5 in prostate cancer under androgen deprivation fills a gap that the guideline names itself: no risk tool exists. Two trials give the event rates by type of androgen deprivation and by earlier cardiovascular events.
 
 All five are baseline models. The next step is detection during therapy, first for candidate 2. Among the candidates without a model, venous thromboembolism (candidate 8) has the best basis: a score in guidelines, rates with and without prophylaxis, and all its items in the baseline record.

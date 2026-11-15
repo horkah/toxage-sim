@@ -394,10 +394,15 @@ class EngineTest(unittest.TestCase):
         self.assertEqual(sources, {"lung_monitoring"})
 
     def test_lung_monitoring_lowers_the_grade_of_lung_toxicity(self):
-        def severe(s):
-            return sum(e["grade"] >= 3 for events in self.events[s].values() for e in events
-                       if e["event_type"] == hazards.ILD)
-        self.assertLess(severe("lung_monitoring"), severe(USUAL))
+        # Monitoring also records events that usual care never recognises, because the
+        # patient dies or the follow-up ends first. The mean grade shows the effect.
+        def grades(s):
+            return [e["grade"] for events in self.events[s].values() for e in events
+                    if e["event_type"] == hazards.ILD]
+        mean = lambda values: sum(values) / len(values)
+        self.assertLess(mean(grades("lung_monitoring")), mean(grades(USUAL)))
+        severe = lambda s: sum(g >= 3 for g in grades(s))
+        self.assertLessEqual(severe("lung_monitoring"), severe(USUAL))
 
     def test_cardiovascular_monitoring_is_limited_to_androgen_deprivation(self):
         s = "cardiovascular_monitoring"

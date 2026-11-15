@@ -6,10 +6,10 @@ The models follow candidates 1 to 5 of the [toxicity report](../background/toxic
 
 | Model | Event | Applies to |
 |---|---|---|
-| Candidate 1 | At least one adverse event of grade 3 to 5 within 90 days | all ten regimens |
+| Candidate 1 | At least one adverse event of grade 3 to 5 within 90 days | all eleven regimens |
 | Candidate 2 | Interstitial lung disease or pneumonitis within 730 days, any grade and grade 2 or higher | trastuzumab deruxtecan, single-agent chemotherapy in breast cancer |
-| Candidate 3 | Neutropenia of grade 3 or higher or febrile neutropenia within 90 days | the seven regimens with a published rate of severe neutropenia |
-| Candidate 4 | Diarrhoea of grade 3 or higher within 90 days | NALIRIFOX, gemcitabine with nab-paclitaxel |
+| Candidate 3 | Neutropenia of grade 3 or higher or febrile neutropenia within 90 days | the eight regimens with a published rate of severe neutropenia |
+| Candidate 4 | Diarrhoea of grade 3 or higher within 90 days | NALIRIFOX, gemcitabine with nab-paclitaxel, sacituzumab govitecan |
 | Candidate 5 | Major cardiovascular event (myocardial infarction, stroke, cardiovascular death) within 364 days | men with prostate cancer under androgen deprivation, all five prostate regimens |
 
 All are baseline models: they estimate the risk before therapy starts. The detection model for lung toxicity named in the report would use the weekly observations of schema and engine. This and other next steps are listed in [EXTENSIONS.md](EXTENSIONS.md).
@@ -171,13 +171,13 @@ A logistic model with the patient factors of [Lyman et al. (2011)](../background
 
 The drug classes of the published model are not used: the published rate of the regimen takes their place. The risk of the reference patient is set so that the mean risk in a reference population equals that rate. The reference patient has none of the yes-or-no factors, an eGFR of 80 ml/min and white cells of 7. The shares with raised liver values and immunosuppressive medication in the reference population are those of Lyman et al., Table 1. The shares with earlier chemotherapy, G-CSF and an age of 65 or older belong to the trial of each regimen and are partly assumptions; `config/models.json` lists them.
 
-For the two regimens with docetaxel from ARASENS the rate combines neutropenia and febrile neutropenia of grade 3 or 4 as if they were independent.
+For the two regimens with docetaxel from ARASENS and for sacituzumab govitecan the rate combines neutropenia and febrile neutropenia of grade 3 or 4 as if they were independent.
 
 Risk categories: low below 10%, intermediate from 10%, high from 20%. The thresholds are assumptions: 10% separated low from high risk in Lyman et al., and 20% is the risk of febrile neutropenia from which guidelines recommend G-CSF from the first cycle, as cited there.
 
 ## Candidate 4: severe diarrhoea
 
-A logistic model for the two pancreatic regimens, with 20% and 5% severe diarrhoea in NAPOLI 3 ([Wainberg et al., 2023](../background/references.md#wainberg-2023)). The references name risk factors but give no effect sizes, so all odds ratios are assumptions:
+A logistic model for the two pancreatic regimens, with 20% and 5% severe diarrhoea in NAPOLI 3 ([Wainberg et al., 2023](../background/references.md#wainberg-2023)), and for sacituzumab govitecan, with 10% in ASCENT ([Bardia et al., 2021](../background/references.md#bardia-2021)). The references name risk factors but give no effect sizes, so all odds ratios are assumptions:
 
 | Factor | Odds ratio |
 |---|---|
@@ -186,7 +186,7 @@ A logistic model for the two pancreatic regimens, with 20% and 5% severe diarrho
 | Albumin below 35 g/l | 1.3 |
 | UGT1A1*28 homozygous, with irinotecan | 2.0 |
 
-The direction of the UGT1A1 effect follows the reports on sacituzumab govitecan ([Bardia et al., 2021](../background/references.md#bardia-2021); [Gennari et al., 2021](../background/references.md#gennari-2021)) and is applied to the irinotecan in NALIRIFOX. As in candidate 3, the risk of the reference patient is set so that the mean risk in a reference population equals the regimen rate.
+The higher risk with two copies of UGT1A1*28 is reported for sacituzumab govitecan ([Bardia et al., 2021](../background/references.md#bardia-2021); [Gennari et al., 2021](../background/references.md#gennari-2021)), without an effect size. The same factor is applied to the irinotecan in NALIRIFOX, because both drugs act through SN-38. As in candidate 3, the risk of the reference patient is set so that the mean risk in a reference population equals the regimen rate.
 
 Risk categories: low below 10%, intermediate from 10%, high from 20%. The thresholds are assumptions. This model has the weakest basis of the five.
 
@@ -265,7 +265,7 @@ The models describe the risk without an intervention. `data.load` therefore read
 - Candidate 3 uses odds ratios that were found for neutropenia with a neutrophil count below 0.5 or febrile neutropenia in the first cycle, in breast, lung, colorectal and ovarian cancer and lymphoma. The model applies them to neutropenia of grade 3 or higher within 90 days in pancreatic, prostate and breast cancer.
 - The trial shares with G-CSF and with an age of 65 or older in candidate 3 are assumptions.
 - Candidate 3 has no rate for lutetium-177–PSMA-617, olaparib and pembrolizumab with chemotherapy.
-- All effect sizes of candidate 4 are assumptions, and it covers two regimens.
+- All effect sizes of candidate 4 are assumptions, and it covers three regimens.
 - Candidate 5 rests on two trials. PRONOUNCE was stopped early, its men were under the care of a cardiologist, and they had cardiovascular disease, not all of them an earlier event.
 - HERO treated men with androgen deprivation alone. The model applies its rates to men who also get docetaxel, abiraterone, darolutamide, olaparib or lutetium-177–PSMA-617.
 - The effects of age, diabetes, hypertension, smoking, renal function and cardiovascular disease without an event in candidate 5 are assumptions. Lipids, blood pressure as a number, LVEF, troponin and natriuretic peptides are not used.

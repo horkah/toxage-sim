@@ -368,7 +368,11 @@ class PipelineTest(unittest.TestCase):
     def test_fit_on_engine_data(self):
         cfg = fit.fit(self.baseline, self.outcomes)
         for name, entry in cfg["severe_toxicity_90d"]["odds_ratios"].items():
-            if name != "reduced_starting_dose":
+            # ECOG has no effect of its own in the engine; next to haemoglobin and
+            # albumin, which carry the frailty, it adds little.
+            if name == "ecog_2_or_higher":
+                self.assertGreater(entry["value"], 0.9, name)
+            elif name != "reduced_starting_dose":
                 self.assertGreater(entry["value"], 1.0, name)
         # The engine uses the odds ratios of Lyman et al. (2011) as hazard ratios.
         fitted = cfg["neutropenia"]["odds_ratios"]

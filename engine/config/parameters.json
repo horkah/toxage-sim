@@ -18,7 +18,8 @@
       },
       "breast": {
         "breast_her2_low": 0.6,
-        "breast_triple_negative": 0.4
+        "breast_triple_negative": 0.25,
+        "breast_triple_negative_pretreated": 0.15
       }
     },
     "age": {
@@ -39,6 +40,10 @@
         "sd": 11
       },
       "breast_triple_negative": {
+        "mean": 54,
+        "sd": 11
+      },
+      "breast_triple_negative_pretreated": {
         "mean": 54,
         "sd": 11
       },
@@ -186,6 +191,10 @@
         "median": 2.5,
         "sigma": 0.8
       },
+      "breast_triple_negative_pretreated": {
+        "median": 3.0,
+        "sigma": 0.7
+      },
       "basis": "breast_her2_low: about 39% above 4 years as in Powell et al. (2022); others assumption"
     },
     "prior_therapy_lines": {
@@ -211,7 +220,15 @@
       ],
       "breast_triple_negative": [
         0
-      ]
+      ],
+      "breast_triple_negative_pretreated": [
+        2,
+        3,
+        3,
+        4,
+        5
+      ],
+      "basis": "assumption, except breast_triple_negative_pretreated: at least two earlier regimens and a median of three in ASCENT (Bardia et al., 2021)"
     },
     "neutrophils_10e9_l": {
       "median": 4.0,
@@ -286,7 +303,10 @@
       "reduced_level": 0.8,
       "basis": "assumption; in GAP70+ 35% of older patients with impairments started with reduced intensity under usual care"
     },
-    "gcsf_probability_with_docetaxel": 0.5
+    "gcsf_probability_with_docetaxel": 0.5,
+    "breast_triple_negative_pretreated": {
+      "sacituzumab_govitecan": 1.0
+    }
   },
   "hazards": {
     "shapes": {
@@ -412,7 +432,7 @@
       "hypertension": {
         "cardiovascular_disease": 1.5
       },
-      "basis": "neutropenia and febrile neutropenia: odds ratios of the multivariable model of Lyman et al. (2011), Table 3, used as hazard ratios; bilirubin above 1 mg/dl is taken as above the upper limit of normal; the reference values of renal function and white cells are assumptions. G-CSF: Lyman et al. (2011), Table 2, 6.4% against 22.8% with a neutropenic event in the first cycle, as ratio of the cumulative hazards. Frailty acts on these two types as on all others; age and bilirubin act through the published factors instead of the general ones. UGT1A1: assumption; the direction follows Bardia et al. (2021) and Gennari et al. (2021) for sacituzumab govitecan and is applied to the irinotecan in NALIRIFOX. The other values are assumptions; directions follow the report (neuropathy and diabetes: Loprinzi et al., 2020)."
+      "basis": "neutropenia and febrile neutropenia: odds ratios of the multivariable model of Lyman et al. (2011), Table 3, used as hazard ratios; bilirubin above 1 mg/dl is taken as above the upper limit of normal; the reference values of renal function and white cells are assumptions. G-CSF: Lyman et al. (2011), Table 2, 6.4% against 22.8% with a neutropenic event in the first cycle, as ratio of the cumulative hazards. Frailty acts on these two types as on all others; age and bilirubin act through the published factors instead of the general ones. UGT1A1: the size is an assumption; Bardia et al. (2021) and Gennari et al. (2021) report the higher risk for sacituzumab govitecan, and the same factor is applied to the irinotecan in NALIRIFOX. The other values are assumptions; directions follow the report (neuropathy and diabetes: Loprinzi et al., 2020)."
     },
     "dose_exponent": {
       "value": 2.0,

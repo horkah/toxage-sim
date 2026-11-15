@@ -294,7 +294,7 @@ NEUTROPENIA_LABELS = {
     "immunosuppressive_medication": "immunosuppressive medication",
     "reduced_starting_dose": "reduced starting dose",
     "gcsf_prophylaxis": "G-CSF prophylaxis",
-    "ugt1a1_28_homozygous_with_irinotecan": "UGT1A1*28 homozygous, with irinotecan",
+    "ugt1a1_28_homozygous_with_irinotecan": "UGT1A1*28 homozygous, with irinotecan or SN-38",
 }
 
 
@@ -377,7 +377,7 @@ DIARRHOEA_LABELS = {
     "age_70_or_older": "age 70 or older",
     "ecog_2_or_higher": "ECOG 2 or higher",
     "low_albumin": "low albumin",
-    "ugt1a1_28_homozygous_with_irinotecan": "UGT1A1*28 homozygous, with irinotecan",
+    "ugt1a1_28_homozygous_with_irinotecan": "UGT1A1*28 homozygous, with irinotecan or SN-38",
 }
 
 

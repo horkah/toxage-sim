@@ -38,8 +38,8 @@ The schema files hold the full description and unit of every field. The tables b
 |---|---|---|---|
 | `patient_id` | Patient ID | string |  |
 | `tumour_type` | Tumour type | string | `pancreas`, `prostate`, `breast` |
-| `subgroup` | Subgroup | string | `pancreas_metastatic`, `prostate_hormone_sensitive`, `prostate_castration_resistant`, `breast_her2_low`, `breast_triple_negative` |
-| `regimen` | Regimen | string | 10 values, see the schema file |
+| `subgroup` | Subgroup | string | `pancreas_metastatic`, `prostate_hormone_sensitive`, `prostate_castration_resistant`, `breast_her2_low`, `breast_triple_negative`, `breast_triple_negative_pretreated` |
+| `regimen` | Regimen | string | 11 values, see the schema file |
 | `prior_therapy_lines` | Earlier therapy lines | integer | 0 or more |
 | `starting_dose_level` | Starting dose level | number | 0.1–1.0 |
 | `gcsf_prophylaxis` | G-CSF prophylaxis | boolean |  |
@@ -203,7 +203,7 @@ Risks are probabilities. The `ild_`, `neutropenia_` and `diarrhoea_` fields are 
 
 The schema files are JSON Schema (draft 2020-12), so any language can read them. All fields are flat, so a table can be stored as CSV with the field names as header. In CSV, null is an empty cell and booleans are `true` and `false`.
 
-Each schema file carries a `version`, currently 0.5.0 for baseline and outcome, 0.4.0 for the other four tables of the engine and 0.3.0 for risk_score. Adding an optional field raises the minor version. Renaming or removing a field, or changing its meaning, raises the major version. Changes that leave the data as they are, such as a new `title`, raise the patch version.
+Each schema file carries a `version`, currently 0.6.0 for baseline, 0.5.0 for outcome, 0.4.0 for the other four tables of the engine and 0.3.0 for risk_score. Adding an optional field raises the minor version. Renaming or removing a field, or changing its meaning, raises the major version. Changes that leave the data as they are, such as a new `title`, raise the patch version.
 
 Every field has a `title`, which the app shows as its label, and a `unit` where one applies.
 

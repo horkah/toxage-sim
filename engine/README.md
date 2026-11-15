@@ -66,7 +66,7 @@ latent frailty ──► baseline characteristics ──► choice of regimen an
         observations of the week: blood values, oxygen saturation, blood pressure, symptoms
 ```
 
-A patient is followed until death or for 520 weeks. Observations are written while the patient is on therapy and for four weeks after. The three tumour types always have equal numbers of patients.
+A patient is followed until death or for 520 weeks. Observations are written while the patient is on therapy and for four weeks after. The three tumour types always have equal numbers of patients, with eleven regimens in six subgroups.
 
 ## Patient groups
 
@@ -76,7 +76,8 @@ A patient is followed until death or for 520 weeks. Observations are written whi
 | prostate | `prostate_hormone_sensitive` | 50% | `adt_docetaxel`, `adt_docetaxel_abiraterone`, `adt_docetaxel_darolutamide` |
 | prostate | `prostate_castration_resistant` | 50% | `lu_psma_617`, `olaparib` |
 | breast | `breast_her2_low` | 60% | `trastuzumab_deruxtecan`, `chemotherapy_single_agent` |
-| breast | `breast_triple_negative` | 40% | `pembrolizumab_chemotherapy` |
+| breast | `breast_triple_negative` | 25% | `pembrolizumab_chemotherapy` |
+| breast | `breast_triple_negative_pretreated` | 15% | `sacituzumab_govitecan` |
 
 The subgroups differ in age, earlier therapy lines, time since diagnosis, blood values, toxicity profile, treatment duration and survival.
 
@@ -151,7 +152,7 @@ These mechanisms make the data behave like real data rather than like independen
 2. **Age effects.** Age lowers renal function, raises the rates of diabetes and cardiovascular disease, and adds to frailty and to the toxicity hazards.
 3. **Tumour-specific patterns.** Pancreatic cancer comes with more frailty, lower albumin and weight, more diabetes and, in some patients, raised bilirubin. Castration-resistant prostate cancer and HER2-low breast cancer come with earlier therapy lines and lower blood counts.
 4. **Treatment by indication.** Fitter and younger pancreatic patients more often get NALIRIFOX. Patients with lung problems less often get trastuzumab deruxtecan. Men with an earlier cardiovascular event more often get a GnRH antagonist instead of an agonist. Frail and older patients more often start with a reduced dose. Regimen and dose are therefore not independent of the patient's risk.
-5. **Type-specific risk factors.** Neutropenia and febrile neutropenia follow the published model of [Lyman et al. (2011)](../background/references.md#lyman-2011): earlier chemotherapy, an age of 65 or older, raised AST, alkaline phosphatase or bilirubin, lower renal function, fewer white cells and immunosuppressive medication raise the hazard, G-CSF lowers it. In patients with two copies of UGT1A1*28 the irinotecan in NALIRIFOX causes more neutropenia and diarrhoea. Low haemoglobin and renal impairment raise the hazard of anaemia. Diabetes raises the hazard of neuropathy, cardiovascular disease that of hypertension. The six published risk factors raise the hazard of lung toxicity under trastuzumab deruxtecan. For cardiovascular events an earlier event raises the hazard under a GnRH agonist and under an antagonist, as HERO ([Shore et al., 2020](../background/references.md#shore-2020)) and PRONOUNCE ([Lopes et al., 2021](../background/references.md#lopes-2021)) show together; age, diabetes, hypertension, smoking, renal function, cardiovascular disease without an event and frailty add to it.
+5. **Type-specific risk factors.** Neutropenia and febrile neutropenia follow the published model of [Lyman et al. (2011)](../background/references.md#lyman-2011): earlier chemotherapy, an age of 65 or older, raised AST, alkaline phosphatase or bilirubin, lower renal function, fewer white cells and immunosuppressive medication raise the hazard, G-CSF lowers it. In patients with two copies of UGT1A1*28, sacituzumab govitecan and the irinotecan in NALIRIFOX cause more neutropenia and diarrhoea: both act through SN-38, which these patients break down slowly. Low haemoglobin and renal impairment raise the hazard of anaemia. Diabetes raises the hazard of neuropathy, cardiovascular disease that of hypertension. The six published risk factors raise the hazard of lung toxicity under trastuzumab deruxtecan. For cardiovascular events an earlier event raises the hazard under a GnRH agonist and under an antagonist, as HERO ([Shore et al., 2020](../background/references.md#shore-2020)) and PRONOUNCE ([Lopes et al., 2021](../background/references.md#lopes-2021)) show together; age, diabetes, hypertension, smoking, renal function, cardiovascular disease without an event and frailty add to it.
 6. **Time patterns.** Neutropenia, diarrhoea and unspecified events occur mainly in the first weeks: older patients had their first severe toxicity after a median of 22 days ([Extermann et al., 2012](../background/references.md#extermann-2012)), and two thirds of first neutropenic events fall into the first cycle ([Lyman et al., 2011](../background/references.md#lyman-2011)). Anaemia, low platelets, hypertension and immune-related events peak around week 8. Neuropathy grows with time on therapy. Lung toxicity follows the published onset distribution. Cardiovascular events have a constant hazard while the patient is on therapy. Toxicity from docetaxel ends after 18 weeks.
 7. **Feedback.** A severe event can lead to an interruption, a dose reduction or the end of therapy. A lower dose lowers the hazard of later events. A patient who stops therapy has no further therapy-related events.
 8. **Competing events.** Progression, the planned end of therapy and death end the time at risk.
@@ -286,7 +287,7 @@ The effects of the scenarios follow from the assumed parameters of the intervent
 | Patient factors of neutropenia and febrile neutropenia, effect of G-CSF | Literature ([Lyman et al., 2011](../background/references.md#lyman-2011)); odds ratios used as hazard ratios |
 | Shares with raised AST and alkaline phosphatase, low white cells and immunosuppressive medication | Literature ([Lyman et al., 2011](../background/references.md#lyman-2011)), approximately |
 | Timing of early events | Literature ([Extermann et al., 2012](../background/references.md#extermann-2012)), approximately |
-| Share with UGT1A1*28 and its effect on neutropenia and diarrhoea with irinotecan | Assumption; the direction follows [Bardia et al. (2021)](../background/references.md#bardia-2021) and [Gennari et al. (2021)](../background/references.md#gennari-2021) |
+| Share with UGT1A1*28 and the size of its effect on neutropenia and diarrhoea | Assumption; [Bardia et al. (2021)](../background/references.md#bardia-2021) and [Gennari et al. (2021)](../background/references.md#gennari-2021) report the higher risk for sacituzumab govitecan |
 | Effects of age, diabetes, hypertension, smoking, renal function, cardiovascular disease without an event and frailty on cardiovascular events | Assumption; the directions follow the ESC guideline ([Lyon et al., 2022](../background/references.md#lyon-2022)) |
 | Share and length of the warning phase, grades of cardiovascular events | Assumption |
 | Mean age in three subgroups | Literature (median ages in ARASENS, VISION, ASCENT) |
@@ -333,7 +334,7 @@ The effects of the scenarios follow from the assumed parameters of the intervent
 
 ## Ideas for later
 
-- Further regimens: FOLFIRINOX, gemcitabine alone, sacituzumab govitecan, ribociclib with endocrine therapy, cabazitaxel.
+- Further regimens: FOLFIRINOX, gemcitabine alone, ribociclib with endocrine therapy, cabazitaxel.
 - A second and third therapy line per patient, with carry-over of toxicity such as neuropathy.
 - A link from time on therapy and dose received to progression and survival, so that fewer stops of therapy can show as a gain.
 - Drug components of a regimen with their own schedules and dose levels.

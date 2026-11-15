@@ -32,8 +32,8 @@ def brier(risks, outcomes):
 def calibration_slope(risks, outcomes):
     """Slope of a logistic regression of the outcome on the logit of the risk.
     1 means the spread of the risks is right, below 1 means too extreme.
-    None without events or non-events, or if the fit does not converge."""
-    if not 0 < sum(outcomes) < len(outcomes):
+    None without events or non-events, if all risks are the same, or if the fit does not converge."""
+    if not 0 < sum(outcomes) < len(outcomes) or max(risks) - min(risks) < 1e-12:
         return None
     x = [[1.0, math.log(p / (1 - p))] for p in (min(max(r, 1e-9), 1 - 1e-9) for r in risks)]
     result = glm.fit(x, list(outcomes))

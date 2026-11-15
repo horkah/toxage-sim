@@ -48,7 +48,7 @@ Open ideas for the risk models of candidates 1 to 5. Each item says what it need
 | # | Extension | Needs |
 |---|---|---|
 | 4.1 | Published effect sizes for age, performance status, albumin and UGT1A1 with irinotecan. | literature |
-| 4.2 | Further regimens: FOLFIRINOX (16.8% severe diarrhoea in [Nichetti et al., 2024](../background/references.md#nichetti-2024)), sacituzumab govitecan (10%, [Bardia et al., 2021](../background/references.md#bardia-2021)), colitis under checkpoint inhibitors with inflammatory bowel disease as risk factor ([Haanen et al., 2022](../background/references.md#haanen-2022)). | engine (regimens), schema |
+| 4.2 | Further regimens: FOLFIRINOX (16.8% severe diarrhoea in [Nichetti et al., 2024](../background/references.md#nichetti-2024)), colitis under checkpoint inhibitors with inflammatory bowel disease as risk factor ([Haanen et al., 2022](../background/references.md#haanen-2022)). | engine (regimens), schema |
 | 4.3 | Hypokalaemia of grade 3 or higher, 15% with NALIRIFOX ([Wainberg et al., 2023](../background/references.md#wainberg-2023)), and potassium as a weekly value. Low potassium is a correctable risk factor for QT prolongation. | schema, engine |
 | 4.4 | A detection model on the weekly reports of diarrhoea, on weight and on potassium. The engine raises reported diarrhoea in the week before an event. | risk model; schema and engine for weight and potassium |
 

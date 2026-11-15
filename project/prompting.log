@@ -316,3 +316,8 @@ ok, 13 additional pdfs are there. you know what to do. once you have read everyt
 2026-11-15 10:46 (+01:00) | model: claude-fable-5-2 | attachments: none
 --------------------------------------------------------------------------------
 continue, but dont forget to make reasonable interim states commited to git
+
+================================================================================
+2026-11-15 16:09 (+01:00) | model: claude-fable-5-2 | attachments: none
+--------------------------------------------------------------------------------
+Please now conceptualize and implement the five next most wanted and most impactful (regarding realism and completeness of our project) extensions to our modeling. Commit them one after the other. Push only at the end. Choose extensions where no decision from me is needed because you have sufficient knowledge available. Our goal is to overcome a good part of the current limitations step by step.
