@@ -14,6 +14,9 @@ import math
 from hazards import CV, ILD, OWN_FACTORS
 import interventions
 
+# Event types that count as severe neutropenia in the outcome record.
+NEUTROPENIC = ("neutropenia", "febrile_neutropenia")
+
 
 def _stage(episode, day):
     """Grade that an unrecognised event has reached on a day."""
@@ -53,6 +56,8 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
     ild = cv = None
     last_day = 0
     report_weeks = {s: 0 for s in sources}
+    fatigue = part["alert_fatigue"]["action_ratio_per_earlier_false_alert"]
+    false_alerts = 0
     report_weekday = int(draws.u("report_weekday") * 7)
 
     stop_base = 1 - 0.5 ** (1 / regimen["median_treatment_weeks"])
@@ -165,7 +170,8 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
                         continue
                     alerted = True
                     attended = draws.u("attend", week) < plan["attendance"]
-                    acted = attended and draws.u("act", week) < plan["action"]
+                    # Alert fatigue: earlier false alerts of this patient make the team act less often.
+                    acted = attended and draws.u("act", week) < plan["action"] * fatigue ** false_alerts
                     alerts.append({"scenario_id": plan["scenario_id"], "patient_id": pid, "day": report_day,
                                    "source": source, "true_alert": True, "event_type": episode["event_type"],
                                    "attended": attended, "acted": acted})
@@ -178,6 +184,7 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
                     alerts.append({"scenario_id": plan["scenario_id"], "patient_id": pid, "day": report_day,
                                    "source": source, "true_alert": False, "event_type": None,
                                    "attended": draws.u("attend", week) < plan["attendance"], "acted": False})
+                    false_alerts += 1
 
         # 2. Usual care recognises events that have reached their day.
         for episode in sorted(pending, key=lambda e: e["routine_day"]):
@@ -270,6 +277,8 @@ def outcome(latent, course, iv):
     events, alerts = course["events"], course["alerts"]
     follow_up = course["follow_up_days"]
     severe = [e["day"] for e in events if e["grade"] >= 3 and e["day"] <= 90]
+    neutropenia = [e["day"] for e in events if e["event_type"] in NEUTROPENIC and e["grade"] >= 3 and e["day"] <= 90]
+    diarrhoea = [e["day"] for e in events if e["event_type"] == "diarrhoea" and e["grade"] >= 3 and e["day"] <= 90]
     ild, cv = course["ild"], course["cv"]
     major = bool(cv and cv["recognised"] and cv["grade"] >= 3)
 
@@ -293,14 +302,20 @@ def outcome(latent, course, iv):
 
     q = iv["quality_of_life"]
     base = min(0.95, max(q["minimum"], q["base"][patient["tumour_type"]] + q["frailty_slope"] * latent["frailty"]))
+    # The base value holds while the patient is on the therapy line; after its
+    # end the patient counts as progressive.
     on_therapy = min(follow_up, course["end_day"] if course["end_day"] is not None else follow_up)
-    quality_days = follow_up * base - on_therapy * q["on_therapy_decrement"]
+    quality_days = follow_up * base - (follow_up - on_therapy) * q["after_therapy_decrement"]
     for e in events:
         days = cons["event_days"][str(e["grade"])]
         if e["event_type"] in OWN_FACTORS:
             days *= cons["event_days"][f"{e['event_type']}_factor"]
         end = follow_up if e["grade"] == 5 else min(follow_up, e["day"] + days)
-        quality_days -= q["event_decrement"][str(e["grade"])] * max(0, end - e["onset_day"])
+        if e["grade"] >= 3:
+            decrement = q["severe_event_decrement"].get(e["event_type"], q["severe_event_decrement"]["default"])
+        else:
+            decrement = q["event_decrement"][str(e["grade"])]
+        quality_days -= decrement * max(0, end - e["onset_day"])
 
     return {
         "scenario_id": plan["scenario_id"],
@@ -310,6 +325,10 @@ def outcome(latent, course, iv):
         "participating": plan["participating"],
         "severe_toxicity_90d": bool(severe),
         "severe_toxicity_day": min(severe) if severe else None,
+        "severe_neutropenia_90d": bool(neutropenia),
+        "severe_neutropenia_day": min(neutropenia) if neutropenia else None,
+        "severe_diarrhoea_90d": bool(diarrhoea),
+        "severe_diarrhoea_day": min(diarrhoea) if diarrhoea else None,
         "ild": ild is not None,
         "ild_onset_day": ild["onset_day"] if ild else None,
         "ild_diagnosis_day": ild["diagnosis_day"] if ild else None,

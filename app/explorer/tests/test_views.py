@@ -104,7 +104,7 @@ class ExplorerTest(CohortTestCase):
     def test_model_cards_show_the_patient(self):
         response = self.client.get("/?patient=3")
         cards = response.context["model_cards"]
-        self.assertEqual([s["model"].id for s, _, _ in cards], ["severe90", "ild", "cv"])
+        self.assertEqual([s["model"].id for s, _, _ in cards], ["severe90", "ild", "neutropenia", "diarrhoea", "cv"])
         self.assertTrue(all(r is not None for _, _, r in cards))
         self.assertEqual(response.context["patient_risk"]["model"].id, "severe90")
         self.assertContains(response, "Patient P000003: ")

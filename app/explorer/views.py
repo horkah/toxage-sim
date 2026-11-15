@@ -15,7 +15,8 @@ from .models import Dataset
 VIEWS = [("risk", "Risk"), ("characteristics", "Patient characteristics"),
          ("time", "Course over time"), ("interventions", "Interventions")]
 # Group of each risk model in the parameter file of the risk models.
-MODEL_GROUPS = {"severe90": "severe_toxicity_90d", "ild": "ild", "cv": "cardiovascular"}
+MODEL_GROUPS = {"severe90": "severe_toxicity_90d", "ild": "ild", "neutropenia": "neutropenia",
+                "diarrhoea": "diarrhoea", "cv": "cardiovascular"}
 # Fields that sum up a patient at a glance, in the header of the patient card.
 KEY_FACTS = ("tumour_type", "regimen", "age_years", "sex", "ecog")
 log = logging.getLogger(__name__)

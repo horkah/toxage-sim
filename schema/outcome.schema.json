@@ -3,7 +3,7 @@
   "$id": "toxage-sim/outcome",
   "title": "Outcome record",
   "description": "Summary of the course of one patient in one scenario, derived from the event, alert and observation records. One record per scenario and patient. Days count from therapy start (day 1).",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,6 +14,10 @@
     "participating",
     "severe_toxicity_90d",
     "severe_toxicity_day",
+    "severe_neutropenia_90d",
+    "severe_neutropenia_day",
+    "severe_diarrhoea_90d",
+    "severe_diarrhoea_day",
     "ild",
     "ild_onset_day",
     "ild_diagnosis_day",
@@ -79,6 +83,38 @@
       "maximum": 90,
       "unit": "days",
       "description": "Day of the first adverse event of grade 3 to 5. Null if there was none within 90 days."
+    },
+    "severe_neutropenia_90d": {
+      "title": "Severe neutropenia in 90 days",
+      "type": "boolean",
+      "description": "Neutropenia of CTCAE grade 3 or higher, or febrile neutropenia, recognised within 90 days of therapy start."
+    },
+    "severe_neutropenia_day": {
+      "title": "Day of severe neutropenia",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "maximum": 90,
+      "unit": "days",
+      "description": "Day of the first neutropenia of grade 3 or higher or febrile neutropenia. Null if there was none within 90 days."
+    },
+    "severe_diarrhoea_90d": {
+      "title": "Severe diarrhoea in 90 days",
+      "type": "boolean",
+      "description": "Diarrhoea of CTCAE grade 3 or higher recognised within 90 days of therapy start."
+    },
+    "severe_diarrhoea_day": {
+      "title": "Day of severe diarrhoea",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "maximum": 90,
+      "unit": "days",
+      "description": "Day of the first diarrhoea of grade 3 or higher. Null if there was none within 90 days."
     },
     "ild": {
       "title": "Lung toxicity",

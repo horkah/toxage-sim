@@ -46,6 +46,8 @@ class ModelTest(unittest.TestCase):
             self.assertEqual(self.models["severe90"].risk(p), calc.severe_toxicity_risk(p, self.cfg))
             self.assertEqual(self.models["ild"].risk(p), calc.ild_risk(p, self.cfg))
             self.assertEqual(self.models["cv"].risk(p), calc.cv_risk(p, self.cfg))
+            self.assertEqual(self.models["neutropenia"].risk(p), calc.neutropenia_risk(p, self.cfg))
+            self.assertEqual(self.models["diarrhoea"].risk(p), calc.diarrhoea_risk(p, self.cfg))
 
     def test_models_equal_the_score_table(self):
         scorer = calc.Scorer(self.cfg)
@@ -54,10 +56,45 @@ class ModelTest(unittest.TestCase):
             self.assertEqual(self.models["severe90"].risk(p), record["severe_toxicity_90d_risk"])
             self.assertEqual(self.models["ild"].risk(p), record["ild_risk"])
             self.assertEqual(self.models["cv"].risk(p), record["cv_risk"])
+            self.assertEqual(self.models["neutropenia"].risk(p), record["neutropenia_risk"])
+            self.assertEqual(self.models["diarrhoea"].risk(p), record["diarrhoea_risk"])
+
+    def test_there_are_five_models_in_the_order_of_the_candidates(self):
+        self.assertEqual([m.candidate for m in toxage_risk.load()], [1, 2, 3, 4, 5])
+        self.assertEqual(list(self.models), ["severe90", "ild", "neutropenia", "diarrhoea", "cv"])
+
+    def test_neutropenia_and_diarrhoea_models(self):
+        for key, regimen in (("neutropenia", "gemcitabine_nab_paclitaxel"), ("diarrhoea", "nalirifox")):
+            model = self.models[key]
+            p = self.patient(regimen=regimen, tumour_type="pancreas", ugt1a1_28_homozygous=True, age_years=74)
+            odds = model.reference_risk(p) / (1 - model.reference_risk(p))
+            odds *= math.prod(f.ratio for f in model.factors(p))
+            self.assertAlmostEqual(odds / (1 + odds), model.risk(p), places=12)
+            self.assertEqual([f.name for f in model.factors(p)], list(model.labels))
+            self.assertEqual(model.window_days, 90)
+            other = self.patient(regimen="olaparib")
+            self.assertFalse(model.applies(other))
+            self.assertIsNone(model.risk(other))
+            self.assertIsNone(model.reference_risk(other))
+            self.assertEqual(model.factors(other), [])
+
+    def test_lung_risk_over_time_and_other_androgen_deprivation(self):
+        lung = self.models["ild"]
+        p = self.patient(regimen="trastuzumab_deruxtecan")
+        self.assertAlmostEqual(lung.risk_by_day(p, lung.window_days), lung.risk(p))
+        self.assertLess(lung.risk_by_day(p, 100), lung.risk(p))
+        self.assertLess(lung.remaining_risk(p, 365), lung.risk(p))
+        self.assertIsNone(lung.risk_by_day(self.patient(regimen="nalirifox"), 100))
+        heart = self.models["cv"]
+        man = self.patient(tumour_type="prostate", regimen="olaparib", sex="male", adt_type="gnrh_agonist")
+        self.assertAlmostEqual(heart.risk_on(man, "gnrh_agonist"), heart.risk(man))
+        self.assertLess(heart.risk_on(man, "gnrh_antagonist"), heart.risk(man))
+        self.assertIsNone(heart.risk_on(self.patient(adt_type=None), "gnrh_antagonist"))
 
     def test_reference_patient_has_reference_risk(self):
         model = self.models["severe90"]
-        p = self.patient(regimen="olaparib", age_years=65, ecog=0, ga_impaired_domains=0)
+        p = self.patient(regimen="olaparib", age_years=65, ecog=0, ga_impaired_domains=0,
+                         haemoglobin_g_dl=12.3, albumin_g_l=38, starting_dose_level=1.0)
         self.assertAlmostEqual(model.risk(p), model.reference_risk(p))
         self.assertTrue(all(f.ratio == 1 for f in model.factors(p)))
 
@@ -70,7 +107,8 @@ class ModelTest(unittest.TestCase):
         odds *= math.prod(f.ratio for f in severe.factors(p))
         self.assertAlmostEqual(odds / (1 + odds), severe.risk(p), places=12)
         self.assertEqual([f.name for f in severe.factors(p)],
-                         ["age", "ecog_2_or_higher", "ga_impaired_domains"])
+                         ["age", "ecog_2_or_higher", "ga_impaired_domains", "haemoglobin", "albumin",
+                          "reduced_starting_dose"])
         ild = self.models["ild"]
         ratio = math.prod(f.ratio for f in ild.factors(p))
         self.assertAlmostEqual(1 - (1 - ild.reference_risk(p)) ** ratio, ild.risk(p), places=12)
@@ -81,7 +119,7 @@ class ModelTest(unittest.TestCase):
         model = self.models["cv"]
         p = self.patient(tumour_type="prostate", regimen="olaparib", sex="male", adt_type="gnrh_agonist",
                          age_years=79, prior_cardiovascular_event=True, cardiovascular_disease=True,
-                         diabetes=True, arterial_hypertension=False, smoking_status="former",
+                         diabetes=True, arterial_hypertension=False, smoking_status="never",
                          renal_function="normal")
         ratio = math.prod(f.ratio for f in model.factors(p))
         self.assertAlmostEqual(1 - (1 - model.reference_risk(p)) ** ratio, model.risk(p), places=12)

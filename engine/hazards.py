@@ -50,8 +50,10 @@ def target_probabilities(regimen, params):
     targets = dict(regimen["severe_event_rates"])
     if regimen["cardiovascular_event_rate"] is not None:
         # The published rate holds for the weeks of the trial.
-        share = params["simulation"]["calibration_weeks"] / params["hazards"]["cardiovascular"]["rate_window_weeks"]
-        targets[CV] = 1 - (1 - regimen["cardiovascular_event_rate"]) ** share
+        c = params["hazards"]["cardiovascular"]
+        share = params["simulation"]["calibration_weeks"] / c["rate_window_weeks"]
+        rate = regimen["cardiovascular_event_rate"] * c["cardiovascular_share_of_events"]["value"]
+        targets[CV] = 1 - (1 - rate) ** share
     none = 1.0
     for p in targets.values():
         none *= 1 - p
@@ -62,21 +64,20 @@ def target_probabilities(regimen, params):
     return targets
 
 
-def multipliers(patient, latent, params):
-    """Hazard multiplier of one patient for every event type."""
+def multipliers(patient, latent, params, regimen=None):
+    """Hazard multiplier of one patient for every event type. regimen is the
+    entry of the patient's regimen; without it the factors that depend on the
+    drugs of the regimen do not apply."""
     hz = params["hazards"]
+    regimen = regimen or {}
     general = general_multiplier(patient, latent, params)
     pretreated = patient["prior_therapy_lines"] >= params["population"]["pretreated_from_lines"]
     sp = hz["specific"]
+    irinotecan = bool(regimen.get("irinotecan")) and patient["ugt1a1_28_homozygous"]
 
     result = {name: general for name in hz["event_types"]}
     for name in ("neutropenia", "febrile_neutropenia"):
-        m = sp[name]
-        result[name] *= (m["reference_neutrophils"] / patient["neutrophils_10e9_l"]) ** m["baseline_neutrophils_exponent"]
-        if pretreated:
-            result[name] *= m["pretreated"]
-        if patient["gcsf_prophylaxis"]:
-            result[name] *= m["gcsf"]
+        result[name] = neutropenia_multiplier(patient, latent, params, sp[name], irinotecan)
     m = sp["anaemia"]
     result["anaemia"] *= math.exp(m["log_hazard_ratio_per_g_dl_below_reference"]
                                   * (m["reference_haemoglobin_g_dl"] - patient["haemoglobin_g_dl"]))
@@ -88,12 +89,47 @@ def multipliers(patient, latent, params):
         result["thrombocytopenia"] *= m["pretreated"]
     if patient["age_years"] >= sp["diarrhoea"]["older_from_age"]:
         result["diarrhoea"] *= sp["diarrhoea"]["older_age"]
+    if irinotecan:
+        result["diarrhoea"] *= sp["diarrhoea"]["ugt1a1_28_homozygous_with_irinotecan"]
     if patient["diabetes"]:
         result["peripheral_neuropathy"] *= sp["peripheral_neuropathy"]["diabetes"]
     if patient["cardiovascular_disease"]:
         result["hypertension"] *= sp["hypertension"]["cardiovascular_disease"]
 
-    hr, limit = hz["ild"]["hazard_ratios"], hz["ild"]["thresholds"]
+    result[ILD] = ild_multiplier(patient, params) if regimen.get("ild_risk_factors") else 1.0
+    result[CV] = cardiovascular_multiplier(patient, latent, params)
+    return result
+
+
+def neutropenia_multiplier(patient, latent, params, m, irinotecan):
+    """Hazard multiplier for neutropenia or febrile neutropenia: frailty and
+    the patient factors of Lyman et al. (2011). m holds the ratios; irinotecan
+    is true for a UGT1A1*28 homozygous patient on a regimen with irinotecan."""
+    value = math.exp(params["hazards"]["general"]["frailty_log_hazard_ratio"] * latent["frailty"])
+    if patient["prior_therapy_lines"] >= m["prior_chemotherapy_from_lines"]:
+        value *= m["prior_chemotherapy"]
+    if patient["age_years"] >= m["older_from_age"]:
+        value *= m["age_65_or_older"]
+    if patient["ast_u_l"] > m["ast_above_u_l"]:
+        value *= m["ast_above_35"]
+    if patient["alkaline_phosphatase_u_l"] > m["alkaline_phosphatase_above_u_l"]:
+        value *= m["alkaline_phosphatase_above_120"]
+    if patient["bilirubin_ratio_uln"] > m["bilirubin_above_ratio_uln"]:
+        value *= m["bilirubin_above_normal"]
+    value *= m["per_ml_min_of_egfr"] ** (patient["egfr_ml_min"] - m["reference_egfr_ml_min"])
+    value *= m["per_10e9_l_of_white_cells"] ** (patient["white_cells_10e9_l"] - m["reference_white_cells_10e9_l"])
+    if patient["immunosuppressive_medication"]:
+        value *= m["immunosuppressive_medication"]
+    if patient["gcsf_prophylaxis"]:
+        value *= m["gcsf"]
+    if irinotecan:
+        value *= m["ugt1a1_28_homozygous_with_irinotecan"]
+    return value
+
+
+def ild_multiplier(patient, params):
+    """Hazard multiplier for lung toxicity from the published risk factors."""
+    hr, limit = params["hazards"]["ild"]["hazard_ratios"], params["hazards"]["ild"]["thresholds"]
     ild = 1.0
     if patient["age_years"] < limit["younger_below_age"]:
         ild *= hr["younger_age"]
@@ -107,9 +143,7 @@ def multipliers(patient, latent, params):
         ild *= hr["long_since_diagnosis"]
     if patient["spo2_percent"] < limit["low_spo2_below_percent"]:
         ild *= hr["low_spo2"]
-    result[ILD] = ild
-    result[CV] = cardiovascular_multiplier(patient, latent, params)
-    return result
+    return ild
 
 
 def cardiovascular_multiplier(patient, latent, params):
@@ -153,6 +187,7 @@ class HazardTable:
         self.weeks = params["simulation"]["weeks"]
         window = params["simulation"]["calibration_weeks"]
         self.params = params
+        self.regimens = regimens
         self.calibration = calibration or {}
         types = params["hazards"]["event_types"]
         shapes = {s: time_weights(s, self.weeks, params) for s in ("early", "mid", "cumulative", "constant", "ild")}
@@ -187,7 +222,7 @@ class HazardTable:
         """Return [(event type, hazard coefficient, weekly weights)] and the
         multipliers. general_factor scales the hazards of all event types
         without risk factors of their own."""
-        mult = multipliers(patient, latent, self.params)
+        mult = multipliers(patient, latent, self.params, self.regimens[patient["regimen"]])
         if general_factor != 1.0:
             mult = {t: m if t in OWN_FACTORS else m * general_factor for t, m in mult.items()}
         rows = [(t, h * mult[t], w) for t, h, w in self.rows[patient["regimen"]]]

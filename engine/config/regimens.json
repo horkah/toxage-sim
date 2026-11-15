@@ -1,5 +1,5 @@
 {
-  "description": "Regimens of the engine with reference values from the literature. severe_toxicity_rate: share of patients with at least one adverse event of grade 3 or higher. severe_event_rates: share with a grade 3 or higher event of that type. ild_rate: share with drug-related interstitial lung disease or pneumonitis of any grade; null means the sources give no rate and the engine generates none. cardiovascular_event_rate: share of patients with a major adverse cardiovascular event within 48 weeks under androgen deprivation with a GnRH agonist; null for regimens without androgen deprivation. median_treatment_weeks: median time to the end of treatment for reasons other than toxicity. max_treatment_weeks: planned end of treatment. chemotherapy_weeks: weeks during which the chemotherapy part of a combination is given; null means throughout.",
+  "description": "Regimens of the engine with reference values from the literature. severe_toxicity_rate: share of patients with at least one adverse event of grade 3 or higher. severe_event_rates: share with a grade 3 or higher event of that type. ild_rate: share with drug-related interstitial lung disease or pneumonitis of any grade; null means the sources give no rate and the engine generates none. cardiovascular_event_rate: share of patients with a major adverse cardiovascular event within 48 weeks under androgen deprivation with a GnRH agonist; null for regimens without androgen deprivation. median_treatment_weeks: median time to the end of treatment for reasons other than toxicity. max_treatment_weeks: planned end of treatment. chemotherapy_weeks: weeks during which the chemotherapy part of a combination is given; null means throughout. irinotecan: the regimen contains irinotecan, so the UGT1A1 genotype acts on neutropenia and diarrhoea. corticosteroid: the regimen includes a corticosteroid, which counts as immunosuppressive medication. ild_risk_factors: the published patient factors of lung toxicity apply to this regimen.",
   "regimens": {
     "nalirifox": {
       "tumour_type": "pancreas",
@@ -19,6 +19,9 @@
       },
       "ild_rate": null,
       "cardiovascular_event_rate": null,
+      "irinotecan": true,
+      "corticosteroid": false,
+      "ild_risk_factors": false,
       "source": "Wainberg et al. (2023), NAPOLI 3; thrombocytopenia from Nichetti et al. (2024). Neutropenia is the sum of the terms neutropenia (14%) and decreased neutrophil count (10%)."
     },
     "gemcitabine_nab_paclitaxel": {
@@ -39,6 +42,9 @@
       },
       "ild_rate": null,
       "cardiovascular_event_rate": null,
+      "irinotecan": false,
+      "corticosteroid": false,
+      "ild_risk_factors": false,
       "source": "Wainberg et al. (2023), NAPOLI 3; thrombocytopenia from Nichetti et al. (2024). Neutropenia is the sum of the terms neutropenia (25%) and decreased neutrophil count (14%)."
     },
     "adt_docetaxel": {
@@ -58,6 +64,9 @@
       },
       "ild_rate": null,
       "cardiovascular_event_rate": 0.062,
+      "irinotecan": false,
+      "corticosteroid": false,
+      "ild_risk_factors": false,
       "source": "Smith et al. (2022), ARASENS, placebo arm; median treatment duration 16.7 months; cardiovascular event rate from the leuprolide arm of HERO (Shore et al., 2020), assumed to hold for androgen deprivation in this setting"
     },
     "adt_docetaxel_abiraterone": {
@@ -76,6 +85,9 @@
       },
       "ild_rate": null,
       "cardiovascular_event_rate": 0.062,
+      "irinotecan": false,
+      "corticosteroid": true,
+      "ild_risk_factors": false,
       "source": "Fizazi et al. (2022), PEACE-1; median survival 5.72 years; median treatment duration is an assumption; cardiovascular event rate from the leuprolide arm of HERO (Shore et al., 2020), assumed to hold for androgen deprivation in this setting"
     },
     "adt_docetaxel_darolutamide": {
@@ -95,6 +107,9 @@
       },
       "ild_rate": null,
       "cardiovascular_event_rate": 0.062,
+      "irinotecan": false,
+      "corticosteroid": false,
+      "ild_risk_factors": false,
       "source": "Smith et al. (2022), ARASENS; median treatment duration 41.0 months; median survival was not reached, 66 months is an assumption; cardiovascular event rate from the leuprolide arm of HERO (Shore et al., 2020), assumed to hold for androgen deprivation in this setting"
     },
     "lu_psma_617": {
@@ -112,6 +127,9 @@
       },
       "ild_rate": null,
       "cardiovascular_event_rate": 0.062,
+      "irinotecan": false,
+      "corticosteroid": false,
+      "ild_risk_factors": false,
       "source": "Sartor et al. (2021), VISION; up to six cycles of six weeks; time to progression from the median imaging-based progression-free survival of 8.7 months; cardiovascular event rate from the leuprolide arm of HERO (Shore et al., 2020), assumed to hold for androgen deprivation in this setting"
     },
     "olaparib": {
@@ -128,6 +146,9 @@
       },
       "ild_rate": null,
       "cardiovascular_event_rate": 0.062,
+      "irinotecan": false,
+      "corticosteroid": false,
+      "ild_risk_factors": false,
       "source": "de Bono et al. (2020), PROfound; median treatment duration 7.4 months; median survival of cohort A; cardiovascular event rate from the leuprolide arm of HERO (Shore et al., 2020), assumed to hold for androgen deprivation in this setting"
     },
     "trastuzumab_deruxtecan": {
@@ -145,6 +166,9 @@
       },
       "ild_rate": 0.121,
       "cardiovascular_event_rate": null,
+      "irinotecan": false,
+      "corticosteroid": false,
+      "ild_risk_factors": true,
       "source": "Modi et al. (2022), DESTINY-Breast04; median treatment duration 8.2 months"
     },
     "chemotherapy_single_agent": {
@@ -162,6 +186,9 @@
       },
       "ild_rate": 0.006,
       "cardiovascular_event_rate": null,
+      "irinotecan": false,
+      "corticosteroid": false,
+      "ild_risk_factors": false,
       "source": "Modi et al. (2022), DESTINY-Breast04, physician's choice arm; median treatment duration 3.5 months"
     },
     "pembrolizumab_chemotherapy": {
@@ -178,6 +205,9 @@
       },
       "ild_rate": null,
       "cardiovascular_event_rate": null,
+      "irinotecan": false,
+      "corticosteroid": false,
+      "ild_risk_factors": false,
       "source": "Cortes et al. (2022), KEYNOTE-355; treatment-related adverse events of grade 3 to 5; immune-mediated events of grade 3 or 4; median exposure 26.4 weeks"
     }
   },

@@ -1,4 +1,5 @@
 """Tests of the engine. Run with: python3 -m unittest discover engine/tests"""
+import copy
 import json
 import sys
 import unittest
@@ -53,6 +54,7 @@ class EngineTest(unittest.TestCase):
     def setUpClass(cls):
         cls.regimens, cls.params = generate.load_config()
         cls.iv = generate.load_interventions()
+        cls.config = generate.default_config()
         cls.data = generate.generate(3000, seed=7, validate=False)
         cls.baseline = {p["patient_id"]: p for p in cls.data["baseline"]}
         cls.scenarios = [s["scenario_id"] for s in cls.data["scenario"]]
@@ -133,16 +135,18 @@ class EngineTest(unittest.TestCase):
         self.assertEqual(self.rate("ild", lambda p: p["regimen"] == "nalirifox"), 0)
 
     def test_cardiovascular_events_follow_hero(self):
-        # Shore et al. (2020): 6.2% in 48 weeks under a GnRH agonist, far more after an earlier event.
+        # Shore et al. (2020): 6.2% in 48 weeks under a GnRH agonist, death from any cause
+        # included; 61.5% of such events are cardiovascular (Lopes et al., 2021). More
+        # after an earlier event.
         def first_year(test):
             ids = [i for i, p in self.baseline.items() if p["adt_type"] is not None and test(p)]
             hits = sum(self.outcome[USUAL][i]["cv_event"] and self.outcome[USUAL][i]["cv_event_day"] <= 336
                        for i in ids)
             return hits / len(ids)
         agonist = lambda p: p["adt_type"] == "gnrh_agonist"
-        self.assertAlmostEqual(first_year(agonist), 0.062, delta=0.03)
+        self.assertAlmostEqual(first_year(agonist), 0.062 * 0.615, delta=0.025)
         self.assertGreater(first_year(lambda p: agonist(p) and p["prior_cardiovascular_event"]),
-                           2 * first_year(lambda p: agonist(p) and not p["prior_cardiovascular_event"]))
+                           first_year(lambda p: agonist(p) and not p["prior_cardiovascular_event"]))
         self.assertEqual(self.rate("cv_event", lambda p: p["tumour_type"] != "prostate"), 0)
 
     def test_cardiovascular_history_of_the_patients(self):
@@ -154,6 +158,71 @@ class EngineTest(unittest.TestCase):
             self.assertEqual(p["adt_type"] is not None, p["tumour_type"] == "prostate")
             if p["prior_cardiovascular_event"]:
                 self.assertTrue(p["cardiovascular_disease"])
+
+    def test_laboratory_values_and_medication_follow_the_literature(self):
+        # Lyman et al. (2011): 13.5% with AST above 35 U/l, 19.5% with alkaline
+        # phosphatase above 120 U/l, 12.8% with white cells below 5, 14.4% on
+        # immunosuppressive medication.
+        patients = self.data["baseline"]
+        share = lambda test, group=patients: sum(test(p) for p in group) / len(group)
+        self.assertAlmostEqual(share(lambda p: p["ast_u_l"] > 35), 0.135, delta=0.06)
+        self.assertAlmostEqual(share(lambda p: p["alkaline_phosphatase_u_l"] > 120), 0.195, delta=0.08)
+        self.assertAlmostEqual(share(lambda p: p["white_cells_10e9_l"] < 5), 0.128, delta=0.08)
+        self.assertAlmostEqual(share(lambda p: p["ugt1a1_28_homozygous"]), 0.10, delta=0.03)
+        for p in patients:
+            self.assertGreater(p["white_cells_10e9_l"], p["neutrophils_10e9_l"])
+            if p["regimen"] == "adt_docetaxel_abiraterone":
+                self.assertTrue(p["immunosuppressive_medication"])
+        others = [p for p in patients if p["regimen"] != "adt_docetaxel_abiraterone"]
+        self.assertAlmostEqual(share(lambda p: p["immunosuppressive_medication"], others), 0.144, delta=0.04)
+
+    def test_neutropenia_follows_the_published_risk_factors(self):
+        regimens, params = self.config["regimens"], self.config["parameters"]
+        patient = dict(next(p for p in self.data["baseline"] if p["regimen"] == "nalirifox"),
+                       gcsf_prophylaxis=False, ugt1a1_28_homozygous=False, prior_therapy_lines=0)
+        latent = {"frailty": 0.0}
+        value = lambda **changes: hazards.multipliers(
+            dict(patient, **changes), latent, params, regimens["nalirifox"])["neutropenia"]
+        self.assertAlmostEqual(value(gcsf_prophylaxis=True) / value(), 0.26)
+        self.assertAlmostEqual(value(prior_therapy_lines=1) / value(), 1.925)
+        self.assertAlmostEqual(value(ugt1a1_28_homozygous=True) / value(), 2.0)
+        self.assertAlmostEqual(value(white_cells_10e9_l=patient["white_cells_10e9_l"] + 1) / value(), 0.93)
+        # The genotype counts only with irinotecan, the lung factors only with trastuzumab deruxtecan.
+        other = lambda **changes: hazards.multipliers(
+            dict(patient, **changes), latent, params, regimens["gemcitabine_nab_paclitaxel"])
+        self.assertAlmostEqual(other(ugt1a1_28_homozygous=True)["diarrhoea"], other()["diarrhoea"])
+        self.assertEqual(other(lung_comorbidity=True, spo2_percent=90)[hazards.ILD], 1.0)
+        tdxd = hazards.multipliers(dict(patient, lung_comorbidity=True), latent, params, regimens["trastuzumab_deruxtecan"])
+        self.assertGreater(tdxd[hazards.ILD], 1.7)
+
+    def test_severe_neutropenia_and_diarrhoea_follow_the_regimens(self):
+        rate = lambda field, regimen: self.rate(field, lambda p: p["regimen"] == regimen)
+        self.assertGreater(rate("severe_neutropenia_90d", "gemcitabine_nab_paclitaxel"),
+                           rate("severe_neutropenia_90d", "nalirifox"))
+        self.assertGreater(rate("severe_diarrhoea_90d", "nalirifox"),
+                           rate("severe_diarrhoea_90d", "gemcitabine_nab_paclitaxel") + 0.05)
+        self.assertEqual(rate("severe_diarrhoea_90d", "olaparib"), 0)
+        self.assertEqual(rate("severe_neutropenia_90d", "olaparib"), 0)
+
+    def test_false_alerts_make_the_team_act_less_often(self):
+        # With a strong fatigue, fewer true alerts are acted on than without any.
+        acted = {}
+        for ratio in (1.0, 0.3):
+            config = copy.deepcopy(self.config)
+            config["interventions"]["participation"]["alert_fatigue"]["action_ratio_per_earlier_false_alert"] = ratio
+            data = generate.generate(600, 5, ["symptom_monitoring"], config=config)
+            true = [a for a in data["alert"] if a["true_alert"] and a["attended"]]
+            acted[ratio] = sum(a["acted"] for a in true) / len(true)
+        self.assertGreater(acted[1.0], acted[0.3] + 0.1)
+
+    def test_quality_of_life_follows_the_published_utilities(self):
+        # Lloyd et al. (2006): 0.715 on treatment, 0.272 less with progressive disease.
+        q = self.config["interventions"]["quality_of_life"]
+        self.assertEqual(q["base"]["breast"], 0.715)
+        self.assertEqual(q["after_therapy_decrement"], 0.272)
+        for o in self.outcome[USUAL].values():
+            years = o["follow_up_days"] / 365.25
+            self.assertLessEqual(o["qaly"], 0.95 * years + 1e-6)
 
     def test_lung_toxicity_is_often_recognised_late(self):
         # A cohort of its own: the 3000 patients of the class have only about 35
@@ -197,6 +266,12 @@ class EngineTest(unittest.TestCase):
                 days = [e["day"] for e in events if e["grade"] >= 3 and e["day"] <= 90]
                 self.assertEqual(o["severe_toxicity_90d"], bool(days))
                 self.assertEqual(o["severe_toxicity_day"], min(days) if days else None)
+                for field, types in (("severe_neutropenia", ("neutropenia", "febrile_neutropenia")),
+                                     ("severe_diarrhoea", ("diarrhoea",))):
+                    days = [e["day"] for e in events
+                            if e["event_type"] in types and e["grade"] >= 3 and e["day"] <= 90]
+                    self.assertEqual(o[f"{field}_90d"], bool(days))
+                    self.assertEqual(o[f"{field}_day"], min(days) if days else None)
                 self.assertEqual(o["ild"], o["ild_onset_day"] is not None)
                 heart = [e for e in events if e["event_type"] == hazards.CV]
                 self.assertLessEqual(len(heart), 1)

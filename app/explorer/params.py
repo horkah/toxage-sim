@@ -20,6 +20,7 @@ REPO = Path(settings.REPO_DIR)
 SEP = "/"
 # Titles of top-level groups whose key is an abbreviation.
 GROUP_TITLES = {"ild": "Lung toxicity (ILD)", "severe_toxicity_90d": "Severe toxicity, 90 days",
+                "neutropenia": "Severe neutropenia, 90 days", "diarrhoea": "Severe diarrhoea, 90 days",
                 "cardiovascular": "Cardiovascular events"}
 # Keys whose text explains a value. They are shown, not edited.
 NOTES = ("basis", "description", "source", "comment")

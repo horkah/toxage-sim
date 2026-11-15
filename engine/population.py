@@ -77,6 +77,18 @@ def _cardiovascular(rng, tumour, age, diabetes, cvd, params):
     }
 
 
+def _liver_values(rng, subgroup, obstruction, params):
+    """AST and alkaline phosphatase: higher with biliary obstruction, alkaline
+    phosphatase also in castration-resistant prostate cancer."""
+    p = params["population"]
+    a, k = p["ast_u_l"], p["alkaline_phosphatase_u_l"]
+    ast = _lognormal(rng, a["median"], a["sigma"]) * (a["obstruction_factor"] if obstruction else 1)
+    alp = _lognormal(rng, k["median"], k["sigma"]) * (k["obstruction_factor"] if obstruction else 1)
+    if subgroup == "prostate_castration_resistant":
+        alp *= k["castration_resistant_factor"]
+    return {"ast_u_l": round(ast), "alkaline_phosphatase_u_l": round(alp)}
+
+
 def draw_patient(rng, index, tumour, regimens, params):
     """Return (baseline record, latent values) of one patient."""
     p = params["population"]
@@ -133,7 +145,8 @@ def draw_patient(rng, index, tumour, regimens, params):
         renal = "moderate_severe_decrease"
 
     bl = p["bilirubin_ratio_uln"]
-    if is_pancreas and rng.random() < bl["pancreas_obstruction_probability"]:
+    obstruction = is_pancreas and rng.random() < bl["pancreas_obstruction_probability"]
+    if obstruction:
         bilirubin = _lognormal(rng, bl["obstruction_median"], bl["obstruction_sigma"])
     else:
         bilirubin = _lognormal(rng, bl["median"], bl["sigma"])
@@ -154,6 +167,10 @@ def draw_patient(rng, index, tumour, regimens, params):
         + h["renal_impairment_shift"] * (renal == "moderate_severe_decrease")
         + rng.gauss(0, h["sd"])
     )
+    w = p["white_cells_10e9_l"]
+    share = clip(rng.gauss(w["neutrophil_share_mean"], w["neutrophil_share_sd"]),
+                 w["neutrophil_share_minimum"], w["neutrophil_share_maximum"])
+    white_cells = neutrophils / share
     pl = p["platelets_10e9_l"]
     platelets = max(pl["minimum"], _lognormal(rng, pl["median"], pl["sigma"]) * (pl["pretreated_factor"] if pretreated else 1))
 
@@ -171,6 +188,11 @@ def draw_patient(rng, index, tumour, regimens, params):
         and rng.random() < params["treatment_choice"]["gcsf_probability_with_docetaxel"]
     )
 
+    liver = _liver_values(rng, subgroup, obstruction, params)
+    immunosuppressed = regimens[regimen]["corticosteroid"] or (
+        rng.random() < p["immunosuppressive_medication"]["probability"])
+    ugt1a1 = rng.random() < p["ugt1a1_28_homozygous"]["probability"]
+
     baseline = {
         "patient_id": f"P{index:06d}",
         "tumour_type": tumour,
@@ -179,6 +201,8 @@ def draw_patient(rng, index, tumour, regimens, params):
         "prior_therapy_lines": lines,
         "starting_dose_level": sd["reduced_level"] if reduced else 1.0,
         "gcsf_prophylaxis": gcsf,
+        "immunosuppressive_medication": immunosuppressed,
+        "ugt1a1_28_homozygous": ugt1a1,
         "age_years": age,
         "sex": sex,
         "ecog": ecog,
@@ -188,7 +212,10 @@ def draw_patient(rng, index, tumour, regimens, params):
         "egfr_ml_min": egfr,
         "renal_function": renal,
         "bilirubin_ratio_uln": round(bilirubin, 2),
+        "ast_u_l": liver["ast_u_l"],
+        "alkaline_phosphatase_u_l": liver["alkaline_phosphatase_u_l"],
         "neutrophils_10e9_l": round(neutrophils, 2),
+        "white_cells_10e9_l": round(white_cells, 2),
         "haemoglobin_g_dl": round(clip(hb, h["minimum"], h["maximum"]), 1),
         "platelets_10e9_l": round(platelets),
         "spo2_percent": spo2,

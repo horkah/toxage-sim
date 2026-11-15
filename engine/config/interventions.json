@@ -18,6 +18,10 @@
     },
     "attendance_after_alert": 0.9,
     "action_after_attended_alert": 0.85,
+    "alert_fatigue": {
+      "action_ratio_per_earlier_false_alert": 0.95,
+      "basis": "assumption: every earlier false alert of a patient lowers the probability that the team acts on a new alert by this factor"
+    },
     "monitoring_weeks_after_stop": 4,
     "basis": "assumption; fitter and younger patients take part and report more often"
   },
@@ -123,7 +127,7 @@
     "gcsf_from_neutropenia_rate": 0.2,
     "supportive_hazard_ratio": 0.75,
     "closer_monitoring": true,
-    "basis": "assumption, oriented on GAP70+ (Mohile et al., 2021): 48.7% started with reduced intensity in the intervention arm, relative risk of severe toxicity 0.74. The predictor is a stand-in: the true patient-related risk plus noise."
+    "basis": "assumption, oriented on GAP70+ (Mohile et al., 2021): 48.7% started with reduced intensity in the intervention arm, relative risk of severe toxicity 0.74; GAIN found 50.5% against 60.6% (Dale et al., 2023). G-CSF is offered from a regimen rate of 20%, the threshold of febrile neutropenia risk from which guidelines recommend primary prophylaxis (Lyman et al., 2011). The predictor is a stand-in: the true patient-related risk plus noise."
   },
   "efficacy": {
     "progression_hazard_ratio_per_dose_step": 1.0,
@@ -202,7 +206,7 @@
     "basis": "assumption"
   },
   "costs": {
-    "unplanned_visit": 150,
+    "unplanned_visit": 28,
     "hospital_day": 800,
     "intensive_care_day": 2500,
     "alert_handling": 25,
@@ -212,31 +216,33 @@
       "cardiovascular_monitoring": 250
     },
     "monitoring_per_week": {
-      "symptom_report": 8,
+      "symptom_report": 46,
       "lung_monitoring": 15,
       "cardiovascular_monitoring": 10
     },
     "set_up_per_participant": 120,
     "risk_assessment_per_patient": 80,
-    "basis": "placeholder values in euros, not from the literature; the costs of the cancer drugs are not included"
+    "basis": "euros. Symptom reports: 200 per patient and month for the system and the staff time to review the reports (Liz\u00e9e et al., 2019). Unplanned visit: mean reimbursement of a consultation in the same analysis (5404 euros for 193 consultations, French health insurance). All other values are placeholders, not from the literature; the costs of the cancer drugs are not included."
   },
   "quality_of_life": {
     "base": {
-      "pancreas": 0.7,
-      "prostate": 0.8,
-      "breast": 0.75
+      "pancreas": 0.715,
+      "prostate": 0.715,
+      "breast": 0.715
     },
     "frailty_slope": -0.05,
     "minimum": 0.3,
-    "on_therapy_decrement": 0.03,
+    "after_therapy_decrement": 0.272,
     "event_decrement": {
       "1": 0.02,
-      "2": 0.08,
-      "3": 0.2,
-      "4": 0.4,
-      "5": 0.5
+      "2": 0.06
     },
-    "basis": "placeholder values, not from the literature"
+    "severe_event_decrement": {
+      "default": 0.115,
+      "febrile_neutropenia": 0.15,
+      "diarrhoea": 0.103
+    },
+    "basis": "Lloyd et al. (2006), utilities of the general public for metastatic breast cancer: 0.715 for stable disease on treatment, 0.272 less with progressive disease, and 0.150 less with febrile neutropenia, 0.103 with diarrhoea and vomiting and 0.115 with fatigue of grade 3 or 4. The values are used for all three tumours. After the end of the therapy line a patient counts as progressive. The default for severe events is the value of fatigue. The effect of frailty, the lower limit and the decrements of grade 1 and 2 are assumptions."
   },
   "scenarios": {
     "usual_care": {

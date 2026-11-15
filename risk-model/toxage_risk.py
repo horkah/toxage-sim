@@ -32,6 +32,9 @@ FACTOR_LABELS = {
     "age": "Age",
     "ecog_2_or_higher": "ECOG 2 or higher",
     "ga_impaired_domains": "Impaired geriatric domains",
+    "haemoglobin": "Haemoglobin",
+    "albumin": "Albumin",
+    "reduced_starting_dose": "Reduced starting dose",
     **{name: label[0].upper() + label[1:] for name, label in calc.CV_LABELS.items()},
 }
 
@@ -105,7 +108,8 @@ class SevereToxicityModel(RiskModel):
     window_days = 90
     ratio_kind = "odds ratio"
     candidate = 1
-    source = "regimen rate from the trials; effects of age, ECOG and geriatric domains assumed"
+    source = ("regimen rate from the trials; effects of haemoglobin and albumin from Extermann et al. (2012); "
+              "effects of age, ECOG, geriatric domains and starting dose assumed")
 
     def reference_risk(self, patient):
         """The published rate of the regimen."""
@@ -116,19 +120,23 @@ class SevereToxicityModel(RiskModel):
         return calc.severe_toxicity_risk(patient, self.cfg)
 
     def factors(self, patient):
-        """Age, ECOG and geriatric domains as odds ratios; 1 where a factor does not
-        apply."""
+        """Age, ECOG, geriatric domains, haemoglobin, albumin and starting dose as
+        odds ratios; 1 where a factor does not apply."""
         applied = {name: ratio for name, _, ratio in calc.severe_toxicity_terms(patient, self.cfg)}
         return _factors([
             ("age", applied.get("age", 1.0)),
             ("ecog_2_or_higher", applied.get("ecog", 1.0)),
             ("ga_impaired_domains", applied.get("geriatric_assessment", 1.0)),
+            ("haemoglobin", applied.get("haemoglobin", 1.0)),
+            ("albumin", applied.get("albumin", 1.0)),
+            ("reduced_starting_dose", applied.get("reduced_starting_dose", 1.0)),
         ])
 
 
 class LungToxicityModel(RiskModel):
-    """Candidate 2: lung toxicity (ILD) under trastuzumab deruxtecan and single-agent
-    chemotherapy, proportional hazards."""
+    """Candidate 2: lung toxicity (ILD) under trastuzumab deruxtecan, with the
+    published risk factors (proportional hazards), and under single-agent
+    chemotherapy, with the published rate."""
     id = "ild"
     name = "Lung toxicity"
     outcome = "ild"
@@ -161,12 +169,98 @@ class LungToxicityModel(RiskModel):
 
     def factors(self, patient):
         """The six published risk factors as hazard ratios; empty if the model does
-        not apply."""
-        if not self.applies(patient):
+        not apply or the regimen has no risk factors."""
+        if not self.applies(patient) or not calc.ild_uses_factors(patient["regimen"], self.cfg):
             return []
         applied = {name: ratio for name, _, ratio in calc.ild_terms(patient, self.cfg)}
         labels = {name: _capital(label) for name, label in calc.ild_labels(self.cfg).items()}
         return _factors([(name, applied.get(name, 1.0)) for name in calc.ILD_FACTORS], labels)
+
+
+    def risk_by_day(self, patient, day):
+        """Probability of lung toxicity up to a day of the time window."""
+        if not self.applies(patient):
+            return None
+        return calc.ild_risk_by_day(patient, day, self.cfg, self._r0[patient["regimen"]])
+
+    def remaining_risk(self, patient, day):
+        """Probability of lung toxicity in the rest of the time window for a
+        patient who is free of it on the given day."""
+        if not self.applies(patient):
+            return None
+        return calc.ild_remaining_risk(patient, day, self.cfg, self._r0[patient["regimen"]])
+
+
+class _RegimenOddsModel(RiskModel):
+    """A logistic model for the regimens of its configuration block: the risk
+    of the reference patient on the regimen and odds ratios."""
+    block = ""          # key of the model in the configuration
+    ratio_kind = "odds ratio"
+    window_days = 90
+    labels = {}
+    _reference = _terms = _risk = None   # functions of models.py
+
+    def __init__(self, cfg=None):
+        """Prepare the risk of the reference patient of every covered regimen."""
+        super().__init__(cfg)
+        self.window_days = self.cfg[self.block]["window_days"]
+        reference = type(self)._reference
+        self._r0 = {r: reference(r, self.cfg) for r in self.cfg[self.block]["regimen_rates"]}
+
+    def applies(self, patient):
+        """True for the covered regimens."""
+        return patient["regimen"] in self._r0
+
+    def reference_risk(self, patient):
+        """Risk of the reference patient on the same regimen, None if not covered."""
+        return self._r0.get(patient["regimen"])
+
+    def risk(self, patient):
+        """The modelled risk, None if the model does not apply."""
+        if not self.applies(patient):
+            return None
+        return type(self)._risk(patient, self.cfg, self._r0[patient["regimen"]])
+
+    def factors(self, patient):
+        """All factors of the model as odds ratios, 1 where a factor does not
+        apply; empty if the model does not apply."""
+        if not self.applies(patient):
+            return []
+        applied = {name: ratio for name, _, ratio in type(self)._terms(patient, self.cfg)}
+        labels = {name: _capital(label) for name, label in self.labels.items()}
+        return _factors([(name, applied.get(name, 1.0)) for name in self.labels], labels)
+
+
+class NeutropeniaModel(_RegimenOddsModel):
+    """Candidate 3: neutropenia of grade 3 or higher or febrile neutropenia
+    within 90 days, logistic model with the factors of Lyman et al. (2011)."""
+    id = "neutropenia"
+    name = "Severe neutropenia, 90 days"
+    outcome = "severe_neutropenia_90d"
+    onset = "severe_neutropenia_day"
+    candidate = 3
+    block = "neutropenia"
+    labels = calc.NEUTROPENIA_LABELS
+    source = "regimen rate from the trials; odds ratios of Lyman et al. (2011); effect of UGT1A1 assumed"
+    _reference = staticmethod(calc.neutropenia_reference_risk)
+    _terms = staticmethod(calc.neutropenia_terms)
+    _risk = staticmethod(calc.neutropenia_risk)
+
+
+class DiarrhoeaModel(_RegimenOddsModel):
+    """Candidate 4: diarrhoea of grade 3 or higher within 90 days, logistic
+    model."""
+    id = "diarrhoea"
+    name = "Severe diarrhoea, 90 days"
+    outcome = "severe_diarrhoea_90d"
+    onset = "severe_diarrhoea_day"
+    candidate = 4
+    block = "diarrhoea"
+    labels = calc.DIARRHOEA_LABELS
+    source = "regimen rate from NAPOLI 3 (Wainberg et al., 2023); effects of age, ECOG, albumin and UGT1A1 assumed"
+    _reference = staticmethod(calc.diarrhoea_reference_risk)
+    _terms = staticmethod(calc.diarrhoea_terms)
+    _risk = staticmethod(calc.diarrhoea_risk)
 
 
 class CardiovascularModel(RiskModel):
@@ -178,8 +272,9 @@ class CardiovascularModel(RiskModel):
     onset = "cv_event_day"
     ratio_kind = "hazard ratio"
     candidate = 5
-    source = ("rates and the effect of an earlier event from HERO (Shore et al., 2020); "
-              "effects of age, diabetes, hypertension, smoking and renal function assumed")
+    source = ("rates from HERO (Shore et al., 2020); effect of an earlier event from HERO and PRONOUNCE "
+              "(Lopes et al., 2021); effects of age, diabetes, hypertension, smoking, renal function and "
+              "cardiovascular disease without an event assumed")
 
     def __init__(self, cfg=None):
         """Read the time window and prepare the baseline risk r0 of both types of
@@ -212,7 +307,15 @@ class CardiovascularModel(RiskModel):
         return _factors([(name, applied.get(name, 1.0)) for name in calc.CV_LABELS])
 
 
-MODELS = [SevereToxicityModel, LungToxicityModel, CardiovascularModel]
+    def risk_on(self, patient, adt_type):
+        """Risk of the same man on another type of androgen deprivation, None if
+        the model does not apply."""
+        if not self.applies(patient) or adt_type not in self._r0:
+            return None
+        return calc.cv_risk(dict(patient, adt_type=adt_type), self.cfg, self._r0[adt_type])
+
+
+MODELS = [SevereToxicityModel, LungToxicityModel, NeutropeniaModel, DiarrhoeaModel, CardiovascularModel]
 
 
 def load(cfg=None):

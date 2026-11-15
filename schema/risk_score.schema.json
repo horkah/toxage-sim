@@ -3,7 +3,7 @@
   "$id": "toxage-sim/risk_score",
   "title": "Risk score record",
   "description": "Risk scores of one patient at the start of a systemic therapy line, computed from the baseline record. One record per patient, linked by patient_id. Risks are probabilities between 0 and 1.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -17,6 +17,14 @@
     "ild_grade2plus_risk",
     "ild_regimen_rate",
     "ild_category",
+    "neutropenia_applicable",
+    "neutropenia_risk",
+    "neutropenia_regimen_rate",
+    "neutropenia_category",
+    "diarrhoea_applicable",
+    "diarrhoea_risk",
+    "diarrhoea_regimen_rate",
+    "diarrhoea_category",
     "cv_applicable",
     "cv_risk",
     "cv_reference_rate",
@@ -45,7 +53,7 @@
       "type": "number",
       "minimum": 0,
       "maximum": 1,
-      "description": "Candidate 1: risk of the reference patient (age 65, ECOG 0 or 1, no impaired geriatric domain) on the same regimen. Equals the published rate of the regimen."
+      "description": "Candidate 1: risk of the reference patient on the same regimen, as the model configuration defines that patient. Equals the published rate of the regimen."
     },
     "severe_toxicity_90d_category": {
       "title": "Risk category, severe toxicity",
@@ -105,6 +113,84 @@
         null
       ],
       "description": "Candidate 2: risk category from the thresholds in the model configuration."
+    },
+    "neutropenia_applicable": {
+      "title": "Neutropenia model applies",
+      "type": "boolean",
+      "description": "Candidate 3: true for regimens with a published rate of severe neutropenia. If false, the other neutropenia fields are null."
+    },
+    "neutropenia_risk": {
+      "title": "Risk of severe neutropenia",
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Candidate 3: probability of severe neutropenia within the time window of the model."
+    },
+    "neutropenia_regimen_rate": {
+      "title": "Regimen rate of severe neutropenia",
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Candidate 3: published rate of the regimen, i.e. the mean risk in the reference population."
+    },
+    "neutropenia_category": {
+      "title": "Risk category, severe neutropenia",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "low",
+        "intermediate",
+        "high",
+        null
+      ],
+      "description": "Candidate 3: risk category from the thresholds in the model configuration."
+    },
+    "diarrhoea_applicable": {
+      "title": "Diarrhoea model applies",
+      "type": "boolean",
+      "description": "Candidate 4: true for regimens with a published rate of severe diarrhoea. If false, the other diarrhoea fields are null."
+    },
+    "diarrhoea_risk": {
+      "title": "Risk of severe diarrhoea",
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Candidate 4: probability of severe diarrhoea within the time window of the model."
+    },
+    "diarrhoea_regimen_rate": {
+      "title": "Regimen rate of severe diarrhoea",
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Candidate 4: published rate of the regimen, i.e. the mean risk in the reference population."
+    },
+    "diarrhoea_category": {
+      "title": "Risk category, severe diarrhoea",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "low",
+        "intermediate",
+        "high",
+        null
+      ],
+      "description": "Candidate 4: risk category from the thresholds in the model configuration."
     },
     "cv_applicable": {
       "title": "Cardiovascular model applies",

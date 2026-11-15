@@ -1,13 +1,17 @@
 {
-  "description": "Configuration of the risk models for candidates 1, 2 and 5. Every value states its basis: a literature value or an assumption of this project. This file is kept separate from the engine configuration on purpose, so that the risk model does not read the parameters that generated the data.",
-  "version": "0.2.0",
+  "description": "Configuration of the risk models for candidates 1 to 5. Every value states its basis: a literature value or an assumption of this project. This file is kept separate from the engine configuration on purpose, so that the risk model does not read the parameters that generated the data.",
+  "version": "0.3.0",
   "basis": "literature and assumptions",
   "severe_toxicity_90d": {
     "description": "Candidate 1. Logistic model. The regimen rate is the risk of the reference patient; odds ratios shift the risk for patient factors.",
     "reference_patient": {
       "age_years": 65,
       "ecog": "0 or 1",
-      "ga_impaired_domains": 0
+      "ga_impaired_domains": 0,
+      "haemoglobin_g_dl": 12.3,
+      "albumin_g_l": 38,
+      "starting_dose": "full",
+      "basis": "haemoglobin and albumin: medians in Extermann et al. (2012), 12.3 g/dl and 3.8 g/dl; the others are assumptions"
     },
     "regimen_rates": {
       "nalirifox": {
@@ -53,35 +57,53 @@
     },
     "odds_ratios": {
       "per_10_years_of_age": {
-        "value": 1.2,
-        "basis": "assumption; together with the geriatric odds ratio it reproduces about 71% severe toxicity for the average GAP70+ patient (Mohile et al., 2021)"
+        "value": 1.1,
+        "basis": "assumption. Extermann et al. (2012) found no effect of age among patients of 70 or older once the regimen was taken into account (odds ratio 0.99 to 1.01 per year); Lyman et al. (2011) found 1.30 for 65 or older for neutropenic events."
       },
       "ecog_2_or_higher": {
         "value": 2.0,
-        "basis": "assumption; performance status is a selection criterion in Conroy et al. (2023) and Sohal et al. (2020), without an effect size"
+        "basis": "assumption; performance status is a selection criterion in Conroy et al. (2023) and Sohal et al. (2020), and Extermann et al. (2012) found an odds ratio of 1.41 per class of ECOG 0, 1 to 2 and 3 to 4 for non-haematological toxicity"
       },
       "per_impaired_ga_domain": {
         "value": 1.1,
-        "basis": "assumption; see per_10_years_of_age"
+        "basis": "assumption; with the age effect it gives about 72% severe toxicity for the average GAP70+ patient, who had 71% under usual care (Mohile et al., 2021)"
+      },
+      "per_g_dl_haemoglobin_below_reference": {
+        "value": 1.11,
+        "basis": "Extermann et al. (2012), Table 2: odds ratio 0.90 per g/dl for non-haematological toxicity, adjusted for the regimen, not statistically significant (P = .12)"
+      },
+      "per_10_g_l_albumin_below_reference": {
+        "value": 1.35,
+        "basis": "Extermann et al. (2012), Table 2: odds ratio 0.74 per g/dl for non-haematological toxicity, adjusted for the regimen, not statistically significant (P = .22)"
+      },
+      "reduced_starting_dose": {
+        "value": 0.75,
+        "basis": "assumption; in GAP70+ more patients started with reduced intensity in the arm with less toxicity (Mohile et al., 2021), and a planned dose intensity below 85% halved the odds of neutropenic events in Lyman et al. (2011)"
       }
     },
     "categories": {
       "intermediate_from": 0.5,
       "high_from": 0.7,
       "basis": "assumption; 0.7 is close to the 71% of the usual-care arm in GAP70+ (Mohile et al., 2021), 0.5 close to the 51% of its intervention arm"
+    },
+    "thresholds": {
+      "reduced_starting_dose_below": 0.85,
+      "basis": "Lyman et al. (2011): planned relative dose intensity below 85%"
     }
   },
   "ild": {
-    "description": "Candidate 2. Proportional hazards model: risk = 1 - (1 - r0)^HR, with r0 the risk of a patient without risk factors and HR the product of the hazard ratios that apply. r0 is set so that the mean risk in the reference population equals the regimen rate.",
+    "description": "Candidate 2. Proportional hazards model: risk = 1 - (1 - r0)^HR, with r0 the risk of a patient without risk factors and HR the product of the hazard ratios that apply. r0 is set so that the mean risk in the reference population equals the regimen rate. Regimens with risk_factors false get the regimen rate for every patient.",
     "window_days": 730,
     "regimen_rates": {
       "trastuzumab_deruxtecan": {
         "rate": 0.121,
-        "source": "Modi et al. (2022), DESTINY-Breast04, adjudicated drug-related"
+        "source": "Modi et al. (2022), DESTINY-Breast04, adjudicated drug-related",
+        "risk_factors": true
       },
       "chemotherapy_single_agent": {
         "rate": 0.006,
-        "source": "Modi et al. (2022), DESTINY-Breast04, physician's choice arm"
+        "source": "Modi et al. (2022), DESTINY-Breast04, physician's choice arm; the risk factors were found for trastuzumab deruxtecan and are not applied",
+        "risk_factors": false
       }
     },
     "hazard_ratios": {
@@ -128,16 +150,204 @@
     },
     "grade2plus_share": {
       "value": 0.711,
-      "basis": "Modi et al. (2022): 32 of 45 events of grade 2 or higher; assumed to be the same for all patients"
+      "basis": "Modi et al. (2022): 32 of 45 events of grade 2 or higher; assumed to be the same for all patients. The eight pooled studies in Swain et al. (2022) give 99 of 139."
     },
     "categories": {
       "intermediate_from": 0.05,
       "high_from": 0.15,
       "basis": "assumption; 0.15 is close to the 15.4% incidence in Powell et al. (2022)"
+    },
+    "onset_days": {
+      "median": 129,
+      "sigma": 0.92,
+      "basis": "log-normal onset time. Median from Modi et al. (2022); sigma chosen so that 87% of the events start within 12 months, as in Powell et al. (2022). Swain et al. (2022) report a median of 5.5 months in eight pooled studies and 97% within 12 months in patients with breast cancer."
+    }
+  },
+  "neutropenia": {
+    "description": "Candidate 3. Neutropenia of grade 3 or higher or febrile neutropenia within 90 days. Logistic model with the patient factors of Lyman et al. (2011). The log-odds of the reference patient are set so that the mean risk in the reference population equals the regimen rate. The reference patient has none of the yes-or-no factors and the reference values of renal function and white cells.",
+    "window_days": 90,
+    "regimen_rates": {
+      "nalirifox": {
+        "rate": 0.24,
+        "source": "Wainberg et al. (2023), NAPOLI 3: neutropenia 14% and decreased neutrophil count 10% of grade 3 or 4",
+        "prior_chemotherapy_share": 0.0,
+        "gcsf_share": 0.0,
+        "age_65_or_older_share": 0.5,
+        "irinotecan": true
+      },
+      "gemcitabine_nab_paclitaxel": {
+        "rate": 0.39,
+        "source": "Wainberg et al. (2023), NAPOLI 3: neutropenia 25% and decreased neutrophil count 14% of grade 3 or 4",
+        "prior_chemotherapy_share": 0.0,
+        "gcsf_share": 0.0,
+        "age_65_or_older_share": 0.5
+      },
+      "adt_docetaxel": {
+        "rate": 0.391,
+        "source": "Smith et al. (2022), ARASENS, placebo arm: neutropenia 34.2% and febrile neutropenia 7.4% of grade 3 or 4, combined as independent",
+        "prior_chemotherapy_share": 0.0,
+        "gcsf_share": 0.5,
+        "age_65_or_older_share": 0.6
+      },
+      "adt_docetaxel_abiraterone": {
+        "rate": 0.1,
+        "source": "Fizazi et al. (2022), PEACE-1: severe neutropenia in 10% of the patients on abiraterone and docetaxel",
+        "prior_chemotherapy_share": 0.0,
+        "gcsf_share": 0.8,
+        "age_65_or_older_share": 0.6,
+        "corticosteroid": true
+      },
+      "adt_docetaxel_darolutamide": {
+        "rate": 0.389,
+        "source": "Smith et al. (2022), ARASENS: neutropenia 33.7% and febrile neutropenia 7.8% of grade 3 or 4, combined as independent",
+        "prior_chemotherapy_share": 0.0,
+        "gcsf_share": 0.5,
+        "age_65_or_older_share": 0.6
+      },
+      "trastuzumab_deruxtecan": {
+        "rate": 0.137,
+        "source": "Modi et al. (2022), DESTINY-Breast04",
+        "prior_chemotherapy_share": 1.0,
+        "gcsf_share": 0.0,
+        "age_65_or_older_share": 0.25
+      },
+      "chemotherapy_single_agent": {
+        "rate": 0.407,
+        "source": "Modi et al. (2022), DESTINY-Breast04, physician's choice arm",
+        "prior_chemotherapy_share": 1.0,
+        "gcsf_share": 0.0,
+        "age_65_or_older_share": 0.25
+      }
+    },
+    "regimen_shares_basis": "Shares of the trial patients with earlier chemotherapy, G-CSF prophylaxis and an age of 65 or older, used to set the risk of the reference patient. Earlier chemotherapy follows the inclusion criteria of the trials. The age shares are assumptions from the median ages of the trials. The G-CSF shares are assumptions; in PEACE-1 G-CSF was first recommended and later mandatory (Fizazi et al., 2022).",
+    "odds_ratios": {
+      "prior_chemotherapy": {
+        "value": 1.925,
+        "basis": "Lyman et al. (2011), Table 3, multivariable model for severe or febrile neutropenia in the first cycle"
+      },
+      "age_65_or_older": {
+        "value": 1.297,
+        "basis": "Lyman et al. (2011), Table 3, multivariable model for severe or febrile neutropenia in the first cycle; 95% confidence interval 0.96 to 1.75"
+      },
+      "ast_above_35": {
+        "value": 1.422,
+        "basis": "Lyman et al. (2011), Table 3, multivariable model for severe or febrile neutropenia in the first cycle; 95% confidence interval 0.99 to 2.04"
+      },
+      "alkaline_phosphatase_above_120": {
+        "value": 1.469,
+        "basis": "Lyman et al. (2011), Table 3, multivariable model for severe or febrile neutropenia in the first cycle"
+      },
+      "bilirubin_above_normal": {
+        "value": 2.152,
+        "basis": "Lyman et al. (2011), Table 3, multivariable model for severe or febrile neutropenia in the first cycle, bilirubin above 1 mg/dl, taken as above the upper limit of normal"
+      },
+      "per_ml_min_of_egfr": {
+        "value": 0.993,
+        "basis": "Lyman et al. (2011), Table 3, multivariable model for severe or febrile neutropenia in the first cycle"
+      },
+      "per_10e9_l_of_white_cells": {
+        "value": 0.93,
+        "basis": "Lyman et al. (2011), Table 3, multivariable model for severe or febrile neutropenia in the first cycle"
+      },
+      "immunosuppressive_medication": {
+        "value": 1.554,
+        "basis": "Lyman et al. (2011), Table 3, multivariable model for severe or febrile neutropenia in the first cycle"
+      },
+      "reduced_starting_dose": {
+        "value": 0.496,
+        "basis": "Lyman et al. (2011), Table 3, multivariable model for severe or febrile neutropenia in the first cycle: 2.018 for a planned relative dose intensity of 85% or more, inverted"
+      },
+      "gcsf_prophylaxis": {
+        "value": 0.12,
+        "basis": "Lyman et al. (2011), Table 3, multivariable model for severe or febrile neutropenia in the first cycle, primary prophylaxis with a colony-stimulating factor"
+      },
+      "ugt1a1_28_homozygous_with_irinotecan": {
+        "value": 2.0,
+        "basis": "assumption; the direction follows Bardia et al. (2021) and Gennari et al. (2021) for sacituzumab govitecan and is applied to regimens with irinotecan"
+      }
+    },
+    "thresholds": {
+      "prior_chemotherapy_from_lines": 1,
+      "older_from_age": 65,
+      "ast_above_u_l": 35,
+      "alkaline_phosphatase_above_u_l": 120,
+      "bilirubin_above_ratio_uln": 1.0,
+      "reduced_starting_dose_below": 0.85,
+      "basis": "Lyman et al. (2011); bilirubin above 1 mg/dl is taken as above the upper limit of normal"
+    },
+    "reference_patient": {
+      "egfr_ml_min": 80,
+      "white_cells_10e9_l": 7.0,
+      "basis": "assumption"
+    },
+    "reference_population": {
+      "description": "Share of patients with each factor, used to set the risk of the reference patient. Factors are treated as independent; renal function and white cells are taken at their reference values. Earlier chemotherapy, G-CSF and age come from the regimen entry. All trial patients are taken to start at the full dose.",
+      "ast_above_35": 0.135,
+      "alkaline_phosphatase_above_120": 0.195,
+      "bilirubin_above_normal": 0.041,
+      "immunosuppressive_medication": 0.144,
+      "ugt1a1_28_homozygous_with_irinotecan": 0.1,
+      "basis": "Lyman et al. (2011), Table 1; UGT1A1 is an assumption. On a regimen with a corticosteroid every patient counts as taking immunosuppressive medication."
+    },
+    "categories": {
+      "intermediate_from": 0.1,
+      "high_from": 0.2,
+      "basis": "assumption; 0.1 is the cut-off between low and high risk in Lyman et al. (2011), 0.2 the risk of febrile neutropenia from which guidelines recommend primary G-CSF prophylaxis, as cited there"
+    }
+  },
+  "diarrhoea": {
+    "description": "Candidate 4. Diarrhoea of grade 3 or higher within 90 days. Logistic model. The log-odds of the reference patient are set so that the mean risk in the reference population equals the regimen rate. The references name the risk factors but give no effect sizes.",
+    "window_days": 90,
+    "regimen_rates": {
+      "nalirifox": {
+        "rate": 0.2,
+        "source": "Wainberg et al. (2023), NAPOLI 3",
+        "irinotecan": true
+      },
+      "gemcitabine_nab_paclitaxel": {
+        "rate": 0.05,
+        "source": "Wainberg et al. (2023), NAPOLI 3"
+      }
+    },
+    "odds_ratios": {
+      "age_70_or_older": {
+        "value": 1.3,
+        "basis": "assumption"
+      },
+      "ecog_2_or_higher": {
+        "value": 1.5,
+        "basis": "assumption"
+      },
+      "low_albumin": {
+        "value": 1.3,
+        "basis": "assumption; albumin changes the clearance of antibody-drug conjugates (Tarantino et al., 2023) and stands for the nutritional state, which predicted non-haematological toxicity in Extermann et al. (2012)"
+      },
+      "ugt1a1_28_homozygous_with_irinotecan": {
+        "value": 2.0,
+        "basis": "assumption; the direction follows Bardia et al. (2021) and Gennari et al. (2021) for sacituzumab govitecan and is applied to regimens with irinotecan"
+      }
+    },
+    "thresholds": {
+      "older_from_age": 70,
+      "low_albumin_below_g_l": 35,
+      "basis": "assumption; 35 g/l is the albumin threshold among the prognostic factors in Conroy et al. (2023)"
+    },
+    "reference_population": {
+      "description": "Share of patients with each factor, used to set the risk of the reference patient. Factors are treated as independent.",
+      "age_70_or_older": 0.3,
+      "ecog_2_or_higher": 0.0,
+      "low_albumin": 0.2,
+      "ugt1a1_28_homozygous_with_irinotecan": 0.1,
+      "basis": "assumption; NAPOLI 3 enrolled patients with ECOG 0 or 1"
+    },
+    "categories": {
+      "intermediate_from": 0.1,
+      "high_from": 0.2,
+      "basis": "assumption; 0.2 is the rate with NALIRIFOX"
     }
   },
   "cardiovascular": {
-    "description": "Candidate 5. Major adverse cardiovascular events (myocardial infarction, stroke, cardiovascular death) under androgen deprivation for prostate cancer. Proportional hazards model: risk = 1 - (1 - r0)^HR, with r0 the risk of a man of the reference age without risk factors on the same type of androgen deprivation and HR the product of the hazard ratios that apply. r0 is set so that the mean risk in the reference population equals the published rate of that type. The effect of an earlier cardiovascular event depends on the type of androgen deprivation.",
+    "description": "Candidate 5. Major adverse cardiovascular events (myocardial infarction, stroke, cardiovascular death) under androgen deprivation for prostate cancer. Proportional hazards model: risk = 1 - (1 - r0)^HR, with r0 the risk of a man of the reference age without risk factors on the same type of androgen deprivation and HR the product of the hazard ratios that apply. r0 is set so that the mean risk in the reference population equals the published rate of that type.",
     "window_days": 364,
     "rate_window_days": 336,
     "adt_rates": {
@@ -150,17 +360,22 @@
         "source": "Shore et al. (2020), HERO, relugolix arm, 18 of 622 within 48 weeks"
       }
     },
-    "rate_note": "HERO counted non-fatal myocardial infarction, non-fatal stroke and death from any cause. The rates are therefore an upper limit for cardiovascular events alone.",
+    "rate_note": "HERO counted non-fatal myocardial infarction, non-fatal stroke and death from any cause. cardiovascular_share_of_events brings the rates to cardiovascular events.",
+    "cardiovascular_share_of_events": {
+      "value": 0.615,
+      "basis": "Lopes et al. (2021), PRONOUNCE: 16 of the 26 men with death from any cause, myocardial infarction or stroke had cardiovascular death, myocardial infarction or stroke"
+    },
     "prior_event_hazard_ratios": {
       "gnrh_agonist": {
-        "value": 4.57,
-        "basis": "Shore et al. (2020), Table 3: 8 of 45 men with and 11 of 263 without an earlier event under leuprolide; ratio of the cumulative hazards. Small groups."
+        "value": 1.46,
+        "basis": "Events within 48 weeks in 19 of 314 men with an earlier event (8 of 45 in HERO, Shore et al., 2020; 11 of 269 in PRONOUNCE, Lopes et al., 2021) and in 11 of 263 without (HERO); ratio of the cumulative hazards. HERO alone gives 4.57."
       },
       "gnrh_antagonist": {
-        "value": 1.29,
-        "basis": "Shore et al. (2020), Table 3: 3 of 84 men with and 15 of 538 without an earlier event under relugolix; ratio of the cumulative hazards. Small groups."
+        "value": 1.82,
+        "basis": "Events within 48 weeks in 18 of 359 men with an earlier event (3 of 84 in HERO, Shore et al., 2020; 15 of 275 in PRONOUNCE, Lopes et al., 2021) and in 15 of 538 without (HERO); ratio of the cumulative hazards. HERO alone gives 1.29."
       }
     },
+    "prior_event_note": "All men in PRONOUNCE had atherosclerotic cardiovascular disease and are counted as men with an earlier event. They were under the care of a cardiologist.",
     "hazard_ratios": {
       "per_10_years_of_age": {
         "value": 1.4,
@@ -181,6 +396,14 @@
       "renal_moderate_severe_decrease": {
         "value": 1.4,
         "basis": "assumption; risk factor named in the ESC guideline (Lyon et al., 2022)"
+      },
+      "cardiovascular_disease_without_event": {
+        "value": 1.5,
+        "basis": "assumption"
+      },
+      "former_smoker": {
+        "value": 1.2,
+        "basis": "assumption"
       }
     },
     "reference_patient": {
@@ -193,11 +416,13 @@
         "gnrh_agonist": 0.146,
         "gnrh_antagonist": 0.135
       },
-      "diabetes": 0.2,
-      "arterial_hypertension": 0.6,
+      "diabetes": 0.16,
+      "arterial_hypertension": 0.45,
       "current_smoker": 0.15,
+      "former_smoker": 0.39,
       "renal_moderate_severe_decrease": 0.2,
-      "basis": "earlier event: Shore et al. (2020), Table 1, 45 of 308 and 84 of 622; the other shares are assumptions, because HERO reports the risk factors only in groups"
+      "cardiovascular_disease_without_event": 0.08,
+      "basis": "earlier event: Shore et al. (2020), Table 1, 45 of 308 and 84 of 622. Diabetes and hypertension: 16% and 45% in a cohort of 2492 men with prostate cancer, as reported by Lopes et al. (2021); the same cohort had cardiovascular disease in 22%, which leaves about 8% without an earlier event. Smoking: 15.1% current and 38.8% former smokers in PRONOUNCE (Lopes et al., 2021). Renal function is an assumption."
     },
     "categories": {
       "intermediate_from": 0.05,
@@ -208,6 +433,9 @@
   "whole_numbers": [
     "severe_toxicity_90d/reference_patient/ga_impaired_domains",
     "ild/window_days",
+    "neutropenia/window_days",
+    "neutropenia/thresholds/prior_chemotherapy_from_lines",
+    "diarrhoea/window_days",
     "cardiovascular/window_days",
     "cardiovascular/rate_window_days"
   ]

@@ -45,6 +45,18 @@ def evaluate(baseline, outcomes, cfg=None):
             "groups": metrics.calibration_groups(risk, y),
             "by_regimen": _by_regimen([p["regimen"] for p, _ in pairs], risk, y),
         }
+    for name, outcome in (("neutropenia", "severe_neutropenia_90d"), ("diarrhoea", "severe_diarrhoea_90d")):
+        pairs = [(p, s) for p, s in zip(baseline, scores) if s[f"{name}_applicable"]]
+        if pairs:
+            risk = [s[f"{name}_risk"] for _, s in pairs]
+            ref = [s[f"{name}_regimen_rate"] for _, s in pairs]
+            y = [outcomes[p["patient_id"]][outcome] for p, _ in pairs]
+            result[name] = {
+                "model": metrics.summary(risk, y),
+                "regimen_only": metrics.summary(ref, y),
+                "groups": metrics.calibration_groups(risk, y),
+                "by_regimen": _by_regimen([p["regimen"] for p, _ in pairs], risk, y),
+            }
     pairs = [(p, s) for p, s in zip(baseline, scores) if s["cv_applicable"]]
     if pairs:
         risk = [s["cv_risk"] for _, s in pairs]

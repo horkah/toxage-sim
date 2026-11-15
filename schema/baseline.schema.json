@@ -3,7 +3,7 @@
   "$id": "toxage-sim/baseline",
   "title": "Baseline record",
   "description": "One patient at the start of a systemic therapy line, as planned in usual care. One record per patient, shared by all scenarios. A scenario can adapt the starting dose and the G-CSF prophylaxis; the observation records show what was given.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,6 +14,8 @@
     "prior_therapy_lines",
     "starting_dose_level",
     "gcsf_prophylaxis",
+    "immunosuppressive_medication",
+    "ugt1a1_28_homozygous",
     "adt_type",
     "age_years",
     "sex",
@@ -24,7 +26,10 @@
     "egfr_ml_min",
     "renal_function",
     "bilirubin_ratio_uln",
+    "ast_u_l",
+    "alkaline_phosphatase_u_l",
     "neutrophils_10e9_l",
+    "white_cells_10e9_l",
     "haemoglobin_g_dl",
     "platelets_10e9_l",
     "spo2_percent",
@@ -99,6 +104,16 @@
       "title": "G-CSF prophylaxis",
       "type": "boolean",
       "description": "G-CSF is given with each chemotherapy cycle to prevent neutropenia."
+    },
+    "immunosuppressive_medication": {
+      "title": "Immunosuppressive medication",
+      "type": "boolean",
+      "description": "The patient takes immunosuppressive drugs such as corticosteroids, as co-medication or as part of the regimen."
+    },
+    "ugt1a1_28_homozygous": {
+      "title": "UGT1A1*28 homozygous",
+      "type": "boolean",
+      "description": "Two copies of the UGT1A1*28 gene variant, which slows the breakdown of the active form of irinotecan."
     },
     "adt_type": {
       "title": "Androgen deprivation",
@@ -187,12 +202,33 @@
       "unit": "multiple of the upper limit of normal",
       "description": "Total bilirubin relative to the upper limit of normal."
     },
+    "ast_u_l": {
+      "title": "AST",
+      "type": "integer",
+      "minimum": 0,
+      "unit": "U/l",
+      "description": "Aspartate aminotransferase."
+    },
+    "alkaline_phosphatase_u_l": {
+      "title": "Alkaline phosphatase",
+      "type": "integer",
+      "minimum": 0,
+      "unit": "U/l",
+      "description": "Alkaline phosphatase."
+    },
     "neutrophils_10e9_l": {
       "title": "Neutrophils",
       "type": "number",
       "minimum": 0,
       "unit": "10^9/l",
       "description": "Neutrophil count."
+    },
+    "white_cells_10e9_l": {
+      "title": "White blood cells",
+      "type": "number",
+      "minimum": 0,
+      "unit": "10^9/l",
+      "description": "White blood cell count."
     },
     "haemoglobin_g_dl": {
       "title": "Haemoglobin",

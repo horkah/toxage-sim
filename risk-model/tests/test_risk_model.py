@@ -28,6 +28,10 @@ PATIENT = {
     "years_since_diagnosis": 1.0, "adt_type": None, "prior_cardiovascular_event": False,
     "cardiovascular_disease": False, "arterial_hypertension": False, "diabetes": False,
     "smoking_status": "never", "systolic_bp_mmhg": 125,
+    "haemoglobin_g_dl": 12.3, "albumin_g_l": 38, "starting_dose_level": 1.0, "prior_therapy_lines": 0,
+    "egfr_ml_min": 80, "white_cells_10e9_l": 7.0, "ast_u_l": 20, "alkaline_phosphatase_u_l": 80,
+    "bilirubin_ratio_uln": 0.6, "immunosuppressive_medication": False, "ugt1a1_28_homozygous": False,
+    "gcsf_prophylaxis": False,
 }
 MAN = dict(PATIENT, tumour_type="prostate", regimen="olaparib", sex="male", age_years=71,
            adt_type="gnrh_agonist")
@@ -59,8 +63,16 @@ class ModelTest(unittest.TestCase):
 
     def test_risk_rises_with_each_factor(self):
         base = models.severe_toxicity_risk(PATIENT, self.cfg)
-        for change in ({"age_years": 75}, {"ecog": 2}, {"ga_impaired_domains": 2}):
+        for change in ({"age_years": 75}, {"ecog": 2}, {"ga_impaired_domains": 2},
+                       {"haemoglobin_g_dl": 10.0}, {"albumin_g_l": 30}):
             self.assertGreater(models.severe_toxicity_risk(dict(PATIENT, **change), self.cfg), base)
+        self.assertLess(models.severe_toxicity_risk(dict(PATIENT, starting_dose_level=0.8), self.cfg), base)
+        # Extermann et al. (2012): odds ratio 0.90 per g/dl of haemoglobin, 0.74 per g/dl of albumin.
+        odds = lambda r: r / (1 - r)
+        ratio = odds(models.severe_toxicity_risk(dict(PATIENT, haemoglobin_g_dl=11.3), self.cfg)) / odds(base)
+        self.assertAlmostEqual(ratio, 1 / 0.90, delta=0.005)
+        ratio = odds(models.severe_toxicity_risk(dict(PATIENT, albumin_g_l=28), self.cfg)) / odds(base)
+        self.assertAlmostEqual(ratio, 1 / 0.74, delta=0.005)
 
     def test_ild_mean_risk_in_reference_population_equals_rate(self):
         hr = self.cfg["ild"]["hazard_ratios"]
@@ -69,9 +81,31 @@ class ModelTest(unittest.TestCase):
         self.assertAlmostEqual(sum(s for s, _ in profiles), 1.0, places=9)
         for regimen, entry in self.cfg["ild"]["regimen_rates"].items():
             r0 = models.ild_baseline_risk(regimen, self.cfg)
+            if not models.ild_uses_factors(regimen, self.cfg):
+                self.assertEqual(r0, entry["rate"])
+                continue
             mean = sum(s * (1 - (1 - r0) ** math.prod(hr[n]["value"] for n in names))
                        for s, names in profiles)
             self.assertAlmostEqual(mean, entry["rate"], places=6)
+
+    def test_ild_risk_factors_count_only_for_trastuzumab_deruxtecan(self):
+        patient = dict(PATIENT, regimen="chemotherapy_single_agent", spo2_percent=93, lung_comorbidity=True)
+        self.assertEqual(models.ild_terms(patient, self.cfg), [])
+        self.assertAlmostEqual(models.ild_risk(patient, self.cfg), 0.006)
+
+    def test_ild_risk_over_time(self):
+        # Median onset on day 129, 87% of the events within 12 months.
+        risk = models.ild_risk(PATIENT, self.cfg)
+        by_day = lambda day: models.ild_risk_by_day(PATIENT, day, self.cfg)
+        self.assertEqual(by_day(0), 0)
+        self.assertAlmostEqual(by_day(730), risk)
+        self.assertAlmostEqual(by_day(365) / risk, 0.87 / 0.97, delta=0.02)
+        self.assertLess(by_day(90), by_day(180))
+        remaining = lambda day: models.ild_remaining_risk(PATIENT, day, self.cfg)
+        self.assertAlmostEqual(remaining(0), risk)
+        self.assertLess(remaining(365), 0.2 * risk)
+        self.assertEqual(remaining(730), 0)
+        self.assertIsNone(models.ild_risk_by_day(dict(PATIENT, regimen="olaparib"), 100, self.cfg))
 
     def test_ild_patient_without_factors_has_baseline_risk(self):
         r0 = models.ild_baseline_risk("trastuzumab_deruxtecan", self.cfg)
@@ -108,10 +142,12 @@ class ModelTest(unittest.TestCase):
                 mean += share * (1 - (1 - r0) ** ratio)
             target = models.cv_reference_rate(adt, self.cfg)
             self.assertAlmostEqual(mean, target, places=6)
-            # The published rate holds for 48 weeks, the model for 52.
-            self.assertGreater(target, entry["rate"])
-            self.assertLess(target, entry["rate"] * 1.1)
-            self.assertLess(r0, entry["rate"])
+            # The published rate holds for 48 weeks and counts death from any
+            # cause, the model for 52 weeks and cardiovascular events.
+            share = m["cardiovascular_share_of_events"]["value"]
+            self.assertGreater(target, entry["rate"] * share)
+            self.assertLess(target, entry["rate"] * share * 1.1)
+            self.assertLess(r0, target)
 
     def test_cv_man_without_factors_has_baseline_risk(self):
         r0 = models.cv_baseline_risk("gnrh_agonist", self.cfg)
@@ -121,22 +157,94 @@ class ModelTest(unittest.TestCase):
     def test_cv_risk_rises_with_each_factor(self):
         base = models.cv_risk(MAN, self.cfg)
         for change in ({"age_years": 80}, {"diabetes": True}, {"arterial_hypertension": True},
-                       {"smoking_status": "current"}, {"renal_function": "moderate_severe_decrease"},
-                       {"prior_cardiovascular_event": True}):
+                       {"smoking_status": "current"}, {"smoking_status": "former"},
+                       {"renal_function": "moderate_severe_decrease"},
+                       {"cardiovascular_disease": True}, {"prior_cardiovascular_event": True}):
             self.assertGreater(models.cv_risk(dict(MAN, **change), self.cfg), base, change)
-        self.assertEqual(models.cv_risk(dict(MAN, smoking_status="former"), self.cfg), base)
+        # Cardiovascular disease counts on its own only without an earlier event.
+        self.assertEqual(models.cv_risk(dict(MAN, prior_cardiovascular_event=True), self.cfg),
+                         models.cv_risk(dict(MAN, prior_cardiovascular_event=True, cardiovascular_disease=True), self.cfg))
 
-    def test_cv_earlier_event_counts_more_under_an_agonist(self):
+    def test_cv_earlier_event_and_type_of_androgen_deprivation(self):
+        # Pooled from HERO and PRONOUNCE: an earlier event raises the hazard by
+        # 1.46 under an agonist and by 1.82 under an antagonist.
         risk = lambda **c: models.cv_risk(dict(MAN, **c), self.cfg)
         self.assertLess(risk(adt_type="gnrh_antagonist"), risk())
-        agonist = risk(prior_cardiovascular_event=True) / risk()
-        antagonist = (risk(adt_type="gnrh_antagonist", prior_cardiovascular_event=True)
-                      / risk(adt_type="gnrh_antagonist"))
-        self.assertGreater(agonist, 3)
-        self.assertLess(antagonist, 1.5)
+        self.assertLess(risk(adt_type="gnrh_antagonist", prior_cardiovascular_event=True),
+                        risk(prior_cardiovascular_event=True))
         r0 = models.cv_baseline_risk("gnrh_agonist", self.cfg)
         self.assertAlmostEqual(risk(prior_cardiovascular_event=True, diabetes=True),
-                               1 - (1 - r0) ** (4.57 * 1.5), places=12)
+                               1 - (1 - r0) ** (1.46 * 1.5), places=12)
+        r0 = models.cv_baseline_risk("gnrh_antagonist", self.cfg)
+        self.assertAlmostEqual(risk(adt_type="gnrh_antagonist", prior_cardiovascular_event=True),
+                               1 - (1 - r0) ** 1.82, places=12)
+        self.assertAlmostEqual(models.cv_risk_on(MAN, "gnrh_antagonist", self.cfg), risk(adt_type="gnrh_antagonist"))
+
+    def test_neutropenia_mean_risk_in_reference_population_equals_rate(self):
+        m = self.cfg["neutropenia"]
+        odds, ref = m["odds_ratios"], m["reference_population"]
+        for regimen, entry in m["regimen_rates"].items():
+            r0 = models.neutropenia_reference_risk(regimen, self.cfg)
+            factors = [(entry["prior_chemotherapy_share"], "prior_chemotherapy"),
+                       (entry["age_65_or_older_share"], "age_65_or_older"), (entry["gcsf_share"], "gcsf_prophylaxis"),
+                       (ref["ast_above_35"], "ast_above_35"),
+                       (ref["alkaline_phosphatase_above_120"], "alkaline_phosphatase_above_120"),
+                       (ref["bilirubin_above_normal"], "bilirubin_above_normal"),
+                       (1.0 if entry.get("corticosteroid") else ref["immunosuppressive_medication"],
+                        "immunosuppressive_medication"),
+                       (0.1 if entry.get("irinotecan") else 0.0, "ugt1a1_28_homozygous_with_irinotecan")]
+            mean = 0.0
+            for bits in range(2 ** len(factors)):
+                share, logit = 1.0, math.log(r0 / (1 - r0))
+                for i, (s, name) in enumerate(factors):
+                    on = bits >> i & 1
+                    share *= s if on else 1 - s
+                    logit += math.log(odds[name]["value"]) if on else 0.0
+                mean += share / (1 + math.exp(-logit))
+            self.assertAlmostEqual(mean, entry["rate"], places=6, msg=regimen)
+
+    def test_neutropenia_follows_lyman(self):
+        patient = dict(PATIENT, regimen="gemcitabine_nab_paclitaxel", age_years=60)
+        r0 = models.neutropenia_reference_risk("gemcitabine_nab_paclitaxel", self.cfg)
+        self.assertAlmostEqual(models.neutropenia_risk(patient, self.cfg), r0, places=12)
+        odds = lambda r: r / (1 - r)
+        ratio = lambda **c: odds(models.neutropenia_risk(dict(patient, **c), self.cfg)) / odds(r0)
+        self.assertAlmostEqual(ratio(gcsf_prophylaxis=True), 0.12)
+        self.assertAlmostEqual(ratio(prior_therapy_lines=2), 1.925)
+        self.assertAlmostEqual(ratio(age_years=70), 1.297)
+        self.assertAlmostEqual(ratio(ast_u_l=40, alkaline_phosphatase_u_l=130), 1.422 * 1.469)
+        self.assertAlmostEqual(ratio(bilirubin_ratio_uln=1.4), 2.152)
+        self.assertAlmostEqual(ratio(egfr_ml_min=60), 0.993 ** -20)
+        self.assertAlmostEqual(ratio(white_cells_10e9_l=4.0), 0.93 ** -3)
+        self.assertAlmostEqual(ratio(immunosuppressive_medication=True), 1.554)
+        self.assertAlmostEqual(ratio(starting_dose_level=0.8), 0.496)
+        # The genotype counts only on a regimen with irinotecan.
+        self.assertAlmostEqual(ratio(ugt1a1_28_homozygous=True), 1.0)
+        nalirifox = dict(PATIENT, regimen="nalirifox", age_years=60)
+        self.assertGreater(models.neutropenia_risk(dict(nalirifox, ugt1a1_28_homozygous=True), self.cfg),
+                           models.neutropenia_risk(nalirifox, self.cfg))
+        self.assertIsNone(models.neutropenia_risk(dict(PATIENT, regimen="olaparib"), self.cfg))
+
+    def test_diarrhoea_model(self):
+        m = self.cfg["diarrhoea"]
+        patient = dict(PATIENT, regimen="nalirifox", age_years=60)
+        r0 = models.diarrhoea_reference_risk("nalirifox", self.cfg)
+        self.assertAlmostEqual(models.diarrhoea_risk(patient, self.cfg), r0, places=12)
+        self.assertLess(r0, m["regimen_rates"]["nalirifox"]["rate"])
+        for change in ({"age_years": 72}, {"ecog": 2}, {"albumin_g_l": 30}, {"ugt1a1_28_homozygous": True}):
+            self.assertGreater(models.diarrhoea_risk(dict(patient, **change), self.cfg), r0, change)
+        self.assertGreater(models.diarrhoea_risk(patient, self.cfg),
+                           models.diarrhoea_risk(dict(patient, regimen="gemcitabine_nab_paclitaxel"), self.cfg))
+        self.assertIsNone(models.diarrhoea_risk(PATIENT, self.cfg))
+        record = self.model.score(PATIENT)
+        self.assertFalse(record["diarrhoea_applicable"])
+        self.assertTrue(record["neutropenia_applicable"])
+        info = self.model.explain(dict(patient, ugt1a1_28_homozygous=True, age_years=75))
+        for key in ("neutropenia", "diarrhoea"):
+            odds = info[key]["start"]["risk"] / (1 - info[key]["start"]["risk"])
+            odds *= math.prod(f["odds_ratio"] for f in info[key]["factors"])
+            score = self.model.score(dict(patient, ugt1a1_28_homozygous=True, age_years=75))
+            self.assertAlmostEqual(odds / (1 + odds), score[f"{key}_risk"], places=12)
 
     def test_cv_not_applicable(self):
         record = self.model.score(PATIENT)
@@ -148,7 +256,8 @@ class ModelTest(unittest.TestCase):
 
     def test_score_follows_schema(self):
         self.assertEqual(toxage_schema.errors("risk_score", self.model.score(PATIENT)), [])
-        record = self.model.score(dict(MAN, prior_cardiovascular_event=True))
+        record = self.model.score(dict(MAN, age_years=85, prior_cardiovascular_event=True, diabetes=True,
+                                       arterial_hypertension=True, smoking_status="current"))
         self.assertEqual(toxage_schema.errors("risk_score", record), [])
         self.assertEqual(record["cv_category"], "high")
         self.assertEqual(self.model.score(MAN)["cv_category"], "low")
@@ -237,9 +346,12 @@ class PipelineTest(unittest.TestCase):
 
     def test_literature_model_on_engine_data(self):
         result = evaluate.evaluate(self.baseline, self.outcomes)
-        for name in ("severe_toxicity_90d", "ild", "cardiovascular"):
-            self.assertGreater(result[name]["model"]["auc"], result[name]["regimen_only"]["auc"])
-        self.assertGreater(result["cardiovascular"]["model"]["auc"], 0.65)
+        for name in ("severe_toxicity_90d", "ild", "neutropenia", "diarrhoea", "cardiovascular"):
+            self.assertGreater(result[name]["model"]["auc"], result[name]["regimen_only"]["auc"], name)
+        self.assertGreater(result["cardiovascular"]["model"]["auc"], 0.6)
+        self.assertGreater(result["neutropenia"]["model"]["auc"], 0.7)
+        for name in ("neutropenia", "diarrhoea"):
+            self.assertAlmostEqual(result[name]["model"]["observed_to_expected"], 1.0, delta=0.25, msg=name)
         # The engine adds frailty, former smoking and cardiovascular disease
         # without an event, which the model does not know.
         ratio = result["cardiovascular"]["model"]["observed_to_expected"]
@@ -256,7 +368,17 @@ class PipelineTest(unittest.TestCase):
     def test_fit_on_engine_data(self):
         cfg = fit.fit(self.baseline, self.outcomes)
         for name, entry in cfg["severe_toxicity_90d"]["odds_ratios"].items():
-            self.assertGreater(entry["value"], 1.0, name)
+            if name != "reduced_starting_dose":
+                self.assertGreater(entry["value"], 1.0, name)
+        # The engine uses the odds ratios of Lyman et al. (2011) as hazard ratios.
+        fitted = cfg["neutropenia"]["odds_ratios"]
+        self.assertLess(fitted["gcsf_prophylaxis"]["value"], 0.5)
+        # Earlier chemotherapy is the same for all patients of a regimen in the
+        # engine, so it cannot be estimated and is part of the regimen's risk.
+        self.assertEqual(fitted["prior_chemotherapy"]["value"], 1.0)
+        self.assertGreater(fitted["age_65_or_older"]["value"], 1.0)
+        self.assertGreater(fitted["ugt1a1_28_homozygous_with_irinotecan"]["value"], 1.2)
+        self.assertGreater(cfg["diarrhoea"]["odds_ratios"]["ugt1a1_28_homozygous_with_irinotecan"]["value"], 1.2)
         # The engine uses the published hazard ratios for lung toxicity.
         _, engine_params = generate.load_config()
         engine_hr = engine_params["hazards"]["ild"]["hazard_ratios"]
@@ -264,7 +386,7 @@ class PipelineTest(unittest.TestCase):
             low, high = entry["ci95"]
             se = (math.log(high) - math.log(low)) / (2 * 1.96)
             self.assertLess(abs(math.log(entry["value"]) - math.log(engine_hr[name])), 3.5 * se, name)
-        # The engine uses the hazard ratios of HERO for the earlier event.
+        # The engine uses the pooled hazard ratios of HERO and PRONOUNCE for the earlier event.
         engine_cv = engine_params["hazards"]["cardiovascular"]
         entry = cfg["cardiovascular"]["prior_event_hazard_ratios"]["gnrh_agonist"]
         low, high = entry["ci95"]
@@ -279,8 +401,8 @@ class PipelineTest(unittest.TestCase):
         self.assertEqual(toxage_schema.errors("risk_score", record), [])
         before = evaluate.evaluate(self.baseline, self.outcomes)
         after = evaluate.evaluate(self.baseline, self.outcomes, cfg)
-        for name in ("severe_toxicity_90d", "ild", "cardiovascular"):
-            self.assertLessEqual(after[name]["model"]["brier"], before[name]["model"]["brier"] + 1e-9)
+        for name in ("severe_toxicity_90d", "ild", "neutropenia", "diarrhoea", "cardiovascular"):
+            self.assertLessEqual(after[name]["model"]["brier"], before[name]["model"]["brier"] + 1e-9, name)
 
 
 class ReviewFixesTest(unittest.TestCase):

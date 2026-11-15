@@ -14,6 +14,8 @@ class CohortTestCase(TestCase):
 
     def setUp(self):
         self.dataset, self.models, self.rows = cohort.current()
-        self.severe, self.ild, self.cv = self.models
+        by_id = {m.id: m for m in self.models}
+        self.severe, self.ild, self.cv = by_id["severe90"], by_id["ild"], by_id["cv"]
+        self.neutropenia, self.diarrhoea = by_id["neutropenia"], by_id["diarrhoea"]
         self.ild_rows = [r for r in self.rows if r["risk_ild"] is not None]
         self.cv_rows = [r for r in self.rows if r["risk_cv"] is not None]
