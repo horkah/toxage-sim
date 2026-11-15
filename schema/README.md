@@ -43,6 +43,8 @@ The schema files hold the full description and unit of every field. The tables b
 | `prior_therapy_lines` | Earlier therapy lines | integer | 0 or more |
 | `starting_dose_level` | Starting dose level | number | 0.1–1.0 |
 | `gcsf_prophylaxis` | G-CSF prophylaxis | boolean |  |
+| `immunosuppressive_medication` | Immunosuppressive medication | boolean |  |
+| `ugt1a1_28_homozygous` | UGT1A1*28 homozygous | boolean |  |
 | `adt_type` | Androgen deprivation | string or null | `gnrh_agonist`, `gnrh_antagonist` |
 | `age_years` | Age | integer | 18–100 |
 | `sex` | Sex | string | `female`, `male` |
@@ -53,7 +55,10 @@ The schema files hold the full description and unit of every field. The tables b
 | `egfr_ml_min` | eGFR | integer | 5–150 |
 | `renal_function` | Renal function | string | `normal`, `mild_decrease`, `moderate_severe_decrease` |
 | `bilirubin_ratio_uln` | Bilirubin | number | 0 or more |
+| `ast_u_l` | AST | integer | 0 or more |
+| `alkaline_phosphatase_u_l` | Alkaline phosphatase | integer | 0 or more |
 | `neutrophils_10e9_l` | Neutrophils | number | 0 or more |
+| `white_cells_10e9_l` | White blood cells | number | 0 or more |
 | `haemoglobin_g_dl` | Haemoglobin | number | 0 or more |
 | `platelets_10e9_l` | Platelets | integer | 0 or more |
 | `spo2_percent` | Oxygen saturation | integer | 70–100 |
@@ -135,6 +140,10 @@ Observations are written from therapy start until a few weeks after the end of t
 | `participating` | Taking part | boolean |  |
 | `severe_toxicity_90d` | Severe toxicity in 90 days | boolean |  |
 | `severe_toxicity_day` | Day of severe toxicity | integer or null | 1–90 |
+| `severe_neutropenia_90d` | Severe neutropenia in 90 days | boolean |  |
+| `severe_neutropenia_day` | Day of severe neutropenia | integer or null | 1–90 |
+| `severe_diarrhoea_90d` | Severe diarrhoea in 90 days | boolean |  |
+| `severe_diarrhoea_day` | Day of severe diarrhoea | integer or null | 1–90 |
 | `ild` | Lung toxicity | boolean |  |
 | `ild_onset_day` | Day of lung toxicity | integer or null | 1 or more |
 | `ild_diagnosis_day` | Day lung toxicity was recognised | integer or null | 1 or more |
@@ -175,18 +184,26 @@ The outcome table is derived from the event, alert and observation tables. It ho
 | `ild_grade2plus_risk` | Risk of lung toxicity, grade 2 or higher | number or null | 0–1 |
 | `ild_regimen_rate` | Regimen rate of lung toxicity | number or null | 0–1 |
 | `ild_category` | Risk category, lung toxicity | string or null | `low`, `intermediate`, `high` |
+| `neutropenia_applicable` | Neutropenia model applies | boolean |  |
+| `neutropenia_risk` | Risk of severe neutropenia | number or null | 0–1 |
+| `neutropenia_regimen_rate` | Regimen rate of severe neutropenia | number or null | 0–1 |
+| `neutropenia_category` | Risk category, severe neutropenia | string or null | `low`, `intermediate`, `high` |
+| `diarrhoea_applicable` | Diarrhoea model applies | boolean |  |
+| `diarrhoea_risk` | Risk of severe diarrhoea | number or null | 0–1 |
+| `diarrhoea_regimen_rate` | Regimen rate of severe diarrhoea | number or null | 0–1 |
+| `diarrhoea_category` | Risk category, severe diarrhoea | string or null | `low`, `intermediate`, `high` |
 | `cv_applicable` | Cardiovascular model applies | boolean |  |
 | `cv_risk` | Risk of a cardiovascular event | number or null | 0–1 |
 | `cv_reference_rate` | Published rate of cardiovascular events | number or null | 0–1 |
 | `cv_category` | Risk category, cardiovascular events | string or null | `low`, `intermediate`, `high` |
 
-Risks are probabilities. The `ild_` fields are null if the lung toxicity model does not apply to the regimen, the `cv_` fields if the patient is not under androgen deprivation. The risk_score table is written by the risk model, all other tables by the engine.
+Risks are probabilities. The `ild_`, `neutropenia_` and `diarrhoea_` fields are null if the model does not apply to the regimen, the `cv_` fields if the patient is not under androgen deprivation. The risk_score table is written by the risk model, all other tables by the engine.
 
 ## Format
 
 The schema files are JSON Schema (draft 2020-12), so any language can read them. All fields are flat, so a table can be stored as CSV with the field names as header. In CSV, null is an empty cell and booleans are `true` and `false`.
 
-Each schema file carries a `version`, currently 0.4.0 for the six tables of the engine and 0.2.0 for risk_score. Adding an optional field raises the minor version. Renaming or removing a field, or changing its meaning, raises the major version. Changes that leave the data as they are, such as a new `title`, raise the patch version.
+Each schema file carries a `version`, currently 0.5.0 for baseline and outcome, 0.4.0 for the other four tables of the engine and 0.3.0 for risk_score. Adding an optional field raises the minor version. Renaming or removing a field, or changing its meaning, raises the major version. Changes that leave the data as they are, such as a new `title`, raise the patch version.
 
 Every field has a `title`, which the app shows as its label, and a `unit` where one applies.
 

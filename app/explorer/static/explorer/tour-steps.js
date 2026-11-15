@@ -531,7 +531,7 @@ export const STEPS = [
     url: "/parameters/parameters/",
     target: 'nav[aria-label="Parameter file"]',
     text: [
-      "“Regimens” has the published rates of each therapy. “Simulation” has the population, the hazards of adverse events, survival and the measurements. “Interventions” has participation, detection, early treatment, costs and the scenarios. “Risk models” has the coefficients of the three risk models.",
+      "“Regimens” has the published rates of each therapy. “Simulation” has the population, the hazards of adverse events, survival and the measurements. “Interventions” has participation, detection, early treatment, costs and the scenarios. “Risk models” has the coefficients of the five risk models.",
       "Below the files, the groups of the open file lead straight to their place. The field “Find a parameter” narrows the list as you type.",
     ],
   },
