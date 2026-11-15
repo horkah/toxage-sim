@@ -306,3 +306,13 @@ Can we introduction Kaplan-Meier Plots to compare scenarios - for survival, but 
 2026-11-14 23:04 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 Yes please, systematically - sounds all good.
+
+================================================================================
+2026-11-15 10:30 (+01:00) | model: claude-fable-5-2 | attachments: none (13 PDFs committed to background/papers/)
+--------------------------------------------------------------------------------
+ok, 13 additional pdfs are there. you know what to do. once you have read everything, you can update the research report, the risk model candidates, and devise improvements for realistic data generation and interventions, and improve the existing risk models, and add candidates 3 and 4, such that we will have five after this prompt, plus improved versions of everything we had. without saying you will update the references files with our new pdfs.
+
+================================================================================
+2026-11-15 10:46 (+01:00) | model: claude-fable-5-2 | attachments: none
+--------------------------------------------------------------------------------
+continue, but dont forget to make reasonable interim states commited to git
