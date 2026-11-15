@@ -1,7 +1,7 @@
 // Tests of the chart helpers. Run with: node --test app/explorer/tests/
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { esc, fmt, line, linePath, niceStep, niceTicks, pageKey, scale, withParams } from "../static/explorer/charts.js";
+import { axisLabel, esc, fmt, line, linePath, niceStep, niceTicks, pageKey, scale, withParams } from "../static/explorer/charts.js";
 
 test("esc escapes markup", () => {
   assert.equal(esc(`<a href="x">&'`), "&#60;a href=&#34;x&#34;&#62;&#38;&#39;");
@@ -77,4 +77,12 @@ test("a chart drawn large fills the given height", () => {
 test("the page of a large chart is its path and view, not its filters", () => {
   assert.equal(pageKey("/", "risk"), "/#risk");
   assert.notEqual(pageKey("/", "risk"), pageKey("/", "time"));
+});
+
+test("a vertical axis label is shortened to the length of the axis", () => {
+  assert.match(axisLabel("share alive", 12, 100, 200), />share alive<title>/);
+  const short = axisLabel("share alive without severe event", 12, 100, 120);
+  const shown = short.match(/>([^<]*)<title>/)[1];
+  assert.ok(shown.endsWith("…") && shown.length <= Math.floor(120 / 6.6), shown);
+  assert.match(short, /<title>share alive without severe event<\/title>/);
 });

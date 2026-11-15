@@ -74,6 +74,14 @@ function text(x, y, content, cls = "", extra = "") {
   return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" class="${cls}" ${extra}>${esc(content)}</text>`;
 }
 
+// A label along a vertical axis, shortened with "…" to the length of the axis (about 6.6
+// units per character), with the full label as tooltip.
+export function axisLabel(label, x, mid, room) {
+  const fits = Math.max(4, Math.floor(room / 6.6));
+  const shown = label.length > fits ? `${label.slice(0, fits - 1).trimEnd()}…` : label;
+  return `<text x="${x}" y="${mid.toFixed(1)}" class="axis" text-anchor="middle" transform="rotate(-90 ${x} ${mid.toFixed(1)})">${esc(shown)}<title>${esc(label)}</title></text>`;
+}
+
 // The legend below a chart: one swatch per series, and the selected patient if marked.
 function legend(items, highlighted, what = "selected patient") {
   const entries = items.map((s) => `<span><i class="sw s-${esc(s.cls)}"></i>${esc(s.name)}</span>`);
@@ -182,7 +190,7 @@ function frame(spec, height, left = 50, bottom = 40) {
   }
   parts.push(text((left + W - 12) / 2, height - bottom + 34, x.label, "axis", 'text-anchor="middle"'));
   const mid = (height - bottom + 10) / 2;
-  parts.push(text(12, mid, y.label, "axis", `text-anchor="middle" transform="rotate(-90 12 ${mid})"`));
+  parts.push(axisLabel(y.label, 12, mid, height - bottom - 10));
   return { sx, sy, parts, xt, yt, left };
 }
 
@@ -360,7 +368,7 @@ export class ToxChart extends (globalThis.HTMLElement ?? class {}) {
 
 // Focus: one chart shown large ------------------------------------------------------------
 // The chart fills the area of the views, below the context bar and next to the filters,
-// down to the footer; on a phone it fills the screen. It stays large while filters, scenario or patient change (the page
+// down to the footer; where that is too low (phones, landscape), it fills the screen. It stays large while filters, scenario or patient change (the page
 // keeps its address path and view), so their effect shows in it. A double click, Esc or
 // a click in the top bar or on another view brings all charts back to the grid.
 
@@ -395,14 +403,21 @@ function enlarge(chart, fresh) {
   for (const host of document.querySelectorAll(".focus-host")) host.classList.remove("focus-host");
   chart.closest(".views > *")?.classList.add("focus-host");
   chart.classList.add("focused");
-  if (narrow()) {
-    fit(chart);
-    chart.scrollIntoView({ block: "start", behavior: fresh ? "smooth" : "instant" });
-  } else {
-    scrollTo({ top: 0, behavior: fresh ? "smooth" : "instant" });
-    fit(chart);
-  }
+  fit(chart);
+  place(chart, fresh ? "smooth" : "instant");
   if (fresh) chart.focus({ preventScroll: true });
+  // The layout around the chart settles a frame later; place it again then and when a
+  // smooth scroll ends, so that it is not cut off by a few pixels.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (!chart.classList.contains("focused")) return;
+    place(chart, fresh ? "smooth" : "instant");
+    // Only for the scroll started here: the listener ends after 1.5 s, so that it never
+    // moves the page when the user scrolls later.
+    const done = new AbortController();
+    addEventListener("scrollend", () => { if (chart.classList.contains("focused")) place(chart, "instant"); },
+      { once: true, signal: done.signal });
+    setTimeout(() => done.abort(), 1500);
+  }));
 }
 
 // Back to the grid; with scroll, to the place of the chart there.
@@ -418,24 +433,30 @@ function shrink(scroll) {
   }
 }
 
-// The phone layout (as in style.css): the views come below context bar and cohort.
-function narrow() {
-  return Boolean(globalThis.matchMedia?.("(max-width: 860px)").matches);
+// Height of the sticky top bar, which covers the top of the page when it scrolls.
+function stickyTop() {
+  const bar = document.querySelector(".topbar");
+  return bar && getComputedStyle(bar).position === "sticky" ? bar.offsetHeight : 0;
 }
 
-// Height of the large chart: from its top down to the footer, at least 320 pixels.
-// On a phone, where the views start below the controls, the height of the screen.
+// Size of the large chart. In place it reaches from below the controls down to the
+// footer. Where that leaves too little height (a phone, also a wide one in landscape,
+// or a low window), it fills the screen below the top bar instead and the page
+// scrolls to it (place()).
 function fit(chart) {
-  let height;
-  if (narrow()) {
-    height = innerHeight - 24;
-  } else {
-    const top = chart.getBoundingClientRect().top + scrollY;
-    const footer = document.querySelector(".footer")?.offsetHeight ?? 0;
-    height = innerHeight - top - footer - 28;
-  }
-  chart.style.setProperty("--focus-h", `${Math.max(320, height)}px`);
+  const top = chart.getBoundingClientRect().top + scrollY;
+  const footer = document.querySelector(".footer")?.offsetHeight ?? 0;
+  const inPlace = innerHeight - top - footer - 28;
+  const screen = innerHeight - stickyTop() - 16;
+  chart.fillsScreen = inPlace < Math.max(400, 0.7 * screen);
+  chart.style.setProperty("--focus-h", `${Math.max(240, chart.fillsScreen ? screen : inPlace)}px`);
   chart.draw();
+}
+
+// Scroll so that the large chart shows: the page from its top, or the chart just below the top bar.
+function place(chart, behavior) {
+  const top = chart.fillsScreen ? chart.getBoundingClientRect().top + scrollY - stickyTop() - 8 : 0;
+  scrollTo({ top, behavior });
 }
 
 if (globalThis.document) {
@@ -453,12 +474,19 @@ if (globalThis.document) {
   document.addEventListener("toxage:swap", () => {
     if (focus && !document.querySelector("tox-chart.focused")) shrink(false);
   });
-  let resizing = 0;
+  // A new window size: size the large chart again. Only a new width (a phone turned)
+  // scrolls to it again; the height also changes when a phone browser shows or hides
+  // its address bar during scrolling, and that must not move the page.
+  let resizing = 0, width = globalThis.innerWidth;
   addEventListener("resize", () => {
     cancelAnimationFrame(resizing);
     resizing = requestAnimationFrame(() => {
       const chart = document.querySelector("tox-chart.focused");
-      if (chart) fit(chart);
+      const turned = innerWidth !== width;
+      width = innerWidth;
+      if (!chart) return;
+      fit(chart);
+      if (turned) place(chart, "instant");
     });
   });
 }
