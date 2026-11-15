@@ -10,7 +10,13 @@ week. Two scenarios therefore give the same course for a patient until an
 intervention changes something.
 """
 import math
+import sys
+from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "risk-model"))
+
+import detect  # noqa: E402  (detection model of the risk models)
+import measurements  # noqa: E402
 from hazards import BLEEDING, CV, DOSE_FREE, ILD, OWN_FACTORS, VTE
 import interventions
 
@@ -27,11 +33,13 @@ def _stage(episode, day):
     return min(grade, 1 + int((grade - 1) * (day - episode["onset_day"]) / span))
 
 
-def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
+def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None, lung_rule=None):
     """Return the course of one patient as a dictionary.
 
     plan comes from interventions.plan() and holds the patient record as the
     scenario adapts it. hazard_rows come from HazardTable.for_patient().
+    lung_rule is the rule of the detection model for lung toxicity; the default
+    is the one of the model configuration.
     """
     patient = plan["patient"]
     pid = patient["patient_id"]
@@ -58,6 +66,10 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
     report_weeks = {s: 0 for s in sources}
     fatigue = part["alert_fatigue"]["action_ratio_per_earlier_false_alert"]
     false_alerts = 0
+    # Home measurements of every week, and the detection model that reads them.
+    home = {}
+    reads = {s: not perfect and iv["detection"][s].get("detector") == "observations" for s in sources}
+    detectors = {s: detect.LungDetector(lung_rule) for s in sources if reads[s]}
     report_weekday = int(draws.u("report_weekday") * 7)
 
     stop_base = 1 - 0.5 ** (1 / regimen["median_treatment_weeks"])
@@ -149,6 +161,8 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
                 break
             continue
 
+        home[week] = measurements.home_values(draws, patient, latent, params, week, ild)
+
         # 1. Monitoring: reports of this week, alerts, early recognition.
         monitored = bool(sources) and not lost and not dropped and (
             not stopped or week <= stop_week + after_stop)
@@ -161,13 +175,19 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
             for source in sources:
                 report_weeks[source] += 1
                 alerted = False
+                # A detection model that reads the measurements gives one signal per report.
+                signal = detectors[source].report(home[week]) if reads[source] else None
                 for episode in list(pending):
                     if not episode["onset_day"] <= report_day < episode["routine_day"]:
                         continue
                     stage = _stage(episode, report_day)
-                    chance = interventions.sensitivity(source, episode["event_type"], stage, iv, perfect)
-                    if draws.u(f"detect:{source}:{episode['event_type']}", week) >= chance:
-                        continue
+                    if reads[source]:
+                        if not signal or episode["event_type"] not in iv["detection"][source]["event_types"]:
+                            continue
+                    else:
+                        chance = interventions.sensitivity(source, episode["event_type"], stage, iv, perfect)
+                        if draws.u(f"detect:{source}:{episode['event_type']}", week) >= chance:
+                            continue
                     alerted = True
                     attended = draws.u("attend", week) < plan["attendance"]
                     # Alert fatigue: earlier false alerts of this patient make the team act less often.
@@ -179,8 +199,9 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
                         episode["stage"] = stage
                         pending.remove(episode)
                         recognise(episode, report_day + 1, "monitoring", week, first_day)
-                if not alerted and not perfect and (
-                        draws.u(f"false:{source}", week) < iv["detection"][source]["false_alerts_per_report"]):
+                false = signal if reads[source] else (
+                    draws.u(f"false:{source}", week) < iv["detection"][source]["false_alerts_per_report"])
+                if not alerted and not perfect and false:
                     alerts.append({"scenario_id": plan["scenario_id"], "patient_id": pid, "day": report_day,
                                    "source": source, "true_alert": False, "event_type": None,
                                    "attended": draws.u("attend", week) < plan["attendance"], "acted": False})
@@ -265,7 +286,7 @@ def simulate(draws, latent, regimen, params, iv, plan, hazard_rows, weeks=None):
                 stop(first_day + 6, "progression", week)
 
     follow_up = death_day if death_day is not None else 7 * weeks
-    return {"states": states, "events": events, "alerts": alerts, "ild": ild, "cv": cv, "end_day": end_day,
+    return {"states": states, "home": home, "events": events, "alerts": alerts, "ild": ild, "cv": cv, "end_day": end_day,
             "end_reason": end_reason, "death_day": death_day, "toxic_death": toxic_death,
             "follow_up_days": follow_up, "report_weeks": report_weeks, "plan": plan}
 

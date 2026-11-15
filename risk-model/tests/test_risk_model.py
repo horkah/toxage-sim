@@ -13,6 +13,7 @@ sys.path.insert(0, str(MODEL_DIR))
 sys.path.insert(0, str(REPO_DIR / "engine"))
 
 from schema import toxage_schema  # noqa: E402
+import detect  # noqa: E402
 import evaluate  # noqa: E402
 import fit  # noqa: E402
 import generate  # noqa: E402
@@ -287,6 +288,46 @@ class ModelTest(unittest.TestCase):
         ratio = math.prod(f["hazard_ratio"] for f in c5["factors"])
         self.assertAlmostEqual(1 - (1 - c5["start"]["risk"]) ** ratio, self.model.score(man)["cv_risk"], places=12)
         self.assertEqual(len(c5["factors"]), 3)
+
+
+class DetectionTest(unittest.TestCase):
+    """The detection model for lung toxicity on weekly home measurements."""
+
+    def reports(self, *saturations, **symptoms):
+        detector = detect.LungDetector()
+        return [detector.report({"spo2_percent": s, **symptoms}) for s in saturations]
+
+    def test_rule(self):
+        self.assertEqual(self.reports(98, 97, 98, 99), [False] * 4)          # noise
+        self.assertEqual(self.reports(98, 94), [False, True])                # a fall by 4 points
+        self.assertEqual(self.reports(98, 96, 98, 96), [False] * 4)          # a fall by 2, not confirmed
+        self.assertEqual(self.reports(98, 96, 96), [False, False, True])     # confirmed by the next report
+        self.assertEqual(self.reports(98, 96, None, 96), [False, False, False, True])   # a missing week does not count
+
+    def test_symptoms_confirm_a_fall(self):
+        detector = detect.LungDetector()
+        self.assertFalse(detector.report({"spo2_percent": 98, "pro_cough": 0, "pro_dyspnoea": 1}))
+        self.assertFalse(detector.report({"spo2_percent": 98, "pro_cough": 3, "pro_dyspnoea": 1}))   # symptoms alone
+        self.assertTrue(detector.report({"spo2_percent": 96, "pro_cough": 0, "pro_dyspnoea": 3}))
+
+    def test_detector_starts_again_after_an_alert(self):
+        self.assertEqual(self.reports(98, 94, 94, 94, 92, 92), [False, True, False, False, False, True])
+
+    def test_evaluation_on_engine_data(self):
+        data = generate.generate(6000, seed=3, scenarios=["usual_care"], validate=False)
+        observations = {}
+        for r in data["observation"]:
+            observations.setdefault(r["patient_id"], []).append(r)
+        outcomes = {o["patient_id"]: o for o in data["outcome"]}
+        result = detect.evaluate(data["baseline"], observations, outcomes)
+        self.assertGreater(result["events"], 30)
+        self.assertGreater(result["sensitivity"], 0.2)
+        self.assertGreater(result["median_lead_days"], 7)
+        self.assertLess(result["false_alerts_per_week"], 0.03)
+        # Lung toxicity of grade 1 has no symptoms and a small fall of the saturation.
+        grades = result["by_grade"]
+        share = lambda g: grades[g]["found_early"] / grades[g]["events"]
+        self.assertLess(share(1), share(2))
 
 
 class GlmAndMetricsTest(unittest.TestCase):

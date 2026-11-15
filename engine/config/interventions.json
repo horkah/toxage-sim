@@ -77,13 +77,14 @@
       "event_types": [
         "interstitial_lung_disease"
       ],
+      "detector": "observations",
       "stage_sensitivity": {
         "1": 0.5,
         "2": 0.85,
         "3": 0.98
       },
       "false_alerts_per_report": 0.02,
-      "basis": "assumption: stand-in for a detection model on daily oxygen saturation and symptoms"
+      "basis": "detector 'observations': the detection model of the risk models (risk-model/detect.py) reads the weekly oxygen saturation, cough and breathlessness of the patient, as the observation table holds them. Its alerts, true and false, follow from these values. detector 'stand_in' uses the sensitivity per stage and the rate of false alerts given here instead, which are assumptions."
     },
     "cardiovascular_monitoring": {
       "regimens": [

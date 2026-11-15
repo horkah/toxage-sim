@@ -36,7 +36,7 @@ python3 -m unittest discover engine/tests
 | `draws.py` | Fixed random numbers per patient, purpose and week |
 | `interventions.py` | What a scenario means for one patient: participation, adapted start, detection |
 | `course.py` | Course of one patient in weekly steps under one scenario, and the outcome summary |
-| `measurements.py` | Weekly observations derived from the course |
+| `measurements.py` | Weekly observations derived from the course; the home measurements that the detection model reads |
 | `calibrate.py` | Calibration against the literature |
 | `config/regimens.json` | Regimens with reference values and sources |
 | `config/parameters.json` | Parameters of population, hazards, actions, survival and measurements |
@@ -207,7 +207,9 @@ The components of a scenario and all their parameters are in `config/interventio
 
 **Fixed random numbers.** Every random decision of a patient is tied to a purpose and a week (`draws.py`). A scenario changes probabilities, not the random numbers. A patient whom an intervention does not reach has exactly the same course as in usual care, and a patient who is reached differs only from the point where the intervention acts. The tests check this.
 
-**Stand-ins for the risk models.** The prediction at therapy start is the true patient-related risk plus noise; the noise sets its accuracy. The detection during therapy is a sensitivity per stage of an event, times the share of events of a type that show in symptoms, plus a rate of false alerts. Real risk models can take their place in `interventions.py`.
+**Detection during therapy.** Lung monitoring uses the detection model of the [risk models](../risk-model/): each week it reads the oxygen saturation, cough and breathlessness of the patient, the same values that the observation table holds, and alerts by a published rule. Its true and false alerts follow from the measurements. Symptom monitoring and cardiovascular monitoring use stand-ins: a sensitivity per stage of an event, times the share of events of a type that show in symptoms, plus a rate of false alerts.
+
+**Stand-in for the prediction at therapy start.** The prediction is the true patient-related risk plus noise; the noise sets its accuracy.
 
 **Participation.** Whether a patient takes part depends on frailty and age. Reports are missing in some weeks, more often in frail patients. Each week a patient can drop out of the monitoring for good. After an alert the patient may not attend, and the team may not act. Every earlier false alert of a patient makes it a little less likely that the team acts on the next alert (alert fatigue). In all scenarios, including usual care, a patient on therapy can be lost to follow-up: therapy ends, and only events of grade 4 or 5 are still recognised.
 
@@ -332,7 +334,8 @@ The effects of the scenarios follow from the assumed parameters of the intervent
 - Blood tests are generated at fixed intervals and in weeks with a severe blood count event. The low point between two tests is not shown.
 - There is one therapy line per patient. After its end only death is simulated, with the same hazard as before. Later therapy lines and their toxicity are missing, so the long-term course is coarse.
 - Survival depends on tumour, frailty and ECOG, not on the time on therapy or the dose received. An intervention therefore changes survival only through deaths from toxicity. A factor for a faster progression at lower dose exists and is switched off.
-- The detection stand-ins do not read the generated measurements. They draw alerts from the true stage of an event.
+- The stand-ins of symptom monitoring and cardiovascular monitoring do not read the generated measurements. They draw alerts from the true stage of an event.
+- Home measurements come once a week. The published rule for lung toxicity speaks of a fall over one to three days.
 - False alerts cost a contact and, for lung and cardiovascular monitoring, diagnostics. They do not change the therapy. Alert fatigue counts the false alerts of the same patient, not the workload of the team.
 - After the end of the therapy line every patient counts as progressive, whatever the reason for the end.
 - The first severe toxicity comes earlier and in a narrower time span than published.
@@ -355,7 +358,7 @@ The effects of the scenarios follow from the assumed parameters of the intervent
 - A switch from a GnRH agonist to an antagonist for men at high cardiovascular risk as part of the risk-adapted start, as the ESC guideline suggests ([Lyon et al., 2022](../background/references.md#lyon-2022)).
 - Lipids, a full SCORE2 risk and a diastolic blood pressure in the baseline record.
 - Further signals: weight, temperature, potassium, liver values, troponin, ECOG over time.
-- Detection by real risk models that read the weekly observations, in place of the stand-ins.
+- Detection models that read the weekly observations for symptom monitoring and cardiovascular monitoring as well, in place of the stand-ins.
 - Alert fatigue that depends on the number of alerts per nurse.
 - Thresholds for alerts and for the high-risk flag as parameters of a scenario, to study the balance between early recognition and false alerts.
 - The remaining unit costs from the literature, quality-of-life weights for pancreatic and prostate cancer, and costs of the cancer drugs.

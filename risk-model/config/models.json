@@ -1,6 +1,6 @@
 {
-  "description": "Configuration of the risk models for candidates 1 to 5. Every value states its basis: a literature value or an assumption of this project. This file is kept separate from the engine configuration on purpose, so that the risk model does not read the parameters that generated the data.",
-  "version": "0.4.0",
+  "description": "Configuration of the risk models for candidates 1 to 5 and of the detection model for lung toxicity. Every value states its basis: a literature value or an assumption of this project. This file is kept separate from the engine configuration on purpose, so that the risk model does not read the parameters that generated the data.",
+  "version": "0.5.0",
   "basis": "literature and assumptions",
   "severe_toxicity_90d": {
     "description": "Candidate 1. Logistic model. The regimen rate is the risk of the reference patient; odds ratios shift the risk for patient factors.",
@@ -447,6 +447,13 @@
       "basis": "assumption"
     }
   },
+  "lung_detection": {
+    "description": "Detection model for lung toxicity on weekly home measurements, see detect.py. An alert means: examine the patient. Values in points of oxygen saturation and in levels of the symptom scale from 0 to 4.",
+    "fall_once": 4,
+    "fall_confirmed": 2,
+    "symptom_rise": 2,
+    "basis": "Swain et al. (2022): an expert panel recommends an examination after a fall of the oxygen saturation at rest by 2 to 4 points over 1 to 3 days. The confirmation by a second report or by symptoms, and the size of the symptom rise, are assumptions for weekly reports."
+  },
   "whole_numbers": [
     "severe_toxicity_90d/reference_patient/ga_impaired_domains",
     "ild/window_days",
@@ -454,6 +461,9 @@
     "neutropenia/thresholds/prior_chemotherapy_from_lines",
     "diarrhoea/window_days",
     "cardiovascular/window_days",
-    "cardiovascular/rate_window_days"
+    "cardiovascular/rate_window_days",
+    "lung_detection/fall_once",
+    "lung_detection/fall_confirmed",
+    "lung_detection/symptom_rise"
   ]
 }

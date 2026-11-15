@@ -43,6 +43,38 @@ def _warning_effect(day, cv, rise_per_week, maximum, recovery_per_week):
     return effect
 
 
+def home_values(draws, patient, latent, params, week, ild):
+    """Oxygen saturation, cough and breathlessness of one week as the patient
+    measures and reports them at home, None where a value is missing. ild is
+    the lung toxicity of the patient as far as it has developed, or None.
+
+    The course calls this week by week, so that a detection model can read the
+    same values that the observation table holds."""
+    m = params["measurements"]
+    s_p, y_p = m["spo2"], m["symptoms"]
+    day = 7 * week + 1
+    spo2 = None
+    if week == 0 or draws.u("spo2_missing", week) >= s_p["missing"]:
+        maximum = s_p["ild_maximum_drop"][str(ild["grade"])] if ild else 0.0
+        drop = _ild_effect(day + 6, ild, s_p["ild_drop_per_week"], maximum, s_p["recovery_per_week"])
+        base = patient["spo2_percent"]
+        if week > 0:
+            base += s_p["noise_sd"] * draws.normal("spo2_noise", week)
+        spo2 = round(clip(base - drop, 50, 100))
+    cough = dyspnoea = None
+    reported = draws.u("symptoms_missing", week) >= y_p["missing"]
+    if reported:
+        level = lambda x, name: round(clip(x + y_p["noise_sd"] * draws.normal(name, week), 0, 4))
+        c = y_p["cough"]
+        maximum = c["ild_maximum"][str(ild["grade"])] if ild else 0.0
+        lung = _ild_effect(day + 6, ild, c["ild_rise_per_week"], maximum, s_p["recovery_per_week"])
+        cough = level(c["base"] + c["lung_comorbidity_shift"] * patient["lung_comorbidity"] + lung, "cough_noise")
+        b = y_p["dyspnoea"]
+        dyspnoea = level(b["base"] + b["lung_comorbidity_shift"] * patient["lung_comorbidity"]
+                         + b["frailty_slope"] * max(0.0, latent["frailty"]) + lung, "dyspnoea_noise")
+    return {"spo2_percent": spo2, "pro_cough": cough, "pro_dyspnoea": dyspnoea, "reported": reported}
+
+
 def observations(draws, latent, regimen, params, course, mult):
     """Return the observation records of one patient in one scenario."""
     plan = course["plan"]
@@ -92,15 +124,12 @@ def observations(draws, latent, regimen, params, course, mult):
             haemoglobin = round(max(3.0, haemoglobin), 1)
             platelets = round(max(1.0, platelets))
 
-        spo2 = None
-        if week == 0 or rng.random() >= s_p["missing"]:
-            maximum = s_p["ild_maximum_drop"][str(ild["grade"])] if ild else 0.0
-            drop = _ild_effect(day + 6, ild, s_p["ild_drop_per_week"], maximum, s_p["recovery_per_week"])
-            base = patient["spo2_percent"] if week == 0 else patient["spo2_percent"] + rng.gauss(0, s_p["noise_sd"])
-            spo2 = round(clip(base - drop, 50, 100))
+        home = course["home"][week]
+        spo2 = home["spo2_percent"]
 
-        fatigue = diarrhoea = cough = dyspnoea = chest_pain = None
-        reported = rng.random() >= y_p["missing"]
+        fatigue = diarrhoea = chest_pain = None
+        cough, dyspnoea = home["pro_cough"], home["pro_dyspnoea"]
+        reported = home["reported"]
         if reported:
             noise = lambda: rng.gauss(0, y_p["noise_sd"])
             level = lambda x: round(clip(x + noise(), 0, 4))
@@ -116,13 +145,6 @@ def observations(draws, latent, regimen, params, course, mult):
             elif any(e["event_type"] == "diarrhoea" for e in by_week.get(week + 1, [])):
                 value += d["week_before_event_bump"]
             diarrhoea = level(value)
-            c = y_p["cough"]
-            maximum = c["ild_maximum"][str(ild["grade"])] if ild else 0.0
-            lung = _ild_effect(day + 6, ild, c["ild_rise_per_week"], maximum, s_p["recovery_per_week"])
-            cough = level(c["base"] + c["lung_comorbidity_shift"] * patient["lung_comorbidity"] + lung)
-            b = y_p["dyspnoea"]
-            dyspnoea = level(b["base"] + b["lung_comorbidity_shift"] * patient["lung_comorbidity"]
-                             + b["frailty_slope"] * max(0.0, frailty) + lung)
 
         # Drawn after all other values of the week, so that those stay as they are.
         pressure = None

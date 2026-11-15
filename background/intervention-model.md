@@ -294,7 +294,7 @@ The engine implements the model with the parameters in `engine/config/interventi
 |---|---|
 | Participation: uptake, adherence, dropout, attendance, loss to follow-up | Implemented. Uptake and adherence depend on frailty and age. |
 | Prediction at therapy start | Stand-in: true patient-related risk plus noise. A fixed share of the cohort is flagged. |
-| Detection during therapy | Stand-in: sensitivity per stage, share of events that show in symptoms, false alerts per report. It does not read the generated measurements. |
+| Detection during therapy | Lung monitoring: the detection model of the risk models reads the generated oxygen saturation and symptoms. Symptom and cardiovascular monitoring: stand-ins with a sensitivity per stage, the share of events that show in symptoms, and false alerts per report. |
 | Perfect detector | Implemented as scenario. |
 | Natural course in stages | Implemented. Usual care recognises an event at a fixed day and grade; monitoring can recognise it at an earlier stage. |
 | Actions at therapy start | Reduced starting dose, G-CSF, thromboprophylaxis, supportive measures, closer monitoring. |
@@ -313,7 +313,7 @@ Open parts:
 
 - Values from the literature for participation, the effect of early treatment, hospital stays and the remaining unit costs; quality-of-life weights for pancreatic and prostate cancer.
 - The choice of a GnRH antagonist as an action at therapy start.
-- Real risk models in place of the stand-ins.
+- Real risk models in place of the remaining stand-ins.
 - A link from time on therapy to survival, without which an intervention changes survival only through deaths from toxicity.
 
 ## 7. Ideas for later

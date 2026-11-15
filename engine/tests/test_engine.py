@@ -443,6 +443,29 @@ class EngineTest(unittest.TestCase):
         severe = lambda s: sum(g >= 3 for g in grades(s))
         self.assertLessEqual(severe("lung_monitoring"), severe(USUAL))
 
+    def test_lung_monitoring_reads_the_measurements(self):
+        s = "lung_monitoring"
+        true = [a for alerts in self.alerts[s].values() for a in alerts if a["true_alert"]]
+        false = [a for alerts in self.alerts[s].values() for a in alerts if not a["true_alert"]]
+        self.assertTrue(true)
+        self.assertTrue(false)
+        for a in true + false:
+            # The detection model alerts only on a report with an oxygen saturation,
+            # and that saturation is in the observation table.
+            week = (a["day"] - 1) // 7
+            row = self.observations[s][a["patient_id"]][week]
+            self.assertIsNotNone(row["spo2_percent"])
+            self.assertLess(row["spo2_percent"], self.baseline[a["patient_id"]]["spo2_percent"])
+        # The observations of usual care are the ones the detection model would read.
+        self.assertEqual([without(o, "scenario_id") for o in self.observations[USUAL]["P000001"]][:3],
+                         [without(o, "scenario_id") for o in self.observations[s]["P000001"]][:3])
+
+    def test_lung_monitoring_can_use_the_stand_in(self):
+        config = copy.deepcopy(self.config)
+        config["interventions"]["detection"]["lung_monitoring"]["detector"] = "stand_in"
+        data = generate.generate(900, 5, ["lung_monitoring"], config=config)
+        self.assertTrue(any(a["source"] == "lung_monitoring" for a in data["alert"]))
+
     def test_cardiovascular_monitoring_is_limited_to_androgen_deprivation(self):
         s = "cardiovascular_monitoring"
         for pid, o in self.outcome[s].items():

@@ -12,7 +12,7 @@ The models follow candidates 1 to 5 of the [toxicity report](../background/toxic
 | Candidate 4 | Diarrhoea of grade 3 or higher within 90 days | NALIRIFOX, gemcitabine with nab-paclitaxel, sacituzumab govitecan |
 | Candidate 5 | Major cardiovascular event (myocardial infarction, stroke, cardiovascular death) within 364 days | men with prostate cancer under androgen deprivation, all five prostate regimens |
 
-All are baseline models: they estimate the risk before therapy starts. The detection model for lung toxicity named in the report would use the weekly observations of schema and engine. This and other next steps are listed in [EXTENSIONS.md](EXTENSIONS.md).
+All five are baseline models: they estimate the risk before therapy starts. A sixth model works during therapy: the detection model for lung toxicity reads the weekly home measurements and says when a patient should be examined. Next steps are listed in [EXTENSIONS.md](EXTENSIONS.md).
 
 ## Run
 
@@ -32,6 +32,10 @@ python3 risk-model/evaluate.py --data engine/output/test
 python3 -m unittest discover risk-model/tests
 ```
 
+```bash
+python3 risk-model/detect.py --data engine/output/test
+```
+
 `fit.py` estimates the coefficients from data and writes a configuration in the same format as `config/models.json`. `score.py` and `evaluate.py` take it with `--config`:
 
 ```bash
@@ -47,6 +51,7 @@ The code needs Python 3 and no further packages. The output folder is not under 
 | `toxage_risk.py` | Common interface to all risk models, used by the app |
 | `models.py` | The calculations of the five models, and the class `Scorer`, which writes risk score records |
 | `config/models.json` | Coefficients, reference rates and risk categories, each with its source or marked as assumption |
+| `detect.py` | Detection model for lung toxicity on weekly observations, and its evaluation |
 | `score.py` | Command line: baseline CSV to risk score CSV |
 | `evaluate.py` | Command line: discrimination and calibration against outcomes |
 | `fit.py` | Command line: estimates the coefficients from data |
@@ -150,6 +155,30 @@ The risk of grade 2 or higher is 71.1% of the risk of any grade, the share in [M
 **Risk over time.** The onset time is log-normal with a median of 129 days ([Modi et al., 2022](../background/references.md#modi-2022)) and 87% of the events within 12 months ([Powell et al., 2022](../background/references.md#powell-2022)). From this the model gives the risk up to any day and the remaining risk of a patient who is still free of lung toxicity. For a patient who is free of lung toxicity after one year, about a tenth of the risk remains. [Swain et al. (2022)](../background/references.md#swain-2022) report 97% of the events within 12 months and a risk of 1.8% for patients who were still on treatment then.
 
 Risk categories: low below 5%, intermediate from 5%, high from 15%. The thresholds are assumptions; 15% is close to the 15.4% incidence in [Powell et al. (2022)](../background/references.md#powell-2022).
+
+## Detection model for lung toxicity
+
+The baseline model of candidate 2 says who is at risk. The detection model follows a patient on trastuzumab deruxtecan week by week and gives an alert when the patient should be examined. It reads three values of the observation table: oxygen saturation, cough and breathlessness.
+
+The rule follows an expert panel: a fall of the oxygen saturation at rest by 2 to 4 points against the patient's own value should lead to an examination ([Swain et al., 2022](../background/references.md#swain-2022)). For one report per week it reads:
+
+- alert if the saturation is 4 points or more below the patient's reference, or
+- 2 points or more below it in two reports in a row, or
+- 2 points or more below it together with cough or breathlessness that is 2 levels or more above the patient's reference.
+
+The reference is the first report of the patient. After an alert the patient is examined, and the detector starts again from the current report. A report without a saturation says nothing. The confirmation by a second report or by symptoms keeps single noisy values from giving alerts; it is an assumption, as is the size of the symptom rise.
+
+```python
+import detect
+
+detector = detect.LungDetector()
+detector.report({"spo2_percent": 98, "pro_cough": 0, "pro_dyspnoea": 1})   # False, sets the reference
+detector.report({"spo2_percent": 96, "pro_cough": 0, "pro_dyspnoea": 3})   # True
+```
+
+The engine uses this model for its scenario "lung monitoring": the alerts of the scenario, true and false, follow from the generated measurements. `detect.evaluate` measures the model on data of usual care: the share of lung toxicity events with an alert before usual care recognises them, the days gained, and the false alerts per patient-week.
+
+Lung toxicity of grade 1 has no symptoms and shows only in imaging ([Swain et al., 2022](../background/references.md#swain-2022)). The engine gives such events a small fall of the saturation, so the model finds few of them. This limit belongs to home measurements, not to the rule.
 
 ## Candidate 3: severe or febrile neutropenia
 
