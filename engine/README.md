@@ -17,14 +17,14 @@ The engine serves five risk model candidates of the [toxicity report](../backgro
 python3 engine/generate.py --n 3000 --seed 1 --out engine/output
 ```
 
-This writes `scenario.csv`, `baseline.csv`, `observation.csv`, `event.csv`, `alert.csv`, `outcome.csv` and `metadata.json` to the output folder and prints key numbers per regimen and per scenario. `--scenarios` limits the run to some scenarios, for example `--scenarios usual_care`. The same seed gives the same data. The output folder is not under version control. 3000 patients under all seven scenarios take about 30 seconds.
+This writes `scenario.csv`, `baseline.csv`, `observation.csv`, `event.csv`, `alert.csv`, `outcome.csv` and `metadata.json` to the output folder and prints key numbers per regimen and per scenario. `--scenarios` limits the run to some scenarios, for example `--scenarios usual_care`. The same seed gives the same data. The output folder is not under version control. 3000 patients under all eight scenarios take about 45 seconds.
 
 ```bash
 python3 engine/calibrate.py
 python3 -m unittest discover engine/tests
 ```
 
-`calibrate.py` matches the event rates of usual care to the literature and writes `config/calibration.json`. It takes about one minute and has to be run again after every change of the model or its parameters. The engine needs Python 3 and no further packages. It imports the risk models of this repository for the model-guided start and for lung monitoring.
+`calibrate.py` matches the event rates of usual care to the literature and writes `config/calibration.json`. It takes about two minutes and has to be run again after every change of the model or its parameters. The engine needs Python 3 and no further packages. It imports the risk models of this repository for the model-guided start and for lung monitoring.
 
 ## Files
 
@@ -228,16 +228,17 @@ Usual care, from a run with 9000 patients (seed 1), all ECOG levels included:
 
 | Regimen | Trial: any severe toxicity | Generated: any severe toxicity | Generated: within 90 days | Generated: stopped for toxicity |
 |---|---|---|---|---|
-| `nalirifox` | 87% | 89% | 88% | 24% |
-| `gemcitabine_nab_paclitaxel` | 86% | 85% | 84% | 21% |
-| `adt_docetaxel` | 63.5% | 68% | 64% | 8% |
-| `adt_docetaxel_abiraterone` | 63% | 69% | 58% | 11% |
-| `adt_docetaxel_darolutamide` | 66.1% | 74% | 68% | 14% |
-| `lu_psma_617` | 52.7% | 57% | 50% | 12% |
-| `olaparib` | 51% | 55% | 47% | 11% |
-| `trastuzumab_deruxtecan` | 52.6% | 55% | 51% | 14% |
-| `chemotherapy_single_agent` | 67.4% | 69% | 68% | 7% |
-| `pembrolizumab_chemotherapy` | 68.1% | 71% | 69% | 15% |
+| `nalirifox` | 87% | 87% | 87% | 23% |
+| `gemcitabine_nab_paclitaxel` | 86% | 84% | 83% | 20% |
+| `adt_docetaxel` | 63.5% | 65% | 60% | 12% |
+| `adt_docetaxel_abiraterone` | 63% | 71% | 57% | 13% |
+| `adt_docetaxel_darolutamide` | 66.1% | 73% | 65% | 14% |
+| `lu_psma_617` | 52.7% | 55% | 50% | 12% |
+| `olaparib` | 51% | 55% | 45% | 10% |
+| `trastuzumab_deruxtecan` | 52.6% | 58% | 54% | 14% |
+| `chemotherapy_single_agent` | 67.4% | 70% | 68% | 9% |
+| `pembrolizumab_chemotherapy` | 68.1% | 71% | 68% | 12% |
+| `sacituzumab_govitecan` | 64% | 66% | 63% | 4% |
 
 The calibration matches each event type to the literature within 0.3 percentage points in generated patients with ECOG 0 or 1 during the first 52 weeks. The table differs from the trial rates because it includes patients with ECOG 2 and events after week 52.
 
@@ -245,41 +246,48 @@ Further checks against the literature:
 
 | Quantity | Literature | Generated |
 |---|---|---|
-| Severe toxicity within 90 days in patients aged 70 or older with at least one impaired geriatric domain, usual care | 71% ([Mohile et al., 2021](../background/references.md#mohile-2021), usual care) | about 72% |
+| Severe toxicity within 90 days in patients aged 70 or older with at least one impaired geriatric domain, usual care | 71% ([Mohile et al., 2021](../background/references.md#mohile-2021), usual care) | about 71% |
 | The same in flagged patients who take part in the risk-adapted start, against usual care | relative risk 0.74 ([Mohile et al., 2021](../background/references.md#mohile-2021)); 50.5% against 60.6% in GAIN ([Dale et al., 2023](../background/references.md#dale-2023)) | 55% against 74%, relative risk 0.74 |
-| Day of the first severe toxicity, median and quartiles | 22, 9 to 51, in patients aged 70 or older on chemotherapy ([Extermann et al., 2012](../background/references.md#extermann-2012)) | 16, 12 to 24, in pancreatic cancer |
-| Severe or febrile neutropenia with and without G-CSF | 6.4% and 22.8% in the first cycle ([Lyman et al., 2011](../background/references.md#lyman-2011)) | 26% and 61% within 90 days with docetaxel alone |
-| AST above 35 U/l, alkaline phosphatase above 120 U/l, white cells below 5 | 13.5%, 19.5%, 12.8% ([Lyman et al., 2011](../background/references.md#lyman-2011)) | 16%, 19%, 16% |
-| Dose reduction with NALIRIFOX | 60% ([Wainberg et al., 2023](../background/references.md#wainberg-2023)) | about 52% |
-| Therapy stopped because of adverse events with NALIRIFOX | 32% ([Wainberg et al., 2023](../background/references.md#wainberg-2023)) | about 24% |
-| Lung toxicity with trastuzumab deruxtecan within 52 weeks | 10.5% (12.1% overall, 87% of events within 12 months) | about 10% |
-| Share of lung toxicity recognised late | 53% ([Powell et al., 2022](../background/references.md#powell-2022)) | about 53% |
-| Median day of onset of lung toxicity | 129 ([Modi et al., 2022](../background/references.md#modi-2022)) | about 108 |
-| Cardiovascular events within 48 weeks under a GnRH agonist | 3.8%: 6.2% ([Shore et al., 2020](../background/references.md#shore-2020)), of which 61.5% cardiovascular ([Lopes et al., 2021](../background/references.md#lopes-2021)) | 4.1% |
-| Hazard with an earlier event against without, under a GnRH agonist | 1.46 (HERO and PRONOUNCE together) | 5.3% against 4.0%, a ratio of about 1.3 |
-| Cardiovascular events within 48 weeks under a GnRH antagonist | 1.8%: 2.9% ([Shore et al., 2020](../background/references.md#shore-2020)), of which 61.5% cardiovascular | 3.5% |
-| Share of men with an earlier cardiovascular event | 13.9% ([Shore et al., 2020](../background/references.md#shore-2020)) | 12.0% |
+| Day of the first severe toxicity, median and quartiles | 22, 9 to 51, in patients aged 70 or older on chemotherapy ([Extermann et al., 2012](../background/references.md#extermann-2012)) | 15, 11 to 24, in pancreatic cancer |
+| Severe or febrile neutropenia with and without G-CSF | 6.4% and 22.8% in the first cycle ([Lyman et al., 2011](../background/references.md#lyman-2011)) | 23% and 59% within 90 days with docetaxel alone |
+| Severe neutropenia with sacituzumab govitecan, with and without two copies of UGT1A1*28 | higher risk with two copies, no number ([Bardia et al., 2021](../background/references.md#bardia-2021)) | 71% and 53% within 90 days |
+| AST above 35 U/l, alkaline phosphatase above 120 U/l, white cells below 5 | 13.5%, 19.5%, 12.8% ([Lyman et al., 2011](../background/references.md#lyman-2011)) | 16%, 20%, 18% |
+| Venous thromboembolism in pancreatic cancer without and with thromboprophylaxis | 10.2% within three months without; hazard ratio 0.41 with ([Key et al., 2020](../background/references.md#key-2020)) | 12.3% and 6.0% over the whole follow-up |
+| Khorana score of 3 or more among patients with pancreatic cancer | – | 20% |
+| Dose reduction with NALIRIFOX | 60% ([Wainberg et al., 2023](../background/references.md#wainberg-2023)) | about 49% |
+| Therapy stopped because of adverse events with NALIRIFOX | 32% ([Wainberg et al., 2023](../background/references.md#wainberg-2023)) | about 23% |
+| Therapy stopped because of adverse events with sacituzumab govitecan | 5% ([Bardia et al., 2021](../background/references.md#bardia-2021)) | about 4% |
+| Lung toxicity with trastuzumab deruxtecan within 52 weeks | 10.5% (12.1% overall, 87% of events within 12 months) | about 11% |
+| Share of lung toxicity recognised late | 53% ([Powell et al., 2022](../background/references.md#powell-2022)) | about 47% |
+| Median day of onset of lung toxicity | 129 ([Modi et al., 2022](../background/references.md#modi-2022)) | about 101 |
+| Cardiovascular events within 48 weeks under a GnRH agonist | 3.8%: 6.2% ([Shore et al., 2020](../background/references.md#shore-2020)), of which 61.5% cardiovascular ([Lopes et al., 2021](../background/references.md#lopes-2021)) | 4.5% |
+| Hazard with an earlier event against without, under a GnRH agonist | 1.46 (HERO and PRONOUNCE together) | 5.4% against 4.4%, a ratio of about 1.2 |
+| Cardiovascular events within 48 weeks under a GnRH antagonist | 1.8%: 2.9% ([Shore et al., 2020](../background/references.md#shore-2020)), of which 61.5% cardiovascular | 4.8% |
+| Share of men with an earlier cardiovascular event | 13.9% ([Shore et al., 2020](../background/references.md#shore-2020)) | 12.6% |
 
 Scenarios, from the same run, per patient of the whole cohort:
 
 | Scenario | Taking part | Severe toxicity, 90 days | Severe events | Cardiovascular events | Deaths from toxicity | Hospital days | Alerts | QALY | Cost of care (€) | Cost of intervention (€) |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `usual_care` | 0% | 68.3% | 1.20 | 214 | 201 | 3.89 | 0 | 1.247 | 4000 | 0 |
-| `risk_adapted_start` | 21.8% | 64.0% | 1.09 | 216 | 174 | 3.51 | 0.67 | 1.252 | 3603 | 411 |
-| `symptom_monitoring` | 78.6% | 65.8% | 1.13 | 211 | 159 | 3.47 | 2.80 | 1.253 | 3528 | 1364 |
-| `lung_monitoring` | 9.4% | 68.3% | 1.20 | 214 | 198 | 3.89 | 0.07 | 1.248 | 4012 | 58 |
-| `cardiovascular_monitoring` | 25.1% | 68.1% | 1.20 | 200 | 199 | 3.87 | 0.60 | 1.248 | 4113 | 194 |
-| `combined` | 78.6% | 62.1% | 1.04 | 204 | 147 | 3.20 | 3.48 | 1.258 | 3409 | 1670 |
-| `perfect_detection` | 100% | 0.3% | 0.01 | 115 | 22 | 0.11 | 1.30 | 1.303 | 137 | 2441 |
+| `usual_care` | 0% | 67.2% | 1.22 | 259 | 206 | 3.86 | 0 | 1.215 | 3990 | 0 |
+| `risk_adapted_start` | 21.7% | 63.0% | 1.10 | 257 | 180 | 3.48 | 0.65 | 1.219 | 3585 | 394 |
+| `model_guided_start` | 22.0% | 63.4% | 1.07 | 259 | 171 | 3.39 | 0.40 | 1.219 | 3489 | 274 |
+| `symptom_monitoring` | 78.6% | 65.2% | 1.15 | 254 | 162 | 3.42 | 2.72 | 1.222 | 3499 | 1322 |
+| `lung_monitoring` | 9.8% | 67.2% | 1.22 | 259 | 205 | 3.86 | 0.02 | 1.215 | 3992 | 59 |
+| `cardiovascular_monitoring` | 25.1% | 67.0% | 1.21 | 242 | 202 | 3.84 | 0.59 | 1.216 | 4094 | 187 |
+| `combined` | 78.6% | 61.3% | 1.04 | 241 | 151 | 3.16 | 3.33 | 1.226 | 3381 | 1613 |
+| `perfect_detection` | 100% | 0.4% | 0.02 | 130 | 20 | 0.11 | 1.28 | 1.272 | 150 | 2408 |
 
 Cardiovascular events and deaths from toxicity are counts among the 9000 patients, over the whole follow-up.
 
-- Lung monitoring reaches only the patients on trastuzumab deruxtecan. Among them it recognised 43 of 102 lung toxicity events early, by a median of about five weeks, and lowered the events of grade 3 or higher from 19 to 12.
-- Cardiovascular monitoring reaches only the men with prostate cancer. Of the 214 cardiovascular events of usual care, 114 had a warning phase. Monitoring recognised 36 of them early, by a median of three days, and prevented 14 major events and 2 of 29 cardiovascular deaths. It also recognised 96 of 195 hypertension events early and lowered those of grade 3 or higher from 194 to 129.
-- With perfect detection 115 cardiovascular events remain, 22 of them fatal: the events without a warning phase.
-- Symptom monitoring recognised about 14% of the events early, by a median of three days, because most event types worsen within days and a weekly report often comes too late.
-- A scenario can raise the number of cardiovascular events slightly, as the risk-adapted start does here: patients who stay on therapy longer are at risk longer.
-- Against usual care, the combined scenario gains 0.012 quality-adjusted life years per patient for 1080 euros, about 92 000 euros per quality-adjusted life year. The risk-adapted start costs about 2800 euros per quality-adjusted life year, symptom monitoring alone about 143 000. [Lizée et al. (2019)](../background/references.md#lizee-2019) called 30 000 euros very cost-effective and 90 000 cost-effective.
+- **Stand-in against risk models.** The risk-adapted start and the model-guided start flag the same share of patients and reach about the same result, by different patients: 41% of the flags agree. The stand-in knows the frailty of a patient and flags in all three tumours. The model for severe toxicity ranks mostly by the regimen and flags patients with pancreatic cancer almost only (2534 of 2700 flags). Its flagged patients have a higher risk (86% severe toxicity within 90 days in usual care, 69% with the adapted start) than those of the stand-in (74% and 55%).
+- **G-CSF by the model.** In the model-guided start the model for severe neutropenia decides on G-CSF. Together with the flags in pancreatic cancer this brings fewer severe events and fewer deaths from toxicity than the stand-in does, with fewer alerts.
+- **Thromboprophylaxis.** Usual care has 380 venous thromboembolisms. The risk-adapted start lowers them to 318, the model-guided start to 246, because it flags more patients with pancreatic cancer, who all have a Khorana score of 2 or more. Major bleedings rise from 1 to 2 and 7.
+- **Lung monitoring** reaches only the patients on trastuzumab deruxtecan and reads their weekly measurements. Among them it recognised 18 of 118 lung toxicity events early, by a median of about three and a half weeks, and lowered the events of grade 3 or higher from 18 to 14. Of its 184 alerts, 26 were true. Events of grade 1 hardly change the measurements and are not found.
+- **Cardiovascular monitoring** reaches only the men with prostate cancer. Of the 259 cardiovascular events of usual care, 139 had a warning phase. Monitoring recognised 44 of them early, by a median of five days, and prevented 17 major events and 4 of 32 cardiovascular deaths. It also recognised 95 of 202 hypertension events early and lowered those of grade 3 or higher from 205 to 138.
+- With perfect detection 130 cardiovascular events remain, 20 of them fatal: the events without a warning phase.
+- **Symptom monitoring** recognised about 13% of the events early, by a median of three days, because most event types worsen within days and a weekly report often comes too late.
+- **Costs.** Against usual care, the combined scenario gains 0.011 quality-adjusted life years per patient for 1003 euros, about 91 000 euros per quality-adjusted life year. Symptom monitoring alone costs about 107 000. The two adapted starts gain 0.004 quality-adjusted life years and save money: 12 and 227 euros per patient. [Lizée et al. (2019)](../background/references.md#lizee-2019) called 30 000 euros very cost-effective and 90 000 cost-effective.
 
 The effects of the scenarios follow from the assumed parameters of the intervention model. They show how the model behaves, not what an intervention achieves in patients.
 
@@ -295,6 +303,17 @@ Every parameter from the literature is an estimate. `uncertainty.py` repeats the
 - **Shares** are drawn from the beta distribution of their numbers: the cardiovascular share of the events of HERO, the share of lung toxicity that is recognised late, the excess of major bleeding.
 - **Regimen rates** are drawn from the beta distribution of the trial size, for the seven regimens whose safety population is in the references, and the rate of cardiovascular events from the 308 men of HERO.
 - The patients and their fixed random numbers are the same in every draw. What differs between two draws is the parameters alone.
+
+A run with 1500 patients and 40 draws (seed 1) gives these differences to usual care, as mean and 95% interval over the draws:
+
+| Scenario | Severe toxicity, 90 days (points) | Deaths from toxicity per 1000 | Hospital days | QALY | Cost (€) |
+|---|---|---|---|---|---|
+| `risk_adapted_start` | −3.6 (−3.9 to −3.3) | −1.7 (−2.7 to −0.7) | −0.4 (−0.4 to −0.3) | 0.003 (0.002 to 0.006) | −24 (−79 to 38) |
+| `model_guided_start` | −4.4 (−4.9 to −4.0) | −3.5 (−4.7 to −2.0) | −0.5 (−0.6 to −0.4) | 0.005 (0.004 to 0.006) | −303 (−374 to −211) |
+| `symptom_monitoring` | −2.1 (−2.3 to −1.7) | −2.9 (−3.4 to −2.7) | −0.4 (−0.5 to −0.4) | 0.004 (0.004 to 0.005) | 777 (739 to 811) |
+| `combined` | −5.3 (−5.7 to −5.0) | −3.8 (−5.3 to −2.7) | −0.7 (−0.8 to −0.7) | 0.006 (0.005 to 0.009) | 898 (838 to 1003) |
+
+The rate of severe toxicity in usual care itself lies between 62.6% and 67.2%. The differences between the scenarios are much more stable than the levels, because every draw moves all scenarios together. The order of the scenarios holds in every draw; whether the risk-adapted start saves or costs money does not.
 
 `config/uncertainty.json` lists the parameters with their intervals and sources. Parameters without a published interval keep their value, among them all assumptions on participation, detection and early treatment, and the calibration is not repeated. The intervals therefore show a part of the uncertainty, and they are narrower than the truth.
 
