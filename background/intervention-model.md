@@ -327,4 +327,4 @@ Open parts:
 - Interventions for the care team rather than the patient, for example decision support at the tumour board.
 - Costs from different perspectives: health insurance, hospital, society.
 - Longer follow-up with later therapy lines, so that effects on survival can show.
-- Uncertainty of the parameters: repeated simulation with parameters drawn from ranges.
+- Ranges for the assumed parameters of participation, detection and early treatment, so that the uncertainty analysis of the engine covers the whole chain of effects.

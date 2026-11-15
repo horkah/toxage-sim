@@ -1,6 +1,7 @@
 """Tests of the engine. Run with: python3 -m unittest discover engine/tests"""
 import copy
 import json
+import random
 import sys
 import unittest
 from collections import Counter
@@ -13,6 +14,7 @@ sys.path.insert(0, str(ENGINE_DIR))
 from schema import toxage_schema  # noqa: E402
 import generate  # noqa: E402
 import hazards  # noqa: E402
+import uncertainty  # noqa: E402
 from draws import Draws  # noqa: E402
 
 USUAL = generate.USUAL_CARE
@@ -544,6 +546,62 @@ class EngineTest(unittest.TestCase):
         severe = [e for ev in self.events[s].values() for e in ev if e["grade"] >= 3]
         self.assertTrue(all(e["event_type"] in sudden for e in severe))
         self.assertGreaterEqual(self.total("qaly", s), self.total("qaly", "combined"))
+
+
+class UncertaintyTest(unittest.TestCase):
+    """Repeated simulation with parameters drawn from their published uncertainty."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.config = generate.default_config()
+        cls.uncertainty = uncertainty.load_uncertainty()
+
+    def test_every_uncertain_parameter_exists(self):
+        for entry in self.uncertainty["ratios"] + self.uncertainty["shares"]:
+            for path in entry["paths"]:
+                self.assertIsInstance(uncertainty._get(self.config, path), float, path)
+        for entry in self.uncertainty["ratios"]:
+            low, high = entry["interval"]
+            value = uncertainty._get(self.config, entry["paths"][0])
+            self.assertTrue(low < value < high, entry["name"])
+        for name in self.uncertainty["regimen_patients"]:
+            if name != "basis":
+                self.assertIn(name, self.config["regimens"])
+
+    def test_draws_follow_the_published_intervals(self):
+        rng = random.Random(1)
+        values = [uncertainty.draw_config(rng, self.config, self.uncertainty)[1] for _ in range(400)]
+        gcsf = sorted(v["Neutropenia: G-CSF"] for v in values)
+        self.assertAlmostEqual(gcsf[200], 0.26, delta=0.02)                 # the median is the value
+        self.assertAlmostEqual(gcsf[10], 0.18, delta=0.03)                  # 2.5% and 97.5% are the interval
+        self.assertAlmostEqual(gcsf[389], 0.37, delta=0.05)
+        rate = [v["nalirifox: severe toxicity"] for v in values]
+        self.assertAlmostEqual(sum(rate) / len(rate), 0.87, delta=0.01)
+        self.assertTrue(all(0.78 < r < 0.94 for r in rate))                 # 370 patients
+        # The configuration itself stays as it is, and both neutropenia types get the same value.
+        drawn, _ = uncertainty.draw_config(rng, self.config, self.uncertainty)
+        self.assertEqual(self.config, generate.default_config())
+        specific = drawn["parameters"]["hazards"]["specific"]
+        self.assertEqual(specific["neutropenia"]["gcsf"], specific["febrile_neutropenia"]["gcsf"])
+        self.assertNotEqual(specific["neutropenia"]["gcsf"], 0.26)
+
+    def test_analysis(self):
+        result = uncertainty.analyse(240, 3, seed=2, scenarios=["risk_adapted_start"])
+        self.assertEqual(list(result["scenarios"]), [USUAL, "risk_adapted_start"])
+        self.assertEqual(len(result["drawn"]), 3)
+        for measures in result["scenarios"].values():
+            for m in measures.values():
+                for part in ("value", "difference"):
+                    self.assertLessEqual(m[part]["low"], m[part]["mean"] + 1e-12)
+                    self.assertLessEqual(m[part]["mean"], m[part]["high"] + 1e-12)
+        usual = result["scenarios"][USUAL]["severe_90d"]
+        self.assertEqual(usual["difference"], {"mean": 0.0, "low": 0.0, "high": 0.0})
+        self.assertLess(usual["value"]["low"], usual["value"]["high"])       # the draws differ
+        self.assertLess(result["scenarios"]["risk_adapted_start"]["severe_90d"]["difference"]["mean"], 0)
+        # The same seed gives the same analysis.
+        again = uncertainty.analyse(240, 3, seed=2, scenarios=["risk_adapted_start"])
+        self.assertEqual(result["scenarios"], again["scenarios"])
+        self.assertIn("Severe toxicity, 90 days", uncertainty.report(result))
 
 
 class ReviewFixesTest(unittest.TestCase):

@@ -38,10 +38,12 @@ python3 -m unittest discover engine/tests
 | `course.py` | Course of one patient in weekly steps under one scenario, and the outcome summary |
 | `measurements.py` | Weekly observations derived from the course; the home measurements that the detection model reads |
 | `calibrate.py` | Calibration against the literature |
+| `uncertainty.py` | Repeated simulation with parameters drawn from their published uncertainty |
 | `config/regimens.json` | Regimens with reference values and sources |
 | `config/parameters.json` | Parameters of population, hazards, actions, survival and measurements |
 | `config/interventions.json` | Parameters of the intervention model and the list of scenarios |
 | `config/calibration.json` | Calibration factors, written by `calibrate.py` |
+| `config/uncertainty.json` | The parameters with a published interval or a known number of patients, for `uncertainty.py` |
 | `tests/test_engine.py` | Tests |
 
 Every block of the configuration files states whether its values come from the literature or are assumptions. `generate.default_config()` returns the whole configuration as one dictionary; a caller can change values in a copy and pass it to `generate.generate()`.
@@ -281,6 +283,21 @@ Cardiovascular events and deaths from toxicity are counts among the 9000 patient
 
 The effects of the scenarios follow from the assumed parameters of the intervention model. They show how the model behaves, not what an intervention achieves in patients.
 
+## Uncertainty of the parameters
+
+```bash
+python3 engine/uncertainty.py --n 1500 --draws 40 --seed 1
+```
+
+Every parameter from the literature is an estimate. `uncertainty.py` repeats the simulation with parameters drawn from their published uncertainty and reports, per scenario, the mean and the 95% interval of the key numbers and of their differences to usual care.
+
+- **Ratios with a confidence interval** are drawn from a log-normal distribution: the factors of neutropenia and the effect of G-CSF ([Lyman et al., 2011](../background/references.md#lyman-2011)), the effect of thromboprophylaxis ([Key et al., 2020](../background/references.md#key-2020)), and the effect of an earlier cardiovascular event.
+- **Shares** are drawn from the beta distribution of their numbers: the cardiovascular share of the events of HERO, the share of lung toxicity that is recognised late, the excess of major bleeding.
+- **Regimen rates** are drawn from the beta distribution of the trial size, for the seven regimens whose safety population is in the references, and the rate of cardiovascular events from the 308 men of HERO.
+- The patients and their fixed random numbers are the same in every draw. What differs between two draws is the parameters alone.
+
+`config/uncertainty.json` lists the parameters with their intervals and sources. Parameters without a published interval keep their value, among them all assumptions on participation, detection and early treatment, and the calibration is not repeated. The intervals therefore show a part of the uncertainty, and they are narrower than the truth.
+
 ## Basis of the parameters
 
 | Part | Basis |
@@ -363,7 +380,7 @@ The effects of the scenarios follow from the assumed parameters of the intervent
 - Alert fatigue that depends on the number of alerts per nurse.
 - Thresholds for alerts and for the high-risk flag as parameters of a scenario, to study the balance between early recognition and false alerts.
 - The remaining unit costs from the literature, quality-of-life weights for pancreatic and prostate cancer, and costs of the cancer drugs.
-- Uncertainty: repeated runs with parameters drawn from ranges.
+- Ranges for the assumed parameters, so that the uncertainty analysis covers them, and a recalibration within each draw.
 - A file with the latent frailty and the true risk of each patient, to test risk models against the truth.
 - Dependence between event types beyond the shared patient factors.
 - Replacing assumed parameters by published estimates.

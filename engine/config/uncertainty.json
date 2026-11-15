@@ -1,0 +1,189 @@
+{
+  "description": "Parameters of the engine whose uncertainty is known from the literature, for uncertainty.py. ratios: a ratio with a 95% confidence interval, drawn from a log-normal distribution around the value of the configuration. shares: a share that was observed as events among patients, drawn from a beta distribution. regimen_patients: number of treated patients behind the rates of a regimen; every rate of the regimen is drawn from a beta distribution of that size. Parameters without a published interval keep their value, so the intervals of the results show only a part of the uncertainty.",
+  "ratios": [
+    {
+      "name": "Neutropenia: earlier chemotherapy",
+      "paths": [
+        "parameters/hazards/specific/neutropenia/prior_chemotherapy",
+        "parameters/hazards/specific/febrile_neutropenia/prior_chemotherapy"
+      ],
+      "interval": [
+        1.345,
+        2.755
+      ],
+      "basis": "Lyman et al. (2011), Table 3, 95% confidence interval"
+    },
+    {
+      "name": "Neutropenia: age 65 or older",
+      "paths": [
+        "parameters/hazards/specific/neutropenia/age_65_or_older",
+        "parameters/hazards/specific/febrile_neutropenia/age_65_or_older"
+      ],
+      "interval": [
+        0.961,
+        1.75
+      ],
+      "basis": "Lyman et al. (2011), Table 3, 95% confidence interval"
+    },
+    {
+      "name": "Neutropenia: AST above 35 U/l",
+      "paths": [
+        "parameters/hazards/specific/neutropenia/ast_above_35",
+        "parameters/hazards/specific/febrile_neutropenia/ast_above_35"
+      ],
+      "interval": [
+        0.991,
+        2.041
+      ],
+      "basis": "Lyman et al. (2011), Table 3, 95% confidence interval"
+    },
+    {
+      "name": "Neutropenia: alkaline phosphatase above 120 U/l",
+      "paths": [
+        "parameters/hazards/specific/neutropenia/alkaline_phosphatase_above_120",
+        "parameters/hazards/specific/febrile_neutropenia/alkaline_phosphatase_above_120"
+      ],
+      "interval": [
+        1.058,
+        2.04
+      ],
+      "basis": "Lyman et al. (2011), Table 3, 95% confidence interval"
+    },
+    {
+      "name": "Neutropenia: bilirubin above normal",
+      "paths": [
+        "parameters/hazards/specific/neutropenia/bilirubin_above_normal",
+        "parameters/hazards/specific/febrile_neutropenia/bilirubin_above_normal"
+      ],
+      "interval": [
+        1.235,
+        3.747
+      ],
+      "basis": "Lyman et al. (2011), Table 3, 95% confidence interval"
+    },
+    {
+      "name": "Neutropenia: renal function, per ml/min",
+      "paths": [
+        "parameters/hazards/specific/neutropenia/per_ml_min_of_egfr",
+        "parameters/hazards/specific/febrile_neutropenia/per_ml_min_of_egfr"
+      ],
+      "interval": [
+        0.989,
+        0.997
+      ],
+      "basis": "Lyman et al. (2011), Table 3, 95% confidence interval"
+    },
+    {
+      "name": "Neutropenia: white cells, per 10^9/l",
+      "paths": [
+        "parameters/hazards/specific/neutropenia/per_10e9_l_of_white_cells",
+        "parameters/hazards/specific/febrile_neutropenia/per_10e9_l_of_white_cells"
+      ],
+      "interval": [
+        0.892,
+        0.969
+      ],
+      "basis": "Lyman et al. (2011), Table 3, 95% confidence interval"
+    },
+    {
+      "name": "Neutropenia: immunosuppressive medication",
+      "paths": [
+        "parameters/hazards/specific/neutropenia/immunosuppressive_medication",
+        "parameters/hazards/specific/febrile_neutropenia/immunosuppressive_medication"
+      ],
+      "interval": [
+        1.105,
+        2.187
+      ],
+      "basis": "Lyman et al. (2011), Table 3, 95% confidence interval"
+    },
+    {
+      "name": "Neutropenia: G-CSF",
+      "paths": [
+        "parameters/hazards/specific/neutropenia/gcsf",
+        "parameters/hazards/specific/febrile_neutropenia/gcsf"
+      ],
+      "interval": [
+        0.18,
+        0.37
+      ],
+      "basis": "Lyman et al. (2011), Table 2: interval of the ratio of cumulative hazards from the numbers of patients with an event, about 33 with and 435 without G-CSF in the derivation sample"
+    },
+    {
+      "name": "Venous thromboembolism: thromboprophylaxis",
+      "paths": [
+        "parameters/hazards/specific/venous_thromboembolism/thromboprophylaxis"
+      ],
+      "interval": [
+        0.26,
+        0.65
+      ],
+      "basis": "Key et al. (2020): apixaban against placebo, 95% confidence interval of the hazard ratio"
+    },
+    {
+      "name": "Cardiovascular events: earlier event, under an agonist",
+      "paths": [
+        "parameters/hazards/cardiovascular/hazard_ratios/prior_event_with_agonist"
+      ],
+      "interval": [
+        0.69,
+        3.07
+      ],
+      "basis": "from the numbers of events, 19 and 11 (Shore et al., 2020; Lopes et al., 2021)"
+    },
+    {
+      "name": "Cardiovascular events: earlier event, under an antagonist",
+      "paths": [
+        "parameters/hazards/cardiovascular/hazard_ratios/prior_event_with_antagonist"
+      ],
+      "interval": [
+        0.92,
+        3.61
+      ],
+      "basis": "from the numbers of events, 18 and 15 (Shore et al., 2020; Lopes et al., 2021)"
+    }
+  ],
+  "shares": [
+    {
+      "name": "Cardiovascular share of the events of HERO",
+      "paths": [
+        "parameters/hazards/cardiovascular/cardiovascular_share_of_events/value"
+      ],
+      "events": 16,
+      "patients": 26,
+      "basis": "Lopes et al. (2021)"
+    },
+    {
+      "name": "Lung toxicity recognised late",
+      "paths": [
+        "parameters/hazards/ild/recognition_delay/probability_delayed"
+      ],
+      "events": 71,
+      "patients": 148,
+      "basis": "Swain et al. (2022): 71 of 148 events with an earlier onset by the committee; the value of the configuration, 53%, is the one of Powell et al. (2022)"
+    },
+    {
+      "name": "Major bleeding under thromboprophylaxis, excess",
+      "paths": [
+        "parameters/hazards/bleeding/excess_risk"
+      ],
+      "events": 5,
+      "patients": 288,
+      "basis": "Key et al. (2020): 3.5% of 288 patients with apixaban against 1.8% with placebo; the excess of 1.7 percentage points is about 5 patients"
+    }
+  ],
+  "regimen_patients": {
+    "nalirifox": 370,
+    "gemcitabine_nab_paclitaxel": 379,
+    "lu_psma_617": 529,
+    "olaparib": 256,
+    "trastuzumab_deruxtecan": 371,
+    "chemotherapy_single_agent": 172,
+    "sacituzumab_govitecan": 258,
+    "basis": "safety populations of NAPOLI 3 (Wainberg et al., 2023), VISION (Sartor et al., 2021), PROfound (de Bono et al., 2020), DESTINY-Breast04 (Modi et al., 2022) and ASCENT (Bardia et al., 2021). The rates of the other regimens keep their value."
+  },
+  "cardiovascular_rate_patients": {
+    "value": 308,
+    "basis": "leuprolide arm of HERO (Shore et al., 2020), 19 events among 308 men"
+  }
+}

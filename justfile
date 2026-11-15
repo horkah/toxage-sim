@@ -52,6 +52,10 @@ generate n="3000" seed="1" out="engine/output" *scenarios="":
 calibrate:
     {{py}} engine/calibrate.py
 
+# Uncertainty of the scenario results from the published uncertainty of the parameters
+uncertainty n="1500" draws="40" seed="1":
+    {{py}} engine/uncertainty.py --n {{n}} --draws {{draws}} --seed {{seed}}
+
 # --- Risk models -----------------------------------------------------------
 
 # Risk scores for generated patients, e.g.: just score engine/output
