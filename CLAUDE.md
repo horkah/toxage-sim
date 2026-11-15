@@ -11,6 +11,18 @@
   fix, and which tests were run. This applies to every bug fix, also
   small ones.
 
+## App version
+
+- The app version is in `pyproject.toml` (and the matching entry in
+  `uv.lock`). Its first two numbers are those of the highest version among
+  the schema tables in `schema/`. Whenever a schema version changes, set
+  the app version to follow in the same commit, and start the third number
+  at 0 again if the first two changed.
+- Raise the third number by one for every larger extension or change of
+  functionality that leaves the highest schema version as it is.
+- The versions of the schema tables and of the risk model configuration
+  follow their own rules (`schema/README.md`).
+
 ## Prompt log
 
 - Log every prompt of the user in `project/prompting.log`, in the same

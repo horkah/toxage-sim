@@ -15,7 +15,7 @@ Technical and organisational details that go beyond the public [README](../READM
 | Folder | Purpose | Status |
 |---|---|---|
 | `background/` | Literature, report, concepts | 37 references, report with ten risk model candidates, intervention model, 20 PDFs |
-| `schema/` | Central data schema | scenario, baseline, observation, event, alert and outcome table (version 0.4.0), risk_score table (version 0.2.0), Python loader, validator, CSV reader and writer |
+| `schema/` | Central data schema | scenario, baseline, observation, event, alert and outcome table (versions 0.4.0 to 0.7.0), risk_score table (version 0.3.0), Python loader, validator, CSV reader and writer |
 | `engine/` | Synthetic data generator | weekly microsimulation until death or ten years, six subgroups, eleven regimens, five event categories modelled in detail (severe toxicity, lung toxicity, neutropenia, diarrhoea, cardiovascular events), eight intervention scenarios, calibration, uncertainty analysis, tests |
 | `risk-model/` | Toxicity risk model | common interface, baseline models for candidates 1 to 5, fitting, evaluation, tests, list of extensions |
 | `app/` | Inspection app | Django app with disclaimer, explorer (risk, characteristics, course over time, interventions), data sets, parameters, schema and documents, tutorial and demo; Docker image; tests |
@@ -70,7 +70,7 @@ The copyrighted PDFs must not be in the repository when it becomes public. Befor
 
 - The schema in `schema/` is the single source for field names, types and allowed values. Code in other folders reads it from there and does not repeat field lists. Reading and writing CSV files also goes through `schema/toxage_schema.py`. Rules for extending it are in `schema/README.md`.
 - The engine is plain Python 3 without further packages. `engine/README.md` describes the model variables, the covariate mechanisms, the hazard model, the basis of every parameter group, the simplifications and the ideas for later extensions. The parameters themselves are in `engine/config/`.
-- After every change of the model or its parameters, `python3 engine/calibrate.py` has to be run. It takes about one minute and rewrites `engine/config/calibration.json`, which is under version control.
+- After every change of the model or its parameters, `python3 engine/calibrate.py` has to be run. It takes about two minutes and rewrites `engine/config/calibration.json`, which is under version control.
 - Generated data go to `engine/output/`, which is not under version control. Data are reproduced from the seed. 3000 patients under eight scenarios give about 880 000 observation records and take about 45 seconds; checking them against the schema and writing the files takes longer.
 - Scenarios must stay comparable patient by patient. Every random decision in `course.py`, `interventions.py` and `measurements.py` therefore goes through `draws.py` with a purpose and a week, never through a shared random generator. A new decision gets a new purpose name.
 - Tests run with `python3 -m unittest discover engine/tests`.

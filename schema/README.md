@@ -228,7 +228,7 @@ toxage_schema.read_csv(path, "baseline")              # read a CSV with typed va
 ## Extending the schema
 
 - Add the field to the schema file with title, type, allowed range, unit and description.
-- Raise the version.
+- Raise the version of the table, and let the app version in `pyproject.toml` follow the highest table version.
 - Update the tables in this README.
 - Let the engine fill the field, or the risk model for the risk_score table. Their tests check generated records against the schema.
 - The app picks up a new field of the baseline or outcome table by itself: it gets a filter and a chart.
