@@ -350,3 +350,12 @@ The focus view works fine, except for the phone in landscape view. There the foc
 2026-11-16 01:03 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 Next issue: in the demo mode, read only mode is the same, the demo and tutorial don't work because the data generation never finished and is also not displayed well due to the UI elements for generation are missing. Can't we have a safe demo mode where after 10 minutes of inactivity or after reloading the page the stored status is restored and all demo changes are gone, but in the meantime new data can be generated within the memory bounds, parameters changed etc. Just the stored old data never deleted. That would also solve the tutorial /demo problem
+
+================================================================================
+2026-11-16 08:15 (+01:00) | model: claude-fable-5-2 | attachments: none
+--------------------------------------------------------------------------------
+There are statements about open issues, what has been done based on which publications and not done at various places in the repository. Make sure that:
+- no historical statements that reflect past stages are found anywhere in the app
+- redundancy regarding any of the above is avoided
+- all information reflects the current status
+- in the Claude md instructions the places for such information are briefly mentioned such that any future change is reflected there.

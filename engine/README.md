@@ -353,6 +353,8 @@ The rate of severe toxicity in usual care itself lies between 62.6% and 67.2%. T
 
 ## Simplifications
 
+Where the engine is simpler than reality or than the [intervention model](../background/intervention-model.md).
+
 - Only events that reach grade 3 or higher in usual care are generated, and lung toxicity of any grade. Events that stay mild do not exist in the data.
 - The share of cardiovascular events among the events of HERO comes from PRONOUNCE, whose men all had cardiovascular disease and were under the care of a cardiologist.
 - The effect of an earlier cardiovascular event pools HERO and PRONOUNCE. The men of PRONOUNCE had atherosclerotic cardiovascular disease, not all of them an earlier event. HERO alone gives a much stronger effect under an agonist (17.8% against 4.2%) from 45 men.
@@ -381,6 +383,8 @@ The rate of severe toxicity in usual care itself lies between 62.6% and 67.2%. T
 
 ## Ideas for later
 
+The open extensions of the engine and of the interventions. Open extensions of the risk models are in [risk-model/EXTENSIONS.md](../risk-model/EXTENSIONS.md), topics that the literature does not cover in section 9 of the [toxicity report](../background/toxicity-report.md).
+
 - Further regimens: FOLFIRINOX, gemcitabine alone, ribociclib with endocrine therapy, cabazitaxel.
 - A second and third therapy line per patient, with carry-over of toxicity such as neuropathy.
 - A link from time on therapy and dose received to progression and survival, so that fewer stops of therapy can show as a gain.
@@ -396,10 +400,14 @@ The rate of severe toxicity in usual care itself lies between 62.6% and 67.2%. T
 - Lipids, a full SCORE2 risk and a diastolic blood pressure in the baseline record.
 - Further signals: weight, temperature, potassium, liver values, troponin, ECOG over time.
 - Detection models that read the weekly observations for symptom monitoring and cardiovascular monitoring as well, in place of the stand-ins.
-- Alert fatigue that depends on the number of alerts per nurse.
+- Alert fatigue that depends on the number of alerts per nurse, and thresholds that adapt to the workload of the care team.
+- Automated advice for mild symptoms, which takes alerts off the nurses ([Di Maio et al., 2022](../background/references.md#di-maio-2022)).
+- More than one way to report, with different participation by age.
+- Interventions for the care team rather than the patient, for example decision support at the tumour board.
+- Learning effects: the performance of a risk model improves with the data collected.
 - Thresholds for alerts and for the high-risk flag as parameters of a scenario, to study the balance between early recognition and false alerts.
-- The remaining unit costs from the literature, quality-of-life weights for pancreatic and prostate cancer, and costs of the cancer drugs.
-- Ranges for the assumed parameters, so that the uncertainty analysis covers them, and a recalibration within each draw.
+- The remaining unit costs from the literature, quality-of-life weights for pancreatic and prostate cancer, costs of the cancer drugs, and costs from different perspectives: health insurance, hospital, society.
+- Ranges for the assumed parameters of participation, detection and early treatment, so that the uncertainty analysis covers the whole chain of effects, and a recalibration within each draw.
 - A file with the latent frailty and the true risk of each patient, to test risk models against the truth.
 - Dependence between event types beyond the shared patient factors.
-- Replacing assumed parameters by published estimates.
+- Published estimates in place of the assumptions in the table "Basis of the parameters".

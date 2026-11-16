@@ -1,6 +1,6 @@
 # Possible extensions
 
-Open ideas for the risk models of candidates 1 to 5. Each item says what it needs: a change in the [schema](../schema/), the [engine](../engine/), the literature in [background/](../background/), or only the risk model. Items leave this list when they are done.
+The open extensions of the risk models, in this one place. Each item says what it needs: a change in the [schema](../schema/), the [engine](../engine/), the literature in [background/](../background/), or only the risk model. Items leave this list when they are done. How far the existing models can be trusted is in the section "Limits" of the [README](README.md).
 
 ## Candidate 1: any severe toxicity in 90 days
 

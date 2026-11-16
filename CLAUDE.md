@@ -57,6 +57,33 @@
 - `uv run python app/manage.py link_citations` links the citations of all
   Markdown files; the app links those of the configuration notes itself.
 
+## Status, limits and open points
+
+- Each kind of such information has one place; other documents link to it
+  and do not repeat it. The table "Where status, limits and open points are
+  kept" in `project/internal-documentation.md` names the places:
+  - literature: `background/references.md` ("Full texts") and section 9 of
+    `background/toxicity-report.md`; candidates and existing models: its
+    section 8
+  - engine: `engine/README.md` ("Basis of the parameters",
+    "Simplifications", "Ideas for later", the last also for the
+    interventions) and the `basis` notes in `engine/config/`
+  - intervention model: `background/intervention-model.md`, section 5
+    (anchors) and section 6 (what is implemented)
+  - risk models: `risk-model/README.md` ("Limits"),
+    `risk-model/EXTENSIONS.md` (open extensions) and the `basis` notes in
+    `risk-model/config/models.json`
+  - app: `app/README.md` ("Limits"); the texts that tell users about the
+    state of the project: `disclaimer.html`, `about.html`, `tour-steps.js`
+    and the notes in `views.py`
+  - overview: `README.md` ("Status"), `project/code-review-issues.md`,
+    "Open points" in `project/internal-documentation.md`
+- After every change of literature, engine, risk models or app, go through
+  these places: remove what is done, add what is open, and correct what the
+  change made untrue. An item that is done leaves the open lists.
+- Keep counts (references, PDFs, regimens, scenarios, models, tables) out
+  of texts that do not need them; where they stand, they must be right.
+
 ## Current state only
 
 - Documentation, Markdown files, configuration notes and texts of the app

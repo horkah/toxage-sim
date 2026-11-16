@@ -226,9 +226,10 @@ export const STEPS = [
     target: 'nav[aria-label="Risk model"]',
     text: [
       "Each card is a risk model with the observed rate of its event, the mean predicted risk, and two measures of quality: the AUC says how well the model ranks patients (0.5 is chance, 1 is perfect), the Brier score how far the risks are from what happened (lower is better).",
-      "Three risk models exist. The first estimates the risk of any severe side effect (grade 3 to 5) within 90 days. It starts from the published rate of the regimen and shifts it by age, performance status and impaired geriatric domains.",
+      "The first model estimates the risk of any severe side effect (grade 3 to 5) within 90 days. It starts from the published rate of the regimen and shifts it by age, performance status, impaired geriatric domains, haemoglobin, albumin and the starting dose.",
       "The second estimates the risk of lung toxicity under trastuzumab deruxtecan, with six published risk factors such as low oxygen saturation and reduced renal function.",
-      "The third estimates the risk of a heart attack, a stroke or cardiovascular death in the first year for men with prostate cancer under androgen deprivation.",
+      "Two models estimate the risk of severe neutropenia and of severe diarrhoea within 90 days, for the regimens that cause them.",
+      "The last estimates the risk of a heart attack, a stroke or cardiovascular death in the first year for men with prostate cancer under androgen deprivation.",
     ],
   },
   {
@@ -477,7 +478,7 @@ export const STEPS = [
     target: ".charts table.numbers",
     text: [
       "One row per scenario, for the same patients. An intervention works only as far as it reaches people: “Taking part” is lower in older and frailer patients, reports are missing in some weeks, patients drop out, and not every alert is acted on.",
-      "Monitoring also costs: most alerts are false. The last columns give quality-adjusted life years and costs against usual care. The costs are placeholders, so these columns show how the model works, not a result.",
+      "Monitoring also costs: most alerts are false. The last columns give quality-adjusted life years and costs against usual care. Most unit costs are placeholders, so these columns show how the model works, not a result.",
       "A click on the name of a scenario selects it.",
     ],
   },
@@ -755,7 +756,7 @@ export const STEPS = [
     url: "/documents/",
     target: ".cards",
     text: [
-      "The reference holds the data schema and the documents behind the models: the report on therapy toxicity with its 28 references, the intervention model, and the descriptions of the data engine and the risk models.",
+      "The reference holds the data schema and the documents behind the models: the report on therapy toxicity with its references, the intervention model, and the descriptions of the data engine and the risk models.",
     ],
     do: "Open the “Toxicity report”.",
     act: (t) => t.click('a[href="/documents/report/"]'),
@@ -766,8 +767,8 @@ export const STEPS = [
     url: "/documents/report/",
     target: "#reference-nav",
     text: [
-      "The report collects what trials and guidelines say about side effects of therapy in the three tumour types, and derives ten candidates for risk models. The app implements the first two.",
-      "The rates of the regimens in the engine, the risk factors of lung toxicity and the rates of cardiovascular events come from these sources. Effect sizes of the interventions, costs and quality-of-life weights are assumptions.",
+      "The report collects what trials and guidelines say about side effects of therapy in the three tumour types, and derives candidates for risk models. The risk models of the app are the ones that exist.",
+      "The rates of the regimens in the engine, the risk factors of lung toxicity and neutropenia, the rates of cardiovascular events and the quality-of-life weights come from these sources. Most effect sizes of the interventions and most unit costs are assumptions.",
     ],
   },
   {

@@ -542,7 +542,7 @@ Two kinds of model appear in every candidate:
 - **Time window.** Median onset after 129 days to 5.5 months, 87% to 97% within the first year, little risk after.
 - **What a model adds.** The measured delay of 43 to 49 days between true and recognised onset is the clearest gap in current care among all candidates. An event caught at grade 1 allows treatment to resume; from grade 2 the drug is stopped for good.
 - **Limit.** Grade 1 has no symptoms and shows only in imaging. Home measurements can find grade 2 early, not grade 1.
-- **Risk model.** The published hazard ratios, set to the published rate, for trastuzumab deruxtecan; the risk up to any day and the remaining risk during follow-up.
+- **Risk model.** The published hazard ratios, set to the published rate, for trastuzumab deruxtecan; the risk up to any day and the remaining risk during follow-up. A detection model applies the published rule to weekly home measurements.
 
 ### Candidate 3: severe neutropenia and febrile neutropenia
 
@@ -642,7 +642,7 @@ Candidates 1 to 5 are implemented. They were chosen for these reasons:
 - Candidate 4 completes the picture for the pancreatic regimens, where diarrhoea decides between NALIRIFOX and gemcitabine plus nab-paclitaxel, and for sacituzumab govitecan. Its predictors have no published effect sizes.
 - Candidate 5 in prostate cancer under androgen deprivation fills a gap that the guideline names itself: no risk tool exists. Two trials give the event rates by type of androgen deprivation and by earlier cardiovascular events.
 
-All five are baseline models. The next step is detection during therapy, first for candidate 2. Among the candidates without a model, venous thromboembolism (candidate 8) has the best basis: a score in guidelines, rates with and without prophylaxis, and all its items in the baseline record.
+All five are baseline models. Candidate 2 also has a detection model, which follows the home measurements of a patient during therapy. Among the candidates without a model, venous thromboembolism (candidate 8) has the best basis: a score in guidelines, rates with and without prophylaxis, and all its items in the baseline record.
 
 ## 9. Topics not covered by the current references
 

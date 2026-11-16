@@ -1,7 +1,7 @@
 # Code review: open issues
 
 Review of the whole code base: schema, engine, risk models, app (Python,
-templates, JavaScript) and the container setup. Every class and function now
+templates, JavaScript) and the container setup. Every class and function
 has a comment or docstring, and so do the less common statements.
 
 Each finding has a level:

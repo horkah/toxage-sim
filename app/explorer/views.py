@@ -160,7 +160,7 @@ def _intervention_sections(dataset, shown, ids, patient, models):
     sections = [{
         "title": "Scenarios side by side",
         "note": "The same patients under every scenario. Click a bar to select a scenario. "
-                "Costs are placeholder values without the cancer drugs.",
+                "Most unit costs are placeholder values; the cancer drugs are not included.",
         "table": table,
         "charts": [
             ("iv-severe", bars(table, "Severe toxicity within 90 days", [("patients", "sa", "severe_90d")],

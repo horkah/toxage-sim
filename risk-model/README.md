@@ -299,16 +299,13 @@ The models describe the risk without an intervention. `data.load` therefore read
 
 ## Limits
 
-- The effects of age, ECOG, geriatric domains and starting dose in candidate 1 are assumptions. The effects of haemoglobin and albumin come from one study of patients aged 70 or older, for non-haematological toxicity, and were not statistically significant there.
-- Trial rates refer to the whole treatment period and are used as 90-day risks.
-- Dose and enrolment in Japan, two risk factors in [Powell et al. (2022)](../background/references.md#powell-2022), are not in the schema. All patients are treated as receiving the standard dose.
-- Candidate 2 gives the risk within 730 days. The engine follows patients for up to ten years, so a few events fall outside the window.
-- No lung toxicity risk for checkpoint inhibitors, because the references give a rate but no risk model.
-- Candidate 3 uses odds ratios that were found for neutropenia with a neutrophil count below 0.5 or febrile neutropenia in the first cycle, in breast, lung, colorectal and ovarian cancer and lymphoma. The model applies them to neutropenia of grade 3 or higher within 90 days in pancreatic, prostate and breast cancer.
-- The trial shares with G-CSF and with an age of 65 or older in candidate 3 are assumptions.
-- Candidate 3 has no rate for lutetium-177–PSMA-617, olaparib and pembrolizumab with chemotherapy.
-- All effect sizes of candidate 4 are assumptions, and it covers three regimens.
-- Candidate 5 rests on two trials. PRONOUNCE was stopped early, its men were under the care of a cardiologist, and they had cardiovascular disease, not all of them an earlier event.
-- HERO treated men with androgen deprivation alone. The model applies its rates to men who also get docetaxel, abiraterone, darolutamide, olaparib or lutetium-177–PSMA-617.
-- The effects of age, diabetes, hypertension, smoking, renal function and cardiovascular disease without an event in candidate 5 are assumptions. Lipids, blood pressure as a number, LVEF, troponin and natriuretic peptides are not used.
-- The risk categories are assumptions and are not validated.
+How far the models can be trusted. Missing predictors, regimens and events are open extensions and listed in [EXTENSIONS.md](EXTENSIONS.md).
+
+- All models are checked on synthetic data only, and the risk categories are assumptions that are not validated.
+- Trial rates refer to the whole treatment period and are used as risks within the time window of a model.
+- Candidate 1: the effects of age, ECOG, geriatric domains and starting dose are assumptions. The effects of haemoglobin and albumin come from one study of patients aged 70 or older, for non-haematological toxicity, and were not statistically significant there.
+- Candidate 2: all patients are treated as receiving the standard dose. The risk holds for 730 days; the engine follows patients for up to ten years, so a few events fall outside the window.
+- Detection model: the rule rests on expert opinion and was written for a fall over one to three days, not for weekly values.
+- Candidate 3: the odds ratios were found for a neutrophil count below 0.5 or febrile neutropenia in the first cycle, in breast, lung, colorectal and ovarian cancer and lymphoma. The model applies them to neutropenia of grade 3 or higher within 90 days in pancreatic, prostate and breast cancer. The trial shares with G-CSF and with an age of 65 or older are assumptions.
+- Candidate 4: all effect sizes are assumptions.
+- Candidate 5: it rests on two trials. PRONOUNCE was stopped early, its men were under the care of a cardiologist, and they had cardiovascular disease, not all of them an earlier event. HERO treated men with androgen deprivation alone; the model applies its rates to men who also get docetaxel, abiraterone, darolutamide, olaparib or lutetium-177–PSMA-617. The effects of age, diabetes, hypertension, smoking, renal function and cardiovascular disease without an event are assumptions.

@@ -12,14 +12,38 @@ Technical and organisational details that go beyond the public [README](../READM
 
 ## Folders
 
-| Folder | Purpose | Status |
-|---|---|---|
-| `background/` | Literature, report, concepts | 37 references, report with ten risk model candidates, intervention model, 20 PDFs |
-| `schema/` | Central data schema | scenario, baseline, observation, event, alert and outcome table (versions 0.4.0 to 0.7.0), risk_score table (version 0.3.0), Python loader, validator, CSV reader and writer |
-| `engine/` | Synthetic data generator | weekly microsimulation until death or ten years, six subgroups, eleven regimens, five event categories modelled in detail (severe toxicity, lung toxicity, neutropenia, diarrhoea, cardiovascular events), eight intervention scenarios, calibration, uncertainty analysis, tests |
-| `risk-model/` | Toxicity risk model | common interface, baseline models for candidates 1 to 5, fitting, evaluation, tests, list of extensions |
-| `app/` | Inspection app | Django app with disclaimer, explorer (risk, characteristics, course over time, interventions), data sets, parameters, schema and documents, tutorial and demo; Docker image; tests |
-| `project/` | Project management, internal documentation | prompt log, start prompt, this file |
+| Folder | Purpose |
+|---|---|
+| `background/` | Literature with the PDFs, the report on toxicity with the risk model candidates, the intervention model |
+| `schema/` | Central data schema with loader, validator, CSV reader and writer |
+| `engine/` | Synthetic data generator: microsimulation, intervention scenarios, calibration, uncertainty analysis |
+| `risk-model/` | Risk models with a common interface, the detection model, fitting and evaluation |
+| `app/` | Inspection app with tutorial and demo; Docker image |
+| `project/` | Prompt log, start prompt, screenshots, open findings of the code review, this file |
+
+What exists in each folder is summed up in the section "Status" of the [README](../README.md) and described in the README of the folder.
+
+## Where status, limits and open points are kept
+
+Each kind of information has one place. Other documents link to it and do not repeat it.
+
+| Information | Place |
+|---|---|
+| Which full texts are in the repository and what was read | `background/references.md`, table "Full texts" and its notes |
+| Topics the literature does not cover | `background/toxicity-report.md`, section 9 |
+| Risk model candidates and which of them exist as models | `background/toxicity-report.md`, section 8 |
+| Which parameter of the engine comes from the literature and which is an assumption | `engine/README.md`, "Basis of the parameters"; in detail the `basis` notes in `engine/config/` |
+| Literature anchors of the intervention parameters | `background/intervention-model.md`, section 5 |
+| What the engine implements of the intervention model | `background/intervention-model.md`, section 6 |
+| Where the engine is simpler than reality | `engine/README.md`, "Simplifications" |
+| Open extensions of engine and interventions | `engine/README.md`, "Ideas for later" |
+| How far the risk models can be trusted | `risk-model/README.md`, "Limits"; in detail the `basis` notes in `risk-model/config/models.json` |
+| Open extensions of the risk models | `risk-model/EXTENSIONS.md` |
+| Limits of the app | `app/README.md`, "Limits" |
+| Open findings of the code review | `project/code-review-issues.md` |
+| Open organisational points | this file, "Open points" |
+| Summary of the whole project | `README.md`, "Status" |
+| What the app tells its users about the state of the project | `app/explorer/templates/explorer/disclaimer.html` and `about.html`, the texts of `app/explorer/static/explorer/tour-steps.js`, the notes in `app/explorer/views.py` |
 
 ## Literature
 
@@ -45,31 +69,25 @@ The report uses the PDFs in `background/papers/`, converted to text with `pdftot
 
 Sections 2 to 7 of the report state what the sources say. Section 8, the risk model candidates, is our own derivation and is marked as such.
 
-Limits of the current reading:
-
-- The two longest guidelines ([Lyon 2022](../background/references.md#lyon-2022) with 133 pages, [Schneider 2021](../background/references.md#schneider-2021) with 64 pages) were read in selected sections.
-- The online supplements of the papers are not in the repository. This affects [Haanen 2022](../background/references.md#haanen-2022) most, where baseline screening and details on several organs are in the supplement.
-- In the text extracted from [Conroy 2023](../background/references.md#conroy-2023), the signs "≥" and "≤" are lost. The thresholds for Karnofsky score and bilirubin in section 3 of the report follow from the wording of the neighbouring recommendations.
+Which texts were read in full, in selected sections or as abstract only is in the table "Full texts" of `background/references.md` and its notes. One limit of the text extraction: in the text of [Conroy 2023](../background/references.md#conroy-2023), the signs "≥" and "≤" are lost. The thresholds for Karnofsky score and bilirubin in section 3 of the report follow from the wording of the neighbouring recommendations.
 
 ### PDFs
 
-20 PDFs are in `background/papers/`. File names follow the pattern `<first author>-<year>-<publisher file name>.pdf`. The file of [Haanen 2022](../background/references.md#haanen-2022) is spelled `Haanan-…` .
-
-The PDFs of 17 references are missing: the eight guidelines [Dale 2023](../background/references.md#dale-2023), [Di Maio 2022](../background/references.md#di-maio-2022), [Gennari 2021](../background/references.md#gennari-2021), [Key 2020](../background/references.md#key-2020), [Sohal 2020](../background/references.md#sohal-2020), [Taplitz 2018](../background/references.md#taplitz-2018), [Tilki 2024](../background/references.md#tilki-2024) and [Virgo 2021](../background/references.md#virgo-2021), and the nine sources for parameters [Absolom 2021](../background/references.md#absolom-2021), [Extermann 2012](../background/references.md#extermann-2012), [Hurria 2011](../background/references.md#hurria-2011), [Hurria 2016](../background/references.md#hurria-2016), [Lizée 2019](../background/references.md#lizee-2019), [Lloyd 2006](../background/references.md#lloyd-2006), [Lopes 2021](../background/references.md#lopes-2021), [Lyman 2011](../background/references.md#lyman-2011) and [Swain 2022](../background/references.md#swain-2022).
+The PDFs are in `background/papers/`. The table "Full texts" of `background/references.md` lists them and names the references without a PDF. File names follow the pattern `<first author>-<year>-<publisher file name>.pdf`, without spaces, so that the links of the reference list work. The file of [Haanen 2022](../background/references.md#haanen-2022) is spelled `Haanan-…` .
 
 Automated download is limited because the publisher websites and the Europe PMC website block scripted access. The only automated source for PDFs is the PubMed Central article dataset on AWS (`pmc-oa-opendata`), which holds PDFs only for articles with an open licence.
 
 ### Licences of the stored PDFs
 
-- [Powell 2022](../background/references.md#powell-2022) and [Nichetti 2024](../background/references.md#nichetti-2024) are open access under CC BY and may be redistributed.
-- All other PDFs are publisher versions under publisher copyright, obtained through the university account or free to read on the journal website.
+- [Powell 2022](../background/references.md#powell-2022) and [Nichetti 2024](../background/references.md#nichetti-2024) are open access under CC BY and may be redistributed. [Swain 2022](../background/references.md#swain-2022) is open access under CC BY-NC-ND.
+- All other PDFs are publisher versions under publisher copyright, obtained through the access of an institution or free to read on the journal website. `background/papers/README.md` states their permitted use.
 
-The copyrighted PDFs must not be in the repository when it becomes public. Before publication, `background/papers/` has to be reduced to openly licensed files, and the PDFs have to be removed from the git history as well.
+The copyrighted PDFs must not be in the repository when it becomes public, see "Open points".
 
 ## Schema and engine
 
 - The schema in `schema/` is the single source for field names, types and allowed values. Code in other folders reads it from there and does not repeat field lists. Reading and writing CSV files also goes through `schema/toxage_schema.py`. Rules for extending it are in `schema/README.md`.
-- The engine is plain Python 3 without further packages. `engine/README.md` describes the model variables, the covariate mechanisms, the hazard model, the basis of every parameter group, the simplifications and the ideas for later extensions. The parameters themselves are in `engine/config/`.
+- The engine is plain Python 3 without further packages. It imports the risk models for the model-guided start and for lung monitoring. `engine/README.md` describes the model variables, the covariate mechanisms, the hazard model, the scenarios and the uncertainty analysis. The parameters themselves are in `engine/config/`.
 - After every change of the model or its parameters, `python3 engine/calibrate.py` has to be run. It takes about two minutes and rewrites `engine/config/calibration.json`, which is under version control.
 - Generated data go to `engine/output/`, which is not under version control. Data are reproduced from the seed. 3000 patients under eight scenarios give about 880 000 observation records and take about 45 seconds; checking them against the schema and writing the files takes longer.
 - Scenarios must stay comparable patient by patient. Every random decision in `course.py`, `interventions.py` and `measurements.py` therefore goes through `draws.py` with a purpose and a week, never through a shared random generator. A new decision gets a new purpose name.
@@ -80,17 +98,16 @@ The copyrighted PDFs must not be in the repository when it becomes public. Befor
 
 - The risk model has its own configuration in `risk-model/config/models.json`. It does not import the engine and does not read its parameters. Both draw on the same literature.
 - `risk-model/toxage_risk.py` is the interface for the app: one class per model with risk, reference risk and factors. The calculations are in `models.py`. A new model is added in both places and then appears in the app without changes there.
-- The engine generates outcomes with a richer process than the risk models assume. The evaluation in `risk-model/README.md` therefore shows how well simple baseline models do on these data. For lung toxicity and for cardiovascular events, engine and risk model use the same published hazard ratios; for cardiovascular events the engine adds factors the model does not know.
+- The engine generates outcomes with a richer process than the risk models assume. The evaluation in `risk-model/README.md` therefore shows how well simple baseline models do on these data. For lung toxicity, neutropenia and cardiovascular events, engine and risk model use the same published ratios; the engine adds the frailty, which the models do not know.
 - A risk category that is to be as complete as lung toxicity and cardiovascular events touches every part: fields in the schema, rate and risk factors in the engine configuration, the event with its course in `course.py`, signals in `measurements.py`, a monitoring component and a scenario in `interventions.json`, an outcome field for the time window of the model, the model with scoring, fitting and evaluation, and a chart by grade in `app/explorer/timeline.py`.
 - The risk model is plain Python 3 without further packages, like the engine. Refitting uses its own binomial regression in `glm.py`.
 - Scores go to `risk-model/output/`, which is not under version control.
 - Tests run with `python3 -m unittest discover risk-model/tests`. They generate data with the engine, so a change of the engine can make them fail.
-- Possible extensions are collected in `risk-model/EXTENSIONS.md`. Items are removed there when done.
 
 ## App
 
 - The app needs Django, and gunicorn in the container (`pyproject.toml`). Pages are Django templates, charts are drawn by a web component in plain JavaScript.
-- `Dockerfile` and `docker-compose.yml` are in the repository root, because the image needs engine, risk model, schema and documents next to the app. The image was written and its start command tested outside a container; the image build itself has not been run yet.
+- `Dockerfile` and `docker-compose.yml` are in the repository root, because the image needs engine, risk model, schema and documents next to the app.
 - The server must run as one process. Data sets are generated in a thread of that process, and the rows of a scenario are kept in its memory.
 - Model parameters: the JSON files of the repository are the defaults. The app stores only changed values, per file, in the table Setting. `params.engine_config()` gives the engine its configuration; the engine itself never reads the database.
 - A new document for the app is one line in `explorer/docs.py`. A new parameter file is one entry in `explorer/params.py`.
@@ -112,14 +129,8 @@ The literature services work from scripts. The publisher hosts answer scripted r
 
 ## Open points
 
-- Add the 17 missing PDFs to `background/papers/` and read the full texts of the references that are covered only by their abstract or not at all.
-- Extend the literature to the topics in section 9 of the report, first of all published prediction models and the evidence for home measurements.
-- Replace the assumed parameters of the engine by literature values where possible, see the table "Basis of the parameters" in `engine/README.md`.
-- Search the literature for the cardiovascular model: SCORE2 coefficients in place of the assumed hazard ratios, a second trial next to HERO, and data on warning signs before a cardiovascular event.
-- Search the literature for unit costs, quality-of-life weights, hospital stays by event grade, participation rates and the effect of early treatment. The intervention model uses assumptions and placeholders for them.
-- Replace the stand-ins for prediction and detection in the engine by the real risk models.
-- Pick the next extensions of the engine from the list "Ideas for later" in `engine/README.md`.
-- Extend the risk models, see `risk-model/EXTENSIONS.md`. The detection models for lung toxicity (2.1) and for cardiovascular events (5.1) can be built on the weekly observations.
-- Build and run the Docker image once and check it on the target host.
-- Decide whether the app needs a login before it is reachable outside a trusted network.
+Organisational points. The open work on literature, engine, risk models and app is in the places named in the section "Where status, limits and open points are kept".
+
+- Add the PDFs that are missing in `background/papers/`.
 - Decide on a licence for the repository before it becomes public. The disclaimer of the app holds preliminary terms of use.
+- Before the repository becomes public, reduce `background/papers/` to openly licensed files and remove the other PDFs from the git history.
