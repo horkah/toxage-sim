@@ -47,6 +47,9 @@ def _changed_list(changes):
     return found
 
 
+SELECTION_TITLES = (("tumour_types", "Tumour types"), ("subgroups", "Subgroups"), ("regimens", "Regimens"))
+
+
 def data(request, message=None, error=None, posted=None):
     """Page Data: stored data sets, the form to generate one, the archive. message
     and error come from an import."""
@@ -61,6 +64,8 @@ def data(request, message=None, error=None, posted=None):
         d.changed_list = _changed_list(d.settings)
         d.changed = len(d.changed_list)
         d.removable = demo.removable(d)
+        d.selection = [(title, values) for key, title in SELECTION_TITLES
+                       if (values := (d.metadata.get("selection") or {}).get(key))]
     return render(request, "explorer/data.html", {
         "section": "data",
         "datasets": datasets,
@@ -79,6 +84,10 @@ def data(request, message=None, error=None, posted=None):
         "scenario_choices": [(sid, s, store.EXTRA_BYTES.get(sid, store.BYTES_PER_COURSE))
                              for sid, s in params.effective("interventions")["scenarios"].items()],
         "max_patients": MAX_PATIENTS,
+        # Tumour types, subgroups and regimens the cohort can be limited to; all are chosen at first.
+        "selection_choices": [
+            (key, title, [(v, posted is None or v in posted.getlist(key)) for v in values])
+            for (key, title), values in zip(SELECTION_TITLES, store.selection_choices(params.engine_config()).values())],
         "message": message,
         "error": error,
         # The form keeps what was entered when a data set was refused.
@@ -95,8 +104,12 @@ def data_generate(request):
     seed = _int(request.POST.get("seed"), 1, 0, 2**31 - 1)
     try:
         store.generate(n, seed, request.POST.getlist("scenarios"), request.POST.get("name", ""),
-                       recalibrate=request.POST.get("recalibrate") == "yes")
-    except (store.Busy, store.TooLarge) as refused:
+                       recalibrate=request.POST.get("recalibrate") == "yes",
+                       # The form marks that it carries the three boxes: a box without a
+                       # chosen value then means none, not all.
+                       selection={key: request.POST.getlist(key) for key in store.SELECTION_KEYS}
+                       if request.POST.get("selection") else None)
+    except (store.Busy, store.TooLarge, store.NoPatients) as refused:
         return _data_page(request, error=str(refused), posted=request.POST)
     return redirect("data")
 

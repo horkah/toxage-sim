@@ -90,9 +90,36 @@ class EngineTest(unittest.TestCase):
         self.assertIn(USUAL, self.iv["scenarios"])
         self.assertEqual(self.iv["scenarios"][USUAL]["components"], [])
 
-    def test_three_tumour_types_in_equal_numbers(self):
+    def test_tumour_types_follow_their_shares(self):
         counts = Counter(p["tumour_type"] for p in self.data["baseline"])
-        self.assertEqual(dict(counts), {"pancreas": 1000, "prostate": 1000, "breast": 1000})
+        shares = self.params["population"]["tumour_shares"]
+        for tumour in ("pancreas", "prostate", "breast"):
+            self.assertAlmostEqual(counts[tumour] / 3000, shares[tumour], delta=0.001)
+        # Also in a small cohort and in the first patients of a large one.
+        first = Counter(p["tumour_type"] for p in self.data["baseline"][:20])
+        self.assertEqual(first, Counter(pancreas=5, prostate=8, breast=7))
+
+    def test_selection_limits_the_cohort(self):
+        config = copy.deepcopy(self.config)
+        config["selection"] = {"tumour_types": ["pancreas", "breast"], "subgroups": None,
+                               "regimens": ["nalirifox", "trastuzumab_deruxtecan", "sacituzumab_govitecan", "olaparib"]}
+        data = generate.generate(600, 4, [USUAL], config=config)
+        regimens = Counter(p["regimen"] for p in data["baseline"])
+        # Olaparib belongs to prostate cancer, which is not chosen.
+        self.assertEqual(set(regimens), {"nalirifox", "trastuzumab_deruxtecan", "sacituzumab_govitecan"})
+        tumours = Counter(p["tumour_type"] for p in data["baseline"])
+        self.assertAlmostEqual(tumours["pancreas"] / 600, 0.25 / 0.60, delta=0.01)      # the shares keep their proportions
+        self.assertEqual(data["metadata"]["selection"], config["selection"])
+        # Subgroups without a chosen regimen drop out.
+        self.assertNotIn("breast_triple_negative", {p["subgroup"] for p in data["baseline"]})
+        config["selection"] = {"tumour_types": ["prostate"], "regimens": ["nalirifox"]}
+        with self.assertRaises(ValueError):
+            generate.generate(30, 1, [USUAL], config=config)
+        # No selection and a selection of everything give the same patients.
+        everything = copy.deepcopy(self.config)
+        everything["selection"] = {"tumour_types": ["pancreas", "prostate", "breast"], "subgroups": None, "regimens": None}
+        self.assertEqual(generate.generate(90, 3, [USUAL], config=everything)["baseline"],
+                         generate.generate(90, 3, [USUAL], config=self.config)["baseline"])
 
     def test_regimen_fits_subgroup(self):
         for p in self.data["baseline"]:

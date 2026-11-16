@@ -101,7 +101,8 @@ export const STEPS = [
     target: '#generate input[name="n"]',
     changes: true,
     text: [
-      "The patients are split equally over the three tumour types. Inside each type the engine forms subgroups: for example hormone-sensitive and castration-resistant prostate cancer, each with its own regimens, age and course.",
+      "The patients are split over the three tumour types by their shares. Inside each type the engine forms subgroups: for example hormone-sensitive and castration-resistant prostate cancer, each with its own regimens, age and course.",
+      "The three boxes below limit a data set to some tumour types, subgroups or regimens. All are chosen at first.",
       "Small cohorts are quick but noisy. 300 patients are enough for the tour.",
     ],
     do: "Set the number of patients to 300.",

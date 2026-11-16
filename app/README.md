@@ -144,7 +144,7 @@ The charts per characteristic are built from the schema as well, so new fields a
 
 ### Data sets
 
-A data set is one cohort, simulated under one or several scenarios with the parameters of that moment. Several data sets can be stored side by side. The explorer shows the data set chosen on the page "Data", else the newest.
+A data set is one cohort, simulated under one or several scenarios with the parameters of that moment. Three boxes of the form, closed at first, limit the cohort to some tumour types, subgroups and regimens; all are chosen at first. A subgroup needs its tumour type and at least one of its regimens, and a choice that leaves no patient group is refused. The card of a data set names its limits. Several data sets can be stored side by side. The explorer shows the data set chosen on the page "Data", else the newest.
 
 Generating runs in the background. The card of the data set shows the progress and updates itself until the data set is ready. If the server restarts meanwhile, the data set is marked as failed and can be deleted. The form offers to calibrate the event rates again first; this is needed after changes of the regimens or the simulation parameters and takes about a minute.
 

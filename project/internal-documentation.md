@@ -92,7 +92,7 @@ The copyrighted PDFs must not be in the repository when it becomes public, see "
 - Generated data go to `engine/output/`, which is not under version control. Data are reproduced from the seed. 3000 patients under eight scenarios give about 880 000 observation records and take about 45 seconds; checking them against the schema and writing the files takes longer.
 - Scenarios must stay comparable patient by patient. Every random decision in `course.py`, `interventions.py` and `measurements.py` therefore goes through `draws.py` with a purpose and a week, never through a shared random generator. A new decision gets a new purpose name.
 - Tests run with `python3 -m unittest discover engine/tests`.
-- The three tumour types always get equal numbers of patients. If the number of patients is not a multiple of three, the first tumour types get one patient more.
+- The tumour types follow their shares in every part of a cohort: each patient gets the type that is furthest behind its share. A selection of tumour types, subgroups and regimens travels as the entry `selection` of the engine configuration and is stored in the metadata of a data set.
 
 ## Risk model
 

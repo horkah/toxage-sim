@@ -214,18 +214,57 @@ def _run(dataset, scenarios, recalibrate, config, in_thread):
             connection.close()
 
 
-def generate(n, seed, scenarios=None, name="", recalibrate=None, replace=False, wait=None):
+class NoPatients(Exception):
+    """The selection of tumour types, subgroups and regimens leaves no patient group."""
+
+
+SELECTION_KEYS = ("tumour_types", "subgroups", "regimens")
+
+
+def selection_choices(config):
+    """What a data set can be limited to: {key: [values]} for tumour types,
+    subgroups and regimens, in the order of the configuration."""
+    regimens = config["regimens"]
+    shares = config["parameters"]["population"]["subgroup_shares"]
+    return {"tumour_types": list(shares), "subgroups": [s for t in shares.values() for s in t],
+            "regimens": list(regimens)}
+
+
+def clean_selection(selection, config):
+    """The selection as the engine takes it: per key the chosen values that
+    exist, or None if all are chosen or the key is missing. Returns None if
+    nothing is limited. Raises NoPatients if no patient group is left."""
+    choices = selection_choices(config)
+    cleaned = {}
+    for key in SELECTION_KEYS:
+        chosen = None if not selection or selection.get(key) is None else [
+            v for v in choices[key] if v in selection[key]]
+        cleaned[key] = None if chosen is None or len(chosen) == len(choices[key]) else chosen
+    if all(v is None for v in cleaned.values()):
+        return None
+    try:
+        engine.population.tumour_shares(config["regimens"], config["parameters"], cleaned)
+    except ValueError:
+        raise NoPatients("Not generated: the chosen tumour types, subgroups and regimens leave no patient group. "
+                         "A subgroup needs its tumour type and at least one of its regimens.") from None
+    return cleaned
+
+
+def generate(n, seed, scenarios=None, name="", recalibrate=None, replace=False, wait=None, selection=None):
     """Create a data set and fill it with the engine and the current
     parameters. Returns the Dataset at once; it is ready when its status says
     so. With wait=True the call returns after the data set is filled.
 
     recalibrate=None calibrates the event rates again if parameters that
-    affect them differ from the defaults. Raises Busy while another data set
-    is being generated in this process, and TooLarge if the estimated size
-    would exceed the limit of the database on disk.
+    affect them differ from the defaults. selection limits the cohort to some
+    tumour types, subgroups and regimens: {key: list of values}, a missing key
+    means all. Raises Busy while another data set is being generated in this
+    process, TooLarge if the estimated size would exceed the limit of the
+    database on disk, and NoPatients if the selection leaves no patient group.
     """
     changed = params.all_changes()
     config = params.engine_config(changed)
+    config["selection"] = clean_selection(selection, config)
     scenarios = [s for s in (scenarios or []) if s in config["interventions"]["scenarios"]] or None
     if recalibrate is None:
         recalibrate = params.needs_calibration(changed)

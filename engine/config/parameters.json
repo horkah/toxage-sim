@@ -8,6 +8,12 @@
   },
   "population": {
     "basis": "assumption, except where noted",
+    "tumour_shares": {
+      "pancreas": 0.25,
+      "prostate": 0.4,
+      "breast": 0.35,
+      "basis": "assumption, very coarse: share of each tumour type among the patients who start one of the modelled therapy lines. Advanced prostate cancer is the most frequent of the three and has several lines over many years; the modelled breast subgroups cover a large part of metastatic breast cancer; metastatic pancreatic cancer is rarer and has few lines."
+    },
     "subgroup_shares": {
       "pancreas": {
         "pancreas_metastatic": 1.0
@@ -316,6 +322,9 @@
       "basis": "assumption; in GAP70+ 35% of older patients with impairments started with reduced intensity under usual care"
     },
     "gcsf_probability_with_docetaxel": 0.5,
+    "breast_triple_negative": {
+      "pembrolizumab_chemotherapy": 1.0
+    },
     "breast_triple_negative_pretreated": {
       "sacituzumab_govitecan": 1.0
     },

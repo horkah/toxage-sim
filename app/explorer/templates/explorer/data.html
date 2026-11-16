@@ -24,6 +24,7 @@
             <h2>{{ d.name }}</h2>
             <p class="meta">{{ d.n }} patients · seed {{ d.seed }} · {{ d.created|date:"Y-m-d H:i T" }}
               {% if d.ready %}· up to {{ d.metadata.weeks }} weeks{% endif %}</p>
+            {% for title, values in d.selection %}<p class="meta">{{ title }}: {% for v in values %}{{ v|label }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endfor %}
           </div>
           {% if d.pk == active.pk %}<span class="badge accent">shown in the explorer</span>
           {% elif d.status == "running" %}<span class="badge">generating</span>
@@ -104,8 +105,19 @@
             <label>Patients <input type="number" name="n" value="{{ form.n }}" min="3" max="{{ max_patients }}" required></label>
             <label>Seed <input type="number" name="seed" value="{{ form.seed }}" min="0" required></label>
           </div>
-          <p class="hint">Split equally over the three tumour types. 1500 patients under all scenarios take about 20 seconds.
-            The same seed and parameters give the same patients.</p>
+          <p class="hint">Split over the tumour types by their shares in the parameters. 1500 patients under all scenarios take about 20 seconds.
+            The same seed, selection and parameters give the same patients.</p>
+          <input type="hidden" name="selection" value="1">
+          {% for key, title, values in selection_choices %}
+          <details class="limit">
+            <summary>{{ title }}</summary>
+            {% for value, checked in values %}
+            <label class="check"><input type="checkbox" name="{{ key }}" value="{{ value }}"{% if checked %} checked{% endif %}> {{ value|label }}</label>
+            {% endfor %}
+          </details>
+          {% endfor %}
+          <p class="hint">All tumour types, subgroups and regimens are chosen at first. A subgroup needs its tumour type and at least one of its regimens;
+            the shares of what is left keep their proportions.</p>
           <fieldset>
             <legend>Scenarios</legend>
             {% for sid, s, extra in scenario_choices %}

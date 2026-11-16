@@ -62,7 +62,7 @@ def default_config():
 MODEL = "risk_model"    # predictor of a scenario: the risk models instead of the stand-in
 
 
-def cohort(n, seed, regimens, params, iv, risk_config=None):
+def cohort(n, seed, regimens, params, iv, risk_config=None, selection=None):
     """Return the patients with everything that is the same in all scenarios:
     (baseline record, latent values, fixed random numbers, predictor scores).
     The scores hold the stand-in with and without noise and the scores of the
@@ -71,7 +71,7 @@ def cohort(n, seed, regimens, params, iv, risk_config=None):
     rng = random.Random(seed)
     scorer = risk_models.Scorer(risk_config)
     patients = []
-    for index, (patient, latent) in enumerate(population.draw_cohort(rng, n, regimens, params)):
+    for index, (patient, latent) in enumerate(population.draw_cohort(rng, n, regimens, params, selection)):
         draws = Draws(seed, index)
         scores = {perfect: interventions.predictor_score(patient, latent, draws, params, iv, perfect)
                   for perfect in (False, True)}
@@ -107,6 +107,8 @@ def generate(n, seed, scenarios=None, validate=True, config=None, progress=None)
 
     scenarios is a list of scenario ids; the default is all scenarios of the
     configuration. config is a configuration as default_config() returns it.
+    Its optional entry "selection" limits the cohort to some tumour types,
+    subgroups and regimens, see population.draw_cohort.
     progress, if given, is called with (scenarios done, scenarios in total).
     """
     config = config or default_config()
@@ -116,7 +118,8 @@ def generate(n, seed, scenarios=None, validate=True, config=None, progress=None)
     if not isinstance(weeks, int) or isinstance(weeks, bool) or weeks < 1:
         raise ValueError(f"simulation weeks must be a whole number of at least 1, not {weeks!r}")
     table = hazards.HazardTable(regimens, params, config["calibration"])
-    patients, thresholds = cohort(n, seed, regimens, params, iv, config.get("risk_models"))
+    selection = config.get("selection")
+    patients, thresholds = cohort(n, seed, regimens, params, iv, config.get("risk_models"), selection)
     data = {name: [] for name in TABLES}
     data["baseline"] = [p for p, *_ in patients]
     for scenario_id in scenarios:
@@ -142,6 +145,7 @@ def generate(n, seed, scenarios=None, validate=True, config=None, progress=None)
         "seed": seed,
         "weeks": params["simulation"]["weeks"],
         "scenarios": scenarios,
+        "selection": selection,
         "schema_version": {t: toxage_schema.load(t)["version"] for t in TABLES},
     }
     return data
@@ -227,13 +231,20 @@ def main():
     """Command line: generate a cohort, write the tables as CSV files and print a
     summary."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--n", type=int, default=3000, help="number of patients, split equally over the three tumour types")
+    parser.add_argument("--n", type=int, default=3000, help="number of patients, split over the three tumour types by their shares")
     parser.add_argument("--seed", type=int, default=1, help="random seed")
     parser.add_argument("--out", default=str(ENGINE_DIR / "output"), help="output folder")
     parser.add_argument("--scenarios", nargs="*", help="scenario ids; default: all")
+    parser.add_argument("--tumours", nargs="*", help="tumour types; default: all")
+    parser.add_argument("--subgroups", nargs="*", help="subgroups; default: all")
+    parser.add_argument("--regimens", nargs="*", help="regimens; default: all")
     args = parser.parse_args()
 
-    data = generate(args.n, args.seed, args.scenarios)
+    config = default_config()
+    if args.tumours or args.subgroups or args.regimens:
+        config["selection"] = {"tumour_types": args.tumours or None, "subgroups": args.subgroups or None,
+                               "regimens": args.regimens or None}
+    data = generate(args.n, args.seed, args.scenarios, config=config)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     for name in TABLES:

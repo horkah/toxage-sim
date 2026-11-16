@@ -16,13 +16,18 @@ class Command(BaseCommand):
         parser.add_argument("--seed", type=int, default=1, help="random seed")
         parser.add_argument("--scenarios", nargs="*", help="scenario ids; default: all")
         parser.add_argument("--keep", action="store_true", help="keep the data sets that exist")
+        parser.add_argument("--tumours", nargs="*", help="tumour types; default: all")
+        parser.add_argument("--subgroups", nargs="*", help="subgroups; default: all")
+        parser.add_argument("--regimens", nargs="*", help="regimens; default: all")
 
     def handle(self, *args, n, seed, scenarios, keep, **options):
         """Generate the data set in this process and report the result, or fail with
         the engine's message."""
         try:
-            dataset = store.generate(n, seed, scenarios, replace=not keep, wait=True)
-        except store.TooLarge as refused:
+            dataset = store.generate(n, seed, scenarios, replace=not keep, wait=True,
+                                     selection={"tumour_types": options["tumours"], "subgroups": options["subgroups"],
+                                                "regimens": options["regimens"]})
+        except (store.TooLarge, store.NoPatients) as refused:
             raise CommandError(str(refused)) from None
         if not dataset.ready:
             raise CommandError(dataset.message)

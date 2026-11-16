@@ -44,6 +44,41 @@ class DataTest(CohortTestCase):
         self.assertEqual(Dataset.objects.count(), 2)
         self.assertEqual(cohort.newest(), new)
 
+    def test_generate_with_chosen_tumour_types_subgroups_and_regimens(self):
+        page = self.client.get("/data/")
+        self.assertContains(page, '<details class="limit">', count=3)        # collapsed, all chosen
+        self.assertContains(page, 'name="tumour_types" value="pancreas" checked')
+        self.assertContains(page, 'name="regimens" value="olaparib" checked')
+        self.assertNotContains(page, "<details class=\"limit\" open")
+        form = {"n": "30", "seed": "4", "name": "Chosen", "scenarios": ["usual_care"], "selection": "1",
+                "tumour_types": ["prostate", "breast"],
+                "subgroups": ["prostate_castration_resistant", "breast_her2_low", "pancreas_metastatic"],
+                "regimens": ["olaparib", "trastuzumab_deruxtecan", "nalirifox"]}
+        self.assertRedirects(self.client.post("/data/generate/", form), "/data/")
+        new = Dataset.objects.get(name="Chosen")
+        self.assertEqual(new.status, "ready", new.message)
+        regimens = {p.baseline["regimen"] for p in new.patients.all()}
+        self.assertEqual(regimens, {"olaparib", "trastuzumab_deruxtecan"})
+        self.assertEqual(new.metadata["selection"]["tumour_types"], ["prostate", "breast"])
+        self.assertContains(self.client.get("/data/"), "Regimens: nalirifox, olaparib, trastuzumab deruxtecan")
+        # Everything chosen is no selection.
+        everything = dict(form, name="All", **{k: v for k, v in store.selection_choices(params.engine_config()).items()})
+        self.client.post("/data/generate/", everything)
+        self.assertIsNone(Dataset.objects.get(name="All").metadata["selection"])
+
+    def test_a_selection_without_patients_is_refused(self):
+        form = {"n": "30", "seed": "4", "name": "Nobody", "selection": "1", "tumour_types": ["prostate"],
+                "subgroups": ["prostate_castration_resistant"], "regimens": ["nalirifox"]}
+        response = self.client.post("/data/generate/", form)
+        self.assertContains(response, "leave no patient group")
+        self.assertFalse(Dataset.objects.filter(name="Nobody").exists())
+        # The form keeps what was chosen.
+        self.assertContains(response, 'name="tumour_types" value="prostate" checked')
+        self.assertNotContains(response, 'name="tumour_types" value="breast" checked')
+        # Nothing chosen in a box means none.
+        response = self.client.post("/data/generate/", {"n": "30", "seed": "4", "selection": "1"})
+        self.assertContains(response, "leave no patient group")
+
     def test_generate_limits_the_input(self):
         self.client.post("/data/generate/", {"n": "1", "seed": "x"})
         new = Dataset.objects.first()

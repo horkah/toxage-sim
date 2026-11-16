@@ -31,23 +31,59 @@ def _lognormal(rng, median, sigma):
     return rng.lognormvariate(math.log(median), sigma)
 
 
-def _regimen(rng, subgroup, frailty, age, bilirubin, lung_problem, params):
+def _regimen(rng, subgroup, frailty, age, bilirubin, lung_problem, params, allowed=None):
     """The regimen of a patient: chosen by subgroup, frailty, age, bilirubin and lung
-    problems as in the parameters."""
+    problems as in the parameters. allowed limits the choice to some regimens."""
     c = params["treatment_choice"]
     if subgroup == "pancreas_metastatic":
         m = c["pancreas_nalirifox"]
         x = m["intercept"] + m["frailty_slope"] * frailty + m["per_year_above_65"] * (age - 65)
         if bilirubin > m["high_bilirubin_above_uln"]:
             x += m["high_bilirubin_shift"]
-        return "nalirifox" if rng.random() < sigmoid(x) else "gemcitabine_nab_paclitaxel"
-    if subgroup == "breast_her2_low":
+        pair, chance = ("nalirifox", "gemcitabine_nab_paclitaxel"), sigmoid(x)
+    elif subgroup == "breast_her2_low":
         m = c["breast_her2_low_trastuzumab_deruxtecan"]
-        p = m["probability_with_lung_problem"] if lung_problem else m["probability"]
-        return "trastuzumab_deruxtecan" if rng.random() < p else "chemotherapy_single_agent"
-    if subgroup == "breast_triple_negative":
-        return "pembrolizumab_chemotherapy"
-    return _choice(rng, c[subgroup])
+        pair = ("trastuzumab_deruxtecan", "chemotherapy_single_agent")
+        chance = m["probability_with_lung_problem"] if lung_problem else m["probability"]
+    else:
+        options = {r: p for r, p in c[subgroup].items() if allowed is None or r in allowed}
+        return _choice(rng, options)
+    # The random number is drawn in any case, so that a selection changes the
+    # regimen of a patient and nothing else.
+    first = rng.random() < chance
+    if allowed is not None:
+        open_ = [r for r in pair if r in allowed]
+        if len(open_) == 1:
+            return open_[0]
+    return pair[0] if first else pair[1]
+
+
+def subgroups_of(tumour, regimens, params, selection=None):
+    """Shares of the subgroups of a tumour type that a selection leaves:
+    {subgroup: share}. A subgroup stays if it is selected and at least one of
+    its regimens is."""
+    selection = selection or {}
+    shares = {}
+    for subgroup, share in params["population"]["subgroup_shares"][tumour].items():
+        if selection.get("subgroups") is not None and subgroup not in selection["subgroups"]:
+            continue
+        own = [r for r, v in regimens.items() if v["subgroup"] == subgroup]
+        if selection.get("regimens") is not None and not set(own) & set(selection["regimens"]):
+            continue
+        shares[subgroup] = share
+    return shares
+
+
+def tumour_shares(regimens, params, selection=None):
+    """Shares of the tumour types that a selection leaves: {tumour: share}.
+    Raises ValueError if the selection leaves no patient group."""
+    selection = selection or {}
+    shares = {t: s for t, s in params["population"]["tumour_shares"].items()
+              if t in TUMOURS and (selection.get("tumour_types") is None or t in selection["tumour_types"])
+              and subgroups_of(t, regimens, params, selection)}
+    if not shares:
+        raise ValueError("the selection of tumour types, subgroups and regimens leaves no patient group")
+    return shares
 
 
 def _cardiovascular(rng, tumour, age, diabetes, cvd, params):
@@ -89,10 +125,11 @@ def _liver_values(rng, subgroup, obstruction, params):
     return {"ast_u_l": round(ast), "alkaline_phosphatase_u_l": round(alp)}
 
 
-def draw_patient(rng, index, tumour, regimens, params):
-    """Return (baseline record, latent values) of one patient."""
+def draw_patient(rng, index, tumour, regimens, params, selection=None):
+    """Return (baseline record, latent values) of one patient. selection limits
+    the subgroups and regimens, see draw_cohort."""
     p = params["population"]
-    subgroup = _choice(rng, p["subgroup_shares"][tumour])
+    subgroup = _choice(rng, subgroups_of(tumour, regimens, params, selection))
 
     age_p = p["age"]
     age = round(rng.gauss(age_p[subgroup]["mean"], age_p[subgroup]["sd"]))
@@ -177,7 +214,8 @@ def draw_patient(rng, index, tumour, regimens, params):
     ysd = p["years_since_diagnosis"][subgroup]
     years_since_diagnosis = round(_lognormal(rng, ysd["median"], ysd["sigma"]), 1)
     low_spo2 = spo2 < params["treatment_choice"]["breast_her2_low_trastuzumab_deruxtecan"]["lung_problem_spo2_below_percent"]
-    regimen = _regimen(rng, subgroup, frailty, age, bilirubin, lung or low_spo2, params)
+    regimen = _regimen(rng, subgroup, frailty, age, bilirubin, lung or low_spo2, params,
+                       (selection or {}).get("regimens"))
 
     sd = params["treatment_choice"]["starting_dose_reduction"]
     reduced = rng.random() < sigmoid(
@@ -238,9 +276,28 @@ def draw_patient(rng, index, tumour, regimens, params):
     return baseline, {"frailty": frailty}
 
 
-def draw_cohort(rng, n, regimens, params):
-    """Return n patients, split equally over the three tumour types."""
-    patients = []
+def tumour_sequence(n, shares):
+    """Tumour type of each of n patients. The types follow their shares in
+    every part of the sequence: each patient gets the type that is furthest
+    behind its share."""
+    total = sum(shares.values())
+    counts = {t: 0 for t in shares}
+    sequence = []
     for i in range(n):
-        patients.append(draw_patient(rng, i + 1, TUMOURS[i % 3], regimens, params))
+        tumour = max(shares, key=lambda t: shares[t] / total * (i + 1) - counts[t])
+        counts[tumour] += 1
+        sequence.append(tumour)
+    return sequence
+
+
+def draw_cohort(rng, n, regimens, params, selection=None):
+    """Return n patients, split over the tumour types by their shares.
+
+    selection limits the cohort: {"tumour_types": [...], "subgroups": [...],
+    "regimens": [...]}, each key optional; a missing key or None means all.
+    The shares of what is left keep their proportions."""
+    shares = tumour_shares(regimens, params, selection)
+    patients = []
+    for i, tumour in enumerate(tumour_sequence(n, shares)):
+        patients.append(draw_patient(rng, i + 1, tumour, regimens, params, selection))
     return patients

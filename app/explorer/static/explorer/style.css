@@ -465,6 +465,10 @@ progress { width: 240px; height: 8px; accent-color: var(--accent); vertical-alig
 .form fieldset { border: 1px solid var(--border); border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: 7px; padding: 8px 12px 10px; margin: 0; }
 .form fieldset legend { font-size: .84rem; color: var(--muted); padding: 0 4px; }
 .form fieldset.plainset { border: 0; padding: 0; }
+.form details.limit { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 12px; }
+.form details.limit summary { cursor: pointer; font-size: .9rem; }
+.form details.limit[open] summary { margin-bottom: 6px; }
+.form details.limit label.check { margin: 4px 0; }
 .form input[type="text"], .form input[type="number"] { width: 100%; }
 .form button[type="submit"] { align-self: flex-start; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

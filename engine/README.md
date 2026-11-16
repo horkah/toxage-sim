@@ -17,7 +17,7 @@ The engine serves five risk model candidates of the [toxicity report](../backgro
 python3 engine/generate.py --n 3000 --seed 1 --out engine/output
 ```
 
-This writes `scenario.csv`, `baseline.csv`, `observation.csv`, `event.csv`, `alert.csv`, `outcome.csv` and `metadata.json` to the output folder and prints key numbers per regimen and per scenario. `--scenarios` limits the run to some scenarios, for example `--scenarios usual_care`. The same seed gives the same data. The output folder is not under version control. 3000 patients under all eight scenarios take about 45 seconds.
+This writes `scenario.csv`, `baseline.csv`, `observation.csv`, `event.csv`, `alert.csv`, `outcome.csv` and `metadata.json` to the output folder and prints key numbers per regimen and per scenario. `--scenarios` limits the run to some scenarios, for example `--scenarios usual_care`. `--tumours`, `--subgroups` and `--regimens` limit the cohort, for example `--tumours breast --regimens trastuzumab_deruxtecan`. The same seed gives the same data. The output folder is not under version control. 3000 patients under all eight scenarios take about 45 seconds.
 
 ```bash
 python3 engine/calibrate.py
@@ -68,16 +68,16 @@ latent frailty ──► baseline characteristics ──► choice of regimen an
         observations of the week: blood values, oxygen saturation, blood pressure, symptoms
 ```
 
-A patient is followed until death or for 520 weeks. Observations are written while the patient is on therapy and for four weeks after. The three tumour types always have equal numbers of patients, with eleven regimens in six subgroups.
+A patient is followed until death or for 520 weeks. Observations are written while the patient is on therapy and for four weeks after. The cohort has 25% patients with pancreatic, 40% with prostate and 35% with breast cancer, in six subgroups with eleven regimens. A cohort can be limited to some tumour types, subgroups and regimens; the shares of what is left keep their proportions.
 
 ## Patient groups
 
-| Tumour | Subgroup | Share within tumour | Regimens |
+| Tumour (share) | Subgroup | Share within tumour | Regimens |
 |---|---|---|---|
-| pancreas | `pancreas_metastatic` | 100% | `nalirifox`, `gemcitabine_nab_paclitaxel` |
-| prostate | `prostate_hormone_sensitive` | 50% | `adt_docetaxel`, `adt_docetaxel_abiraterone`, `adt_docetaxel_darolutamide` |
+| pancreas (25%) | `pancreas_metastatic` | 100% | `nalirifox`, `gemcitabine_nab_paclitaxel` |
+| prostate (40%) | `prostate_hormone_sensitive` | 50% | `adt_docetaxel`, `adt_docetaxel_abiraterone`, `adt_docetaxel_darolutamide` |
 | prostate | `prostate_castration_resistant` | 50% | `lu_psma_617`, `olaparib` |
-| breast | `breast_her2_low` | 60% | `trastuzumab_deruxtecan`, `chemotherapy_single_agent` |
+| breast (35%) | `breast_her2_low` | 60% | `trastuzumab_deruxtecan`, `chemotherapy_single_agent` |
 | breast | `breast_triple_negative` | 25% | `pembrolizumab_chemotherapy` |
 | breast | `breast_triple_negative_pretreated` | 15% | `sacituzumab_govitecan` |
 
@@ -333,6 +333,7 @@ The rate of severe toxicity in usual care itself lies between 62.6% and 67.2%. T
 | Effects of age, diabetes, hypertension, smoking, renal function, cardiovascular disease without an event and frailty on cardiovascular events | Assumption; the directions follow the ESC guideline ([Lyon et al., 2022](../background/references.md#lyon-2022)) |
 | Share and length of the warning phase, grades of cardiovascular events | Assumption |
 | Mean age in three subgroups | Literature (median ages in ARASENS, VISION, ASCENT) |
+| Shares of the three tumour types | Assumption, very coarse |
 | All other baseline distributions | Assumption |
 | Effects of frailty, age, bilirubin and the type-specific risk factors on the hazards | Assumption; the directions follow the report |
 | Time patterns, grades and actions for events other than lung toxicity | Assumption |

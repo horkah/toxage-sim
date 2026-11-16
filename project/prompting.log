@@ -359,3 +359,8 @@ There are statements about open issues, what has been done based on which public
 - redundancy regarding any of the above is avoided
 - all information reflects the current status
 - in the Claude md instructions the places for such information are briefly mentioned such that any future change is reflected there.
+
+================================================================================
+2026-11-16 08:51 (+01:00) | model: claude-fable-5-2 | attachments: none
+--------------------------------------------------------------------------------
+At data generation, let the user select the tumour type, patient subgroup, and regimens, in three by default collapsed boxes, default all on. And very coarsely roughly set the relative frequency of the three tumor types not equal but to what is typical for these modeled patient groups.
