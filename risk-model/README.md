@@ -253,45 +253,45 @@ Literature configuration, evaluated on 20 000 patients under usual care from `en
 
 | | Candidate 1 | Rate only | Candidate 2 | Rate only | Candidate 3 | Rate only | Candidate 4 | Rate only | Candidate 5 | Rate only |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Patients, events | 20 000, 13 442 | | 4026, 246 | | 15 026, 4629 | | 7640, 911 | | 6667, 299 | |
-| Observed / expected | 0.98 | 0.98 | 0.88 | 0.86 | 0.98 | 1.02 | 0.91 | 0.97 | 1.19 | 1.20 |
-| AUC | 0.710 | 0.690 | 0.808 | 0.732 | 0.740 | 0.664 | 0.712 | 0.685 | 0.650 | 0.525 |
-| Brier score | 0.195 | 0.199 | 0.054 | 0.055 | 0.180 | 0.197 | 0.099 | 0.100 | 0.042 | 0.043 |
-| Calibration slope | 0.89 | 1.04 | 1.14 | – | 1.01 | 0.99 | 1.16 | 1.11 | 0.87 | 0.49 |
+| Patients, events | 20 000, 12 932 | | 4230, 275 | | 14 330, 4429 | | 6066, 683 | | 8000, 353 | |
+| Observed / expected | 0.98 | 0.97 | 0.95 | 0.91 | 0.99 | 1.02 | 0.88 | 0.94 | 1.18 | 1.18 |
+| AUC | 0.702 | 0.674 | 0.784 | 0.726 | 0.754 | 0.686 | 0.704 | 0.689 | 0.641 | 0.531 |
+| Brier score | 0.204 | 0.209 | 0.057 | 0.058 | 0.176 | 0.193 | 0.094 | 0.095 | 0.042 | 0.042 |
+| Calibration slope | 0.94 | 1.06 | 1.06 | 1.39 | 1.03 | 1.08 | 1.10 | 1.12 | 0.81 | 0.64 |
 
-Within single regimens, the AUC of candidate 1 is between 0.54 and 0.63, of candidate 2 0.64 for trastuzumab deruxtecan, of candidate 3 between 0.63 and 0.78, of candidate 4 between 0.58 and 0.60, and of candidate 5 between 0.57 and 0.70.
+Within single regimens, the AUC of candidate 1 is between 0.56 and 0.64, of candidate 2 0.61 for trastuzumab deruxtecan, of candidate 3 between 0.65 and 0.74, of candidate 4 between 0.53 and 0.59, and of candidate 5 between 0.61 and 0.73.
 
 How to read this:
 
 - The engine does not generate outcomes with the models used here. Severe toxicity comes from a latent frailty, type-specific hazards, dose changes and competing events. Age, ECOG, geriatric domains, haemoglobin and albumin predict it only because they are linked to frailty. Candidate 1 gains little over the regimen rate. This is a result, not an artefact, and it agrees with the published scores for this event.
 - For lung toxicity the engine uses the same published hazard ratios as candidate 2, so the ranking of patients is good by construction.
-- For neutropenia the engine uses the published odds ratios of candidate 3 as hazard ratios, so the ranking is good by construction as well. G-CSF alone separates the patients on docetaxel clearly. The model predicts too many events with docetaxel and abiraterone (16.8% against 10.8%).
+- For neutropenia the engine uses the published odds ratios of candidate 3 as hazard ratios, so the ranking is good by construction as well. G-CSF alone separates the patients on docetaxel clearly. The model predicts too many events with docetaxel and abiraterone (16.7% against 9.2%).
 - Candidate 4 separates the three regimens and little else. Within a regimen only the UGT1A1 genotype and age carry information, and the engine has no effect of ECOG or albumin of its own.
-- For cardiovascular events the engine uses the same pooled hazard ratios and the same assumed factors as candidate 5. It adds frailty, which the model does not know. The model therefore predicts too few events (observed to expected 1.19). With the pooled effect of an earlier event the patients differ less in risk than with HERO alone, and the AUC is lower than a model built on HERO alone would reach on data built on HERO alone.
-- Candidate 1 overestimates the risk for olaparib and lutetium-177–PSMA-617 (predicted 55% and 57%, observed 44% and 48%). The published rates cover the whole treatment period, and with these regimens the engine places a larger share of the events after day 90.
+- For cardiovascular events the engine uses the same pooled hazard ratios and the same assumed factors as candidate 5. It adds frailty, which the model does not know. The model therefore predicts too few events (observed to expected 1.18). With the pooled effect of an earlier event the patients differ less in risk than with HERO alone, and the AUC is lower than a model built on HERO alone would reach on data built on HERO alone.
+- Candidate 1 overestimates the risk for olaparib and lutetium-177–PSMA-617 (predicted 54% and 56%, observed 46% and 48%). The published rates cover the whole treatment period, and with these regimens the engine places a larger share of the events after day 90.
 
 Fitted on 50 000 patients from seed 1, `fit.py` gives:
 
-- Candidate 1: odds ratios of 1.22 for age, 1.10 for ECOG 2, 1.04 per geriatric domain, 1.08 per g/dl of haemoglobin, 1.67 per 10 g/l of albumin and 0.61 for a reduced starting dose.
-- Candidate 2: hazard ratios in the range of the published ones, with wide intervals because there are few events, for example 3.33 for moderate or severe renal decrease (published 2.73) and 1.08 for low oxygen saturation (published 2.14; 95% confidence interval 0.65 to 1.81, as few patients have it).
-- Candidate 3: odds ratios near the published ones, for example 0.19 for G-CSF (published 0.12), 2.46 for raised bilirubin (2.15), 1.75 for immunosuppressive medication (1.55) and 2.21 for UGT1A1 with irinotecan or SN-38 (assumed 2.0). A reduced starting dose gives 0.77 (published 0.50). Earlier chemotherapy cannot be estimated, because it is the same for all patients of a regimen.
-- Candidate 4: 1.48 for an age of 70 or older, 2.17 for UGT1A1, 1.21 for low albumin and 1.04 for ECOG 2 (95% confidence interval 0.92 to 1.18).
-- Candidate 5: a hazard ratio of 1.51 for an earlier event under an agonist and 1.80 under an antagonist (assumed 1.46 and 1.82), and 1.37 for age, 1.37 for diabetes, 1.35 for hypertension, 1.30 for current smoking, 1.42 for reduced renal function and 1.41 for cardiovascular disease without an event.
+- Candidate 1: odds ratios of 1.20 for age, 1.19 for ECOG 2, 1.07 per geriatric domain, 1.09 per g/dl of haemoglobin, 1.66 per 10 g/l of albumin and 0.61 for a reduced starting dose.
+- Candidate 2: hazard ratios near the published ones, for example 2.98 for moderate or severe renal decrease (published 2.73) and 1.92 for low oxygen saturation (published 2.14; 95% confidence interval 1.29 to 2.85, as few patients have it).
+- Candidate 3: odds ratios near the published ones, for example 0.21 for G-CSF (published 0.12), 2.39 for raised bilirubin (2.15), 1.74 for immunosuppressive medication (1.55) and 2.15 for UGT1A1 with irinotecan or SN-38 (assumed 2.0). A reduced starting dose gives 0.73 (published 0.50). Earlier chemotherapy cannot be estimated, because it is the same for all patients of a regimen.
+- Candidate 4: 1.61 for an age of 70 or older, 2.08 for UGT1A1, 1.15 for low albumin and 1.21 for ECOG 2.
+- Candidate 5: a hazard ratio of 1.64 for an earlier event under an agonist and 1.81 under an antagonist (assumed 1.46 and 1.82), and 1.40 for age, 1.59 for diabetes, 1.32 for hypertension, 1.66 for current smoking, 1.45 for reduced renal function and 1.21 for cardiovascular disease without an event (95% confidence interval 0.96 to 1.52).
 
-On the 20 000 test patients the fitted configuration reaches an observed to expected ratio of 1.00, 1.01, 1.00, 0.96 and 0.95 and an AUC of 0.725, 0.804, 0.749, 0.720 and 0.645.
+On the 20 000 test patients the fitted configuration reaches an observed to expected ratio of 0.99, 0.91, 1.00, 0.92 and 1.00 and an AUC of 0.713, 0.785, 0.764, 0.715 and 0.630.
 
-The detection model for lung toxicity, on the 2274 patients on trastuzumab deruxtecan among the 20 000 (`detect.py`):
+The detection model for lung toxicity, on the 2393 patients on trastuzumab deruxtecan among the 20 000 (`detect.py`):
 
 | | |
 |---|---|
-| Lung toxicity events recognised in usual care | 241 |
-| With an alert before usual care recognised them | 80 (33%) |
-| Days gained, median | 33 |
-| Grade 1 / grade 2 / grade 3 / grade 5 found early | 17 of 71 / 43 of 126 / 14 of 31 / 6 of 13 |
+| Lung toxicity events recognised in usual care | 264 |
+| With an alert before usual care recognised them | 97 (37%) |
+| Days gained, median | 42 |
+| Grade 1 / grade 2 / grade 3 / grade 5 found early | 15 of 74 / 65 of 148 / 12 of 24 / 5 of 18 |
 | False alerts per patient-week | 0.005 |
-| Alerts in all | 482 in 74 135 patient-weeks |
+| Alerts in all | 534 in 77 952 patient-weeks |
 
-The model finds a third of the events about a month before usual care, at the price of one false alert in 200 patient-weeks. It finds a quarter of the grade 1 events, a third of the grade 2 events and nearly half of the severe ones. Events that usual care recognises promptly leave no time for an alert. In the engine's scenario "lung monitoring" the share is lower, because not every patient takes part and reports every week.
+The model finds more than a third of the events about six weeks before usual care, at the price of one false alert in 200 patient-weeks. It finds a fifth of the grade 1 events and nearly half of the grade 2 and grade 3 events. Events that usual care recognises promptly leave no time for an alert. In the engine's scenario "lung monitoring" the share is lower, because not every patient takes part and reports every week.
 
 The models describe the risk without an intervention. `data.load` therefore reads the outcomes of usual care unless another scenario is named.
 

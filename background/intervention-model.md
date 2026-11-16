@@ -308,4 +308,4 @@ The engine implements the model with the parameters in `engine/config/interventi
 | Same patients, same chance | Implemented with fixed random numbers per patient, purpose and week. |
 | Scenarios | The eight scenarios of section 4.2. |
 
-The check against GAP70+ holds: flagged patients who take part in the risk-adapted start have severe toxicity within 90 days in 55% against 74% in usual care, a relative risk of 0.74. In the model-guided start, where the risk models choose the patients, it is 69% against 86%, a relative risk of 0.80.
+The check against GAP70+ holds: flagged patients who take part in the risk-adapted start have severe toxicity within 90 days in 51% against 70% in usual care, a relative risk of 0.73. In the model-guided start, where the risk models choose the patients, it is 66% against 85%, a relative risk of 0.77.
