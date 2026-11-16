@@ -159,6 +159,18 @@ class ChartTest(CohortTestCase):
         patient = next(r for r in self.rows if not r["severe_toxicity_90d"])
         self.assertIsNone(charts.incidence(self.rows, self.severe, patient)["marker"])
 
+    def test_incidence_stays_within_the_window_of_the_model(self):
+        # Lung toxicity counts over the whole follow-up; an event after the window of the
+        # model must not draw a line beyond the axis, nor mark the patient.
+        rows = [dict(r) for r in self.rows]
+        late = next(r for r in rows if r["risk_ild"] is not None)
+        late.update(ild=True, ild_onset_day=self.ild.window_days + 100)
+        spec = charts.incidence(rows, self.ild, late)
+        for s in spec["series"]:
+            self.assertTrue(all(x <= self.ild.window_days for x, _ in s["points"]), s["name"])
+        self.assertEqual(spec["x"]["max"], self.ild.window_days)
+        self.assertIsNone(spec["marker"])
+
     def test_scatter(self):
         x, y = ("age_years", "age", "int"), ("risk_ild", "risk", "pct")
         spec = charts.scatter(self.rows, x, y, "ild", self.ild_rows[0], "t")

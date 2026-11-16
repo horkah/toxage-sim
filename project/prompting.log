@@ -364,3 +364,10 @@ There are statements about open issues, what has been done based on which public
 2026-11-16 08:51 (+01:00) | model: claude-fable-5-2 | attachments: none
 --------------------------------------------------------------------------------
 At data generation, let the user select the tumour type, patient subgroup, and regimens, in three by default collapsed boxes, default all on. And very coarsely roughly set the relative frequency of the three tumor types not equal but to what is typical for these modeled patient groups.
+
+================================================================================
+2026-11-16 14:36 (+01:00) | model: claude-opus-5-5 | attachments: screenshot (Cumulative incidence by risk group on a phone, a line beyond the box)
+--------------------------------------------------------------------------------
+Git pull
+
+There is a graphics bug in this plot see screenshot from a mobile phone, line outside of the box

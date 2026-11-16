@@ -256,9 +256,12 @@ def incidence(rows, model, patient=None):
              "middle",
              f"high (≥ {_pct(cuts[1]):.3g}%)"]
     mine = None if patient is None else sum(patient[key] >= c for c in cuts)
+    within = lambda r: r.get(model.onset) is not None and r[model.onset] <= model.window_days
     series = []
     for i, (group, name, cls) in enumerate(zip(thirds, names, ("t1", "t2", "t3"))):
-        days = sorted(r[model.onset] for r in group if r[model.outcome])
+        # Only events within the window of the model: an outcome such as lung toxicity
+        # counts over the whole follow-up, the chart shows the window.
+        days = sorted(r[model.onset] for r in group if r[model.outcome] and within(r))
         points, total = [[0, 0]], 0
         for day in sorted(set(days)):
             total += days.count(day)
@@ -267,7 +270,7 @@ def incidence(rows, model, patient=None):
         label = f"{name}, patient's group" if i == mine else name
         series.append({"name": label, "cls": cls, "step": True, "points": points})
     top = nice_max(max(s["points"][-1][1] for s in series) or 0.01)
-    onset = patient.get(model.onset) if patient else None
+    onset = patient[model.onset] if patient and within(patient) else None
     return {
         "type": "line",
         "title": title,
