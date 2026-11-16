@@ -27,9 +27,9 @@ from django.utils.dateparse import parse_datetime
 from schema import toxage_schema
 from toxage_app.version import BUILD, VERSION
 
-from . import cohort, params, store
+from . import cohort, demo, params, store
 from . import courses as stored
-from .models import Course, Dataset, Patient, Setting
+from .models import Course, Dataset, Patient
 
 FORMAT = "toxage-sim-archive"
 FORMAT_VERSION = 1
@@ -50,7 +50,7 @@ def lines(datasets=None):
     """The archive as text lines. datasets=None archives the whole app: all
     data sets that are ready and the changed parameters."""
     whole = datasets is None
-    datasets = list(Dataset.objects.filter(status=Dataset.READY).order_by("created", "pk")
+    datasets = list(demo.visible().filter(status=Dataset.READY).order_by("created", "pk")
                     if whole else datasets)
     yield _line({
         "type": "archive", "format": FORMAT, "format_version": FORMAT_VERSION,
@@ -198,6 +198,7 @@ class _Importer:
         try:
             d = Dataset.objects.create(
                 name=str(rec["name"])[:80], n=int(rec["n"]), seed=int(rec["seed"]), status=Dataset.READY,
+                owner=demo.visitor(),
                 progress=1, metadata={**rec["metadata"],
                                       "base": stored.choose_base([s["scenario_id"] for s in rec["scenarios"]])},
                 scenarios=rec["scenarios"],
@@ -269,8 +270,10 @@ def load(fileobj, replace=False):
     complete = False
     with transaction.atomic():
         if replace:
-            Dataset.objects.all().delete()
-            Setting.objects.filter(pk__in=params.SOURCES).delete()
+            # Everything this request may change: in a demo installation the visitor's space.
+            Dataset.objects.filter(owner=demo.visitor()).delete()
+            for key in params.SOURCES:
+                params.store_changes(key, {})
         for number, rec in records:
             kind = rec.get("type") if isinstance(rec, dict) else None
             if complete:
@@ -289,7 +292,7 @@ def load(fileobj, replace=False):
                                                f"do not work in this app: {problem}.")
                     for key, changed in (rec.get("changes") or {}).items():
                         if key in params.SOURCES and changed:
-                            Setting.objects.create(pk=key, value=changed)
+                            params.store_changes(key, changed)
                     restored = True
             elif kind == "end":
                 importer.flush()

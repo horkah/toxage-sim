@@ -11,6 +11,7 @@
     </div>
   </header>
 
+  {% if demo %}{% include "explorer/demo_note.html" %}{% endif %}
   {% if message %}<p class="notice" role="status" data-toast>{{ message }}</p>{% endif %}
   {% if error %}<p class="notice error" role="alert">{{ error }}</p>{% endif %}
 
@@ -27,6 +28,7 @@
           {% if d.pk == active.pk %}<span class="badge accent">shown in the explorer</span>
           {% elif d.status == "running" %}<span class="badge">generating</span>
           {% elif d.status == "failed" %}<span class="badge danger">failed</span>{% endif %}
+          {% if demo and not d.removable %}<span class="badge" title="Part of the demo; it cannot be deleted">permanent</span>{% endif %}
         </header>
 
         {% if d.status == "running" %}
@@ -42,7 +44,7 @@
           <tr><td><a href="{% url 'explorer' %}?dataset={{ d.pk }}&amp;scenario={{ sid }}" title="Explore this scenario">{{ title }}</a></td>
             <td>{{ d.n }}</td><td>{{ counts.observation|default:"–" }}</td>
             <td>{{ counts.event|default:"–" }}</td><td>{{ counts.alert|default:"0" }}</td>
-            <td>{% if not read_only and d.record_counts|length > 1 %}
+            <td>{% if d.removable and d.record_counts|length > 1 %}
               <form method="post" action="{% url 'data_delete' %}" class="inline" data-confirm="The scenario “{{ title }}” of the data set “{{ d.name }}” will be deleted with the courses of all {{ d.n }} patients in it." data-confirm-title="Delete this scenario?">{% csrf_token %}
                 <input type="hidden" name="dataset" value="{{ d.pk }}"><input type="hidden" name="scenario" value="{{ sid }}">
                 <button type="submit" class="link danger-link">delete scenario</button></form>{% endif %}</td></tr>
@@ -70,7 +72,7 @@
           <a class="button" href="{% url 'records' d.pk %}">Inspect records</a>
           <a class="button" href="{% url 'archive_dataset' d.pk %}" download title="Save this data set as an archive file">Export</a>
           {% endif %}
-          {% if not read_only and d.status != "running" %}
+          {% if d.removable and d.status != "running" %}
           <form method="post" action="{% url 'data_delete' %}" class="inline push" data-confirm="The data set “{{ d.name }}” will be deleted with all {{ d.record_counts|length }} scenarios and {{ d.n }} patients." data-confirm-title="Delete this data set?">{% csrf_token %}
             <input type="hidden" name="dataset" value="{{ d.pk }}">
             <button type="submit" class="danger-outline">Delete data set</button></form>
@@ -81,19 +83,18 @@
       <div class="panel empty-state">
         <img src="{% static 'explorer/img/logo.svg' %}" alt="" width="56" height="56">
         <h2>No data set yet</h2>
-        <p>Generate one with the form{% if not read_only %} or import an archive{% endif %}.</p>
+        <p>Generate one with the form or import an archive.</p>
       </div>
       {% endfor %}
       <div class="datasets-foot muted small">{% if size_mb is not None %}<span>The database uses {{ size_mb|num:1 }} MB of {{ limit_mb|num:0 }} MB on disk.</span>{% endif %}
-        {% if datasets|length > 1 and not read_only and not running %}
-        <form method="post" action="{% url 'data_delete' %}" class="inline" data-confirm="All {{ datasets|length }} data sets will be deleted with all their patients. Parameter changes stay." data-confirm-title="Delete all data sets?">{% csrf_token %}
+        {% if removable_count > 1 and not running %}
+        <form method="post" action="{% url 'data_delete' %}" class="inline" data-confirm="{% if demo %}Your {{ removable_count }} data sets{% else %}All {{ removable_count }} data sets{% endif %} will be deleted with all their patients. Parameter changes stay." data-confirm-title="Delete {% if demo %}your{% else %}all{% endif %} data sets?">{% csrf_token %}
           <input type="hidden" name="all" value="yes">
-          <button type="submit" class="link danger-link">Delete all data sets</button></form>
+          <button type="submit" class="link danger-link">Delete {% if demo %}your{% else %}all{% endif %} data sets</button></form>
         {% endif %}</div>
     </section>
 
     <aside class="side">
-      {% if not read_only %}
       <section class="panel">
         <h2>Generate a data set</h2>
         <form method="post" action="{% url 'data_generate' %}" class="form" id="generate"
@@ -127,7 +128,6 @@
           {% if running %}<span class="muted small">A data set is being generated.</span>{% endif %}
         </form>
       </section>
-      {% endif %}
 
       <section class="panel" id="archive">
         <h2>Archive</h2>
@@ -135,22 +135,19 @@
         <div class="actions">
           <a class="button" href="{% url 'archive' %}" download{% if not ready_count %} aria-disabled="true"{% endif %}>Export everything</a>
         </div>
-        {% if not read_only %}
         <form method="post" action="{% url 'archive_import' %}" enctype="multipart/form-data" class="form" id="import"
-              data-confirm-if="replace" data-confirm="All data sets and parameter changes of the app will be replaced by those of the archive." data-confirm-title="Replace everything?" data-confirm-action="Replace">{% csrf_token %}
+              data-confirm-if="replace" data-confirm="{% if demo %}Your own data sets and parameter changes{% else %}All data sets and parameter changes of the app{% endif %} will be replaced by those of the archive." data-confirm-title="Replace {% if demo %}your changes{% else %}everything{% endif %}?" data-confirm-action="Replace">{% csrf_token %}
           <label>Archive file <input type="file" name="archive" accept=".gz,.jsonl,application/gzip" required></label>
           <fieldset class="plainset">
             <legend class="sr-only">How to import</legend>
             <label class="check"><input type="radio" name="mode" value="add" checked> Add its data sets
               <small>Data sets and parameters of the app stay.</small></label>
-            <label class="check"><input type="radio" name="mode" value="replace"> Replace everything
-              <small>Data sets and parameter changes become those of the archive.</small></label>
+            <label class="check"><input type="radio" name="mode" value="replace"> Replace {% if demo %}your changes{% else %}everything{% endif %}
+              <small>{% if demo %}Your own data sets and parameter changes{% else %}Data sets and parameter changes{% endif %} become those of the archive.</small></label>
           </fieldset>
           <button type="submit">Import</button>
         </form>
-        {% endif %}
       </section>
-      {% if read_only %}<p class="muted small">The app runs in read-only mode. Data sets cannot be generated, imported or deleted.</p>{% endif %}
     </aside>
   </div>
 </div>

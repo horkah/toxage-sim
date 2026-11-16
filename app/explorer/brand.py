@@ -1,7 +1,7 @@
 """The name of the app as the user sees it.
 
-The project and everything under the hood is called toxage-sim. A read-only
-installation (TOXAGE_READ_ONLY=1) shows itself as toxage-sim-demo. Templates
+The project and everything under the hood is called toxage-sim. A demo
+installation (settings.DEMO, explorer/demo.py) shows itself as toxage-sim-demo. Templates
 get the name as app_name for plain text and app_name_tail for the coloured
 part next to the logo (template explorer/brand_name.html).
 """
@@ -11,8 +11,8 @@ BASE = "toxage"
 
 
 def tail():
-    """The coloured part of the name: -sim, or -sim-demo in a read-only installation."""
-    return "-sim-demo" if settings.READ_ONLY else "-sim"
+    """The coloured part of the name: -sim, or -sim-demo in a demo installation."""
+    return "-sim-demo" if settings.DEMO else "-sim"
 
 
 def name():

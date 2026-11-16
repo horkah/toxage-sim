@@ -26,6 +26,7 @@
           Defaults come from <code>{{ source.path }}</code>.</p>
       </div>
     </header>
+    {% if demo %}{% include "explorer/demo_note.html" %}{% endif %}
     {% if saved %}<p class="notice" role="status" data-toast>Saved.</p>{% endif %}
     {% if errors %}<p class="notice error" role="alert">{{ errors|length }} value{{ errors|length|pluralize }} could not be saved. The other values were saved.</p>{% endif %}
 
@@ -33,14 +34,12 @@
       <div class="toolbar sticky">
         <input type="search" class="param-search" placeholder="Find a parameter" aria-label="Find a parameter" data-find="#params tbody tr">
         <span class="spacer"></span>
-        {% if not read_only %}
         <span class="muted small autosave">Changes are saved as you go.</span>
         <noscript><button type="submit" name="action" value="save" class="primary">Save changes</button></noscript>
         <button type="submit" name="action" value="reset_source"{% if not changed_here %} disabled{% endif %}
                 data-confirm="All {{ changed_here }} changed value{{ changed_here|pluralize }} of “{{ source.title }}” will go back to the defaults." data-confirm-title="Reset this file?" data-confirm-action="Reset">Reset this file ({{ changed_here }})</button>
         <button type="submit" name="action" value="reset_all"{% if not changed_total %} disabled{% endif %}
                 data-confirm="All {{ changed_total }} changed value{{ changed_total|pluralize }} in all parameter files will go back to the defaults." data-confirm-title="Reset everything?" data-confirm-action="Reset">Reset everything ({{ changed_total }})</button>
-        {% else %}<span class="muted small">Read-only mode: values cannot be changed.</span>{% endif %}
       </div>
       {% for g in groups %}
       <details id="{{ g.anchor }}"{% if g.changed or forloop.first %} open{% endif %}>
@@ -55,18 +54,18 @@
               {% if r.note %}<small>{{ r.note|cite }}</small>{% endif %}</th>
             <td>
               {% if r.kind == "bool" %}
-              <select name="p:{{ r.path }}" id="p-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"{% if read_only %} disabled{% endif %}>
+              <select name="p:{{ r.path }}" id="p-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
                 <option value="true"{% if r.value == "true" %} selected{% endif %}>true</option>
                 <option value="false"{% if r.value == "false" %} selected{% endif %}>false</option>
               </select>
               {% else %}
               <input type="{% if r.kind == 'number' %}number{% else %}text{% endif %}" step="{% if r.whole %}1{% else %}any{% endif %}" name="p:{{ r.path }}"
-                     id="p-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" value="{{ r.value }}"{% if read_only %} readonly{% endif %}>
+                     id="p-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" value="{{ r.value }}">
               {% endif %}
               {% if r.error %}<small class="error">{{ r.error }}</small>{% endif %}
             </td>
             <td class="default">{{ r.default }}</td>
-            <td>{% if r.changed and not read_only %}<button type="submit" name="action" value="reset:{{ r.path }}" class="iconbutton" title="Back to the default {{ r.default }}" aria-label="Reset to the default">↺</button>{% endif %}</td>
+            <td>{% if r.changed %}<button type="submit" name="action" value="reset:{{ r.path }}" class="iconbutton" title="Back to the default {{ r.default }}" aria-label="Reset to the default">↺</button>{% endif %}</td>
           </tr>
           {% endfor %}
           </tbody>

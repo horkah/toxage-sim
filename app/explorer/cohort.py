@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import toxage_risk
 from schema import toxage_schema
 
-from . import courses, params
+from . import courses, demo, params
 from .models import Course, Dataset
 
 USUAL_CARE = "usual_care"
@@ -113,7 +113,7 @@ def clear_cache():
 
 def newest():
     """The newest data set that is ready."""
-    return Dataset.objects.filter(status=Dataset.READY).first()
+    return demo.visible().filter(status=Dataset.READY).first()
 
 
 def active(request):
@@ -121,7 +121,7 @@ def active(request):
     page (kept in a cookie), else the newest."""
     chosen = request.GET.get("dataset") or request.COOKIES.get(DATASET_COOKIE)
     if chosen and str(chosen).isdigit():
-        dataset = Dataset.objects.filter(pk=int(chosen), status=Dataset.READY).first()
+        dataset = demo.visible().filter(pk=int(chosen), status=Dataset.READY).first()
         if dataset:
             return dataset
     return newest()

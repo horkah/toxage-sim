@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from . import charts, cohort, docs, filters, params, survival, timeline
+from . import charts, cohort, demo, docs, filters, params, survival, timeline
 from .middleware import accepted
 from .models import Dataset
 
@@ -242,7 +242,7 @@ def _explorer(request):
     response = render(request, "explorer/explorer.html", {
         "section": "explore",
         "dataset": dataset,
-        "datasets": Dataset.objects.filter(status=Dataset.READY).only("pk", "name", "n"),
+        "datasets": demo.visible().filter(status=Dataset.READY).only("pk", "name", "n"),
         "total": len(rows),
         "selection": len(selection),
         "models": models,

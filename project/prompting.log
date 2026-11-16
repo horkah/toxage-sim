@@ -345,3 +345,8 @@ Now add a feature where each single plot can be toggled large/ focussed and back
 2026-11-16 00:49 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 The focus view works fine, except for the phone in landscape view. There the focus view disappears.
+
+================================================================================
+2026-11-16 01:03 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+Next issue: in the demo mode, read only mode is the same, the demo and tutorial don't work because the data generation never finished and is also not displayed well due to the UI elements for generation are missing. Can't we have a safe demo mode where after 10 minutes of inactivity or after reloading the page the stored status is restored and all demo changes are gone, but in the meantime new data can be generated within the memory bounds, parameters changed etc. Just the stored old data never deleted. That would also solve the tutorial /demo problem

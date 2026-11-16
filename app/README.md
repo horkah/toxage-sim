@@ -16,7 +16,7 @@ Then open http://localhost:8000, accept the terms, and generate a first data set
 |---|---|---|
 | `TOXAGE_ALLOWED_HOSTS` | Host names under which the app is reached, separated by commas | `*` |
 | `TOXAGE_CSRF_TRUSTED_ORIGINS` | Addresses with scheme from which forms may be sent; needed behind a proxy with HTTPS | empty |
-| `TOXAGE_READ_ONLY` | `1`: data and parameters can be viewed but not changed; only the demo makes its changes and takes them back. The app then shows its name as toxage-sim-demo | `0` |
+| `TOXAGE_DEMO` | `1`: demo installation. The stored data sets and parameter changes are permanent; every visitor works in a space of their own that is emptied on a reload of the page or after 10 minutes without activity, see "Demo installation". The app then shows its name as toxage-sim-demo. `TOXAGE_READ_ONLY=1` has the same effect | `0` |
 | `TOXAGE_SECRET_KEY` | Secret key; without it one is created once and kept in the data folder | created |
 | `TOXAGE_DATA_DIR` | Folder of the database and the secret key | `/data` |
 | `TOXAGE_DEBUG` | `1` for development (`just serve` sets it); off by default | `0` |
@@ -26,7 +26,7 @@ Then open http://localhost:8000, accept the terms, and generate a first data set
 
 The image holds the app, the engine, the risk models, the schema and the documents, without the PDFs of the literature and without the folder `project/` (prompt log and internal notes), which are for developers only. It runs gunicorn with one worker process and several threads. One process is required: data sets are generated in a thread of the server process, and the rows of a scenario are kept in its memory.
 
-The app has no login. Everyone who reaches it can generate and delete data and change parameters, unless `TOXAGE_READ_ONLY=1` is set. It is a demonstrator for a trusted network.
+The app has no login. In a normal installation everyone who reaches it can generate and delete data and change parameters; it is meant for a trusted network. A public installation runs as a demo installation (`TOXAGE_DEMO=1`), where nobody can change or delete the stored content.
 
 ## Run for development
 
@@ -199,13 +199,17 @@ Two guided tours lead through the whole app in about 70 steps: help and settings
 
 In the tutorial the right arrow key or a swipe to the left works like "Next" where it is offered.
 
-The demo leaves the app exactly as it was. At its start the server notes the changed parameters, the stored data sets and the chosen data set. The demo deletes what it created and resets what it changed step by step, and at its end, or when it is stopped, the server puts the noted state back: parameters, data sets and chosen data set. If a demo is cut off, for example by closing the browser, the next page offers to restore the state.
+The demo leaves the app exactly as it was. In a normal installation, at its start the server notes the changed parameters, the stored data sets and the chosen data set. The demo deletes what it created and resets what it changed step by step, and at its end, or when it is stopped, the server puts the noted state back: parameters, data sets and chosen data set. If a demo is cut off, for example by closing the browser, the next page offers to restore the state.
 
 The app offers both tours once per browser session after the disclaimer. This offer can be turned off in the offer itself and turned on and off in the settings. Both tours can be started under "Help" at any time.
 
-In read-only mode the demo keeps all its steps. When it starts, the server notes the state and gives this browser a token in a cookie; with it, and only while this demo runs, the browser may do what the demo does: generate data sets of at most 300 patients, delete the data sets the demo created, and change and reset parameters. It may not delete data sets that were there before, delete everything or import archives. The end of each round and "Stop the demo" bring the state back and end the permission. A demo that has not started a new round for 60 minutes counts as abandoned; the next page view of anyone brings the state before it back.
+Only one demo changes a normal installation at a time. While it runs, a demo started in another browser leaves out the steps that change something and does not touch the running one.
 
-Only one demo changes the app at a time. While it runs, a demo started in another browser leaves out the steps that change something and does not touch the running one. The tutorial follows the user, so in read-only mode it leaves out the steps that change data or parameters.
+### Demo installation
+
+With `TOXAGE_DEMO=1` the data sets and parameter changes that are stored are permanent: everyone sees them, nobody can delete or change them. Visitors may still use every function: generate data sets within the limit of the database, delete their own data sets and scenarios, change and reset parameters, import and export archives, run the tutorial and the demo. All of this goes into a space of the visitor's own (`explorer/demo.py`), which only that browser sees; "Delete your data sets" and "Replace your changes" act on it alone. Data sets in the space and the parameter changes of the space are kept apart from the permanent ones: data sets carry the visitor in `Dataset.owner`, parameter changes are stored per visitor.
+
+The space is emptied when the visitor reloads the page (the browser marks a reload with `Cache-Control: max-age=0`; following a link or opening a new tab is no reload) and after 10 minutes without a request of that browser (`DEMO_IDLE_MINUTES`). A tour that runs during a reload starts again from its first step. The demo needs no snapshot here: each round starts with an empty space and empties it again at its end, and several visitors can run it at the same time. The data and parameter pages say so in a short note, and the permanent data sets are marked "permanent".
 
 ### Settings
 
@@ -227,7 +231,8 @@ Only one demo changes the app at a time. While it runs, a demo started in anothe
 | `explorer/cohort.py` | Loads the patients, adds the risks of all models, describes the schema fields |
 | `explorer/filters.py` | Filters built from schema and risk models |
 | `explorer/charts.py` | Data of the risk charts and key numbers |
-| `explorer/brand.py` | The displayed name of the app (toxage-sim, or toxage-sim-demo when read-only), for all templates |
+| `explorer/brand.py` | The displayed name of the app (toxage-sim, or toxage-sim-demo in a demo installation), for all templates |
+| `explorer/demo.py` | Demo installation: the visitor's own space, emptied on reload and when idle |
 | `explorer/timeline.py` | Data of the charts over time and across scenarios, and the table of endpoints |
 | `explorer/survival.py` | Endpoints, Kaplan-Meier and Aalen-Johansen estimates, restricted means and the paired comparison of scenarios |
 | `explorer/views.py`, `middleware.py` | Explorer, random patient, about, disclaimer |

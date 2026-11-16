@@ -17,7 +17,7 @@ from engine import calibrate
 from engine import generate as engine
 from schema import toxage_schema
 
-from . import cohort, courses, params
+from . import cohort, courses, demo, params
 from .models import Course, Dataset, Patient
 
 KEYS = ("scenario_id", "patient_id")
@@ -236,7 +236,7 @@ def generate(n, seed, scenarios=None, name="", recalibrate=None, replace=False, 
         if _RUNNING:
             raise Busy("A data set is being generated. Please wait until it is ready.")
         dataset = Dataset.objects.create(
-            name=name.strip()[:80] or f"{n} patients, seed {seed}", n=n, seed=seed,
+            name=name.strip()[:80] or f"{n} patients, seed {seed}", n=n, seed=seed, owner=demo.visitor(),
             settings={k: v for k, v in changed.items() if k in params.ENGINE}, message="Starting")
         _RUNNING.add(dataset.pk)
     wait = not settings.ASYNC_JOBS if wait is None else wait
@@ -302,8 +302,9 @@ def delete_scenario(dataset, scenario_id):
 
 
 def delete_all():
-    """Delete every data set; parameter changes stay."""
-    Dataset.objects.all().delete()
+    """Delete every data set this request may delete (in a demo installation the
+    visitor's own); parameter changes stay."""
+    Dataset.objects.filter(owner=demo.visitor()).delete()
     cohort.clear_cache()
     compact()
 

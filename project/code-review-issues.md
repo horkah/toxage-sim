@@ -17,18 +17,19 @@ What remains was decided by the author.
 
 ### M4. No access control on a public installation (kept as is)
 
-- Where: whole app; `docker-compose.yml` (`TOXAGE_READ_ONLY` defaults to 0).
+- Where: whole app; `docker-compose.yml` (`TOXAGE_DEMO` defaults to 0).
 - What: the app has no login. On a public address everyone can generate
   data sets (CPU, and disk up to TOXAGE_DISK_LIMIT_MB), import archives,
   change parameters
   and delete everything. The README names this as a limit for a trusted
   network, but the installation is public.
-- Options: set `TOXAGE_READ_ONLY=1` on the public server and change data
+- Options: set `TOXAGE_DEMO=1` on the public server and change data
   only on a private one; or protect the changing actions (generate, import,
   delete, parameters) with a password or the login of the reverse proxy
   (e.g. basic auth in Caddy); or add user accounts.
 - Decision of the author: keep as is. The README names the missing login as
-  a limit; a public installation can run with `TOXAGE_READ_ONLY=1`.
+  a limit; a public installation runs as a demo installation (`TOXAGE_DEMO=1`),
+  where visitors work in spaces of their own and the stored content stays.
 
 ## Minor
 

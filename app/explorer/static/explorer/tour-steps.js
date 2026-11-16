@@ -8,7 +8,7 @@
 //   until    function that says whether the result is there
 //   wait     true: the step waits for `until` without anything being done
 //   free     true: in the tutorial the step may be passed without doing it
-//   changes  true: the step changes data or parameters (left out in read-only mode)
+//   changes  true: the step changes data or parameters (left out while another demo runs)
 //   needs    name of a remembered value without which the step is left out
 //   only     "tutorial" or "demo"
 // {A} and {B} in selectors and addresses stand for the ids of the data sets

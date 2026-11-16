@@ -14,6 +14,7 @@ from pathlib import Path
 
 from django.conf import settings
 
+from . import demo
 from .models import Setting
 
 REPO = Path(settings.REPO_DIR)
@@ -104,16 +105,24 @@ def anchor(path):
     return "param-" + path.replace(SEP, "--")
 
 
+def _stored(keys):
+    """{key: changes} of the given parameter files as this request sees them. In a
+    visitor's space of a demo installation its own row of a file, once it has one,
+    replaces the permanent row (an empty own row means: the defaults)."""
+    own = demo.visitor()
+    wanted = list(keys) + ([f"{k}@{own}" for k in keys] if own else [])
+    rows = {s.key: s.value for s in Setting.objects.filter(pk__in=wanted)}
+    return {k: dict(rows[f"{k}@{own}"] if own and f"{k}@{own}" in rows else rows.get(k) or {}) for k in keys}
+
+
 def changes(key):
     """The stored changes of one parameter file as {path: value}."""
-    setting = Setting.objects.filter(pk=key).first()
-    return dict(setting.value) if setting else {}
+    return _stored([key])[key]
 
 
 def all_changes():
     """{source key: {path: value}} of everything that differs from the defaults."""
-    stored = {s.key: s.value for s in Setting.objects.all()}
-    return {key: dict(stored[key]) for key in SOURCES if stored.get(key)}
+    return {key: changed for key, changed in _stored(SOURCES).items() if changed}
 
 
 def apply(data, changed):
@@ -273,19 +282,28 @@ def check(key, changed):
 def reset(key=None, path=None):
     """Bring defaults back: one value, one source, or everything."""
     if key is None:
-        Setting.objects.filter(pk__in=SOURCES).delete()
+        for k in SOURCES:
+            _store(k, {})
     elif path is None:
-        Setting.objects.filter(pk=key).delete()
+        _store(key, {})
     else:
         changed = changes(key)
         changed.pop(path, None)
         _store(key, changed)
 
 
+def store_changes(key, changed):
+    """Store the changes of one parameter file as they are (no check), e.g. from an archive."""
+    _store(key, changed)
+
+
 def _store(key, changed):
     """Store the changes of one file, or delete its row when nothing differs from the
-    defaults."""
-    if changed:
+    defaults. In a visitor's space the row stays, also empty: it then stands for the
+    defaults instead of the permanent changes."""
+    if demo.visitor():
+        Setting.objects.update_or_create(pk=demo.setting_key(key), defaults={"value": changed})
+    elif changed:
         Setting.objects.update_or_create(pk=key, defaults={"value": changed})
     else:
         Setting.objects.filter(pk=key).delete()

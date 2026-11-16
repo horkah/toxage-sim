@@ -1,5 +1,4 @@
 """Pages next to the explorer: data sets, archive, parameters, reference."""
-from functools import wraps
 
 from django.conf import settings
 from django.http import Http404, HttpResponseForbidden, StreamingHttpResponse
@@ -9,35 +8,15 @@ from django.views.decorators.http import require_POST
 
 from schema import toxage_schema
 
-from . import archive, cohort, docs, params, store, tour
+from . import archive, cohort, demo, docs, params, store
 from .models import Dataset
 
 PAGE = 50
 MAX_PATIENTS = 20000
 
 
-READ_ONLY_TEXT = "The app runs in read-only mode."
-
-
-def changes_data(view=None, demo=False):
-    """Views that change data or parameters are closed in read-only mode. With
-    demo=True the running demo may use them anyway (tour.demo_may_change);
-    the view then checks the limits of the demo itself."""
-    if view is None:
-        return lambda v: changes_data(v, demo)
-
-    @wraps(view)
-    def wrapped(request, *args, **kwargs):
-        """The view itself, or 403 in read-only mode."""
-        if settings.READ_ONLY and not (demo and tour.demo_may_change(request)):
-            return HttpResponseForbidden(READ_ONLY_TEXT)
-        return view(request, *args, **kwargs)
-    return wrapped
-
-
-def _demo_limited(request):
-    """True if the request may change things only as the demo in read-only mode."""
-    return settings.READ_ONLY
+PERMANENT_TEXT = ("This data set belongs to the permanent content of the demo and cannot be changed. "
+                  "Your own data sets can be deleted.")
 
 
 def fetched(request):
@@ -72,7 +51,7 @@ def data(request, message=None, error=None, posted=None):
     """Page Data: stored data sets, the form to generate one, the archive. message
     and error come from an import."""
     store.mark_interrupted()
-    datasets = list(Dataset.objects.all())
+    datasets = list(demo.visible())
     active = cohort.active(request)
     changed = params.all_changes()
     size = store.used_bytes()
@@ -81,10 +60,12 @@ def data(request, message=None, error=None, posted=None):
                            for s in d.scenarios]
         d.changed_list = _changed_list(d.settings)
         d.changed = len(d.changed_list)
+        d.removable = demo.removable(d)
     return render(request, "explorer/data.html", {
         "section": "data",
         "datasets": datasets,
         "ready_count": sum(d.ready for d in datasets),
+        "removable_count": sum(d.removable for d in datasets),
         "active": active,
         "running": any(d.status == Dataset.RUNNING for d in datasets),
         "scenarios": params.effective("interventions")["scenarios"],
@@ -98,7 +79,6 @@ def data(request, message=None, error=None, posted=None):
         "scenario_choices": [(sid, s, store.EXTRA_BYTES.get(sid, store.BYTES_PER_COURSE))
                              for sid, s in params.effective("interventions")["scenarios"].items()],
         "max_patients": MAX_PATIENTS,
-        "read_only": tour.read_only(request),
         "message": message,
         "error": error,
         # The form keeps what was entered when a data set was refused.
@@ -109,13 +89,9 @@ def data(request, message=None, error=None, posted=None):
 
 
 @require_POST
-@changes_data(demo=True)
 def data_generate(request):
-    """Start generating a data set from the form; the page then follows the progress.
-    The demo in read-only mode generates at most tour.DEMO_MAX_PATIENTS patients."""
+    """Start generating a data set from the form; the page then follows the progress."""
     n = _int(request.POST.get("n"), 1500, 3, MAX_PATIENTS)
-    if _demo_limited(request) and n > tour.DEMO_MAX_PATIENTS:
-        return HttpResponseForbidden(f"In read-only mode the demo generates at most {tour.DEMO_MAX_PATIENTS} patients.")
     seed = _int(request.POST.get("seed"), 1, 0, 2**31 - 1)
     try:
         store.generate(n, seed, request.POST.getlist("scenarios"), request.POST.get("name", ""),
@@ -126,19 +102,15 @@ def data_generate(request):
 
 
 @require_POST
-@changes_data(demo=True)
 def data_delete(request):
-    """Delete one data set, one scenario of it, or all data sets. The demo in
-    read-only mode deletes only what it created."""
-    limited = _demo_limited(request)
+    """Delete one data set, one scenario of it, or all data sets. In a demo
+    installation only the visitor's own data sets; the permanent ones stay."""
     if request.POST.get("all") == "yes":
-        if limited:
-            return HttpResponseForbidden(READ_ONLY_TEXT)
         store.delete_all()
         return redirect("data")
-    dataset = get_object_or_404(Dataset, pk=_int(request.POST.get("dataset"), 0, 0, 2**31))
-    if limited and dataset.pk not in tour.demo_datasets(request):
-        return HttpResponseForbidden(f"{READ_ONLY_TEXT} The demo deletes only the data sets it created.")
+    dataset = get_object_or_404(demo.visible(), pk=_int(request.POST.get("dataset"), 0, 0, 2**31))
+    if not demo.removable(dataset):
+        return HttpResponseForbidden(PERMANENT_TEXT)
     scenario_id = request.POST.get("scenario")
     if scenario_id:
         store.delete_scenario(dataset, scenario_id)
@@ -150,7 +122,7 @@ def data_delete(request):
 @require_POST
 def data_use(request):
     """Choose the data set that the explorer shows."""
-    dataset = get_object_or_404(Dataset, pk=_int(request.POST.get("dataset"), 0, 0, 2**31), status=Dataset.READY)
+    dataset = get_object_or_404(demo.visible(), pk=_int(request.POST.get("dataset"), 0, 0, 2**31), status=Dataset.READY)
     response = redirect("explorer")
     response.set_cookie(cohort.DATASET_COOKIE, str(dataset.pk), max_age=365 * 86400, samesite="Lax")
     return response
@@ -160,7 +132,7 @@ def data_use(request):
 
 def archive_export(request, pk=None):
     """The whole app, or one data set, as an archive file that can be imported later."""
-    dataset = get_object_or_404(Dataset, pk=pk, status=Dataset.READY) if pk is not None else None
+    dataset = get_object_or_404(demo.visible(), pk=pk, status=Dataset.READY) if pk is not None else None
     response = StreamingHttpResponse(archive.gzipped(archive.lines([dataset] if dataset else None)),
                                      content_type="application/gzip")
     response["Content-Disposition"] = f'attachment; filename="{archive.filename(dataset)}"'
@@ -175,7 +147,6 @@ def _data_page(request, **kwargs):
 
 
 @require_POST
-@changes_data
 def archive_import(request):
     """Import an uploaded archive, adding its data sets or replacing everything;
     errors are shown on the page."""
@@ -203,7 +174,7 @@ def _table(request):
 
 def records(request, pk):
     """Records of one table of a data set, page by page."""
-    dataset = get_object_or_404(Dataset, pk=pk, status=Dataset.READY)
+    dataset = get_object_or_404(demo.visible(), pk=pk, status=Dataset.READY)
     table = _table(request)
     scenario = cohort.scenario(dataset, request.GET.get("scenario"))
     patient_id = cohort.normalise_id(request.GET.get("patient"))
@@ -239,7 +210,7 @@ def records(request, pk):
 
 def export(request, pk, table):
     """One table of a data set as CSV file, in the format of the central schema."""
-    dataset = get_object_or_404(Dataset, pk=pk, status=Dataset.READY)
+    dataset = get_object_or_404(demo.visible(), pk=pk, status=Dataset.READY)
     if table not in store.TABLES:
         raise Http404
     wanted = request.GET.get("scenario")
@@ -263,8 +234,6 @@ def parameters(request, key="parameters"):
     source = _source(key)
     posted, errors, saved = None, {}, False
     if request.method == "POST":
-        if tour.read_only(request):          # the running demo may change parameters
-            return HttpResponseForbidden(READ_ONLY_TEXT)
         action = request.POST.get("action", "save")
         if action == "reset_all":
             params.reset()
@@ -290,7 +259,6 @@ def parameters(request, key="parameters"):
         "changed_here": len(changed.get(key, {})),
         "changed_total": sum(len(v) for v in changed.values()),
         "is_engine": key in params.ENGINE,
-        "read_only": tour.read_only(request),
     })
 
 

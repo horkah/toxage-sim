@@ -60,11 +60,11 @@ export function onPage(current, wanted) {
   return true;
 }
 
-// Steps that apply: some change data and are left out in read-only mode,
+// Steps that apply: some change data and are left out while another demo runs,
 // some belong to one mode only, some need something an earlier step made.
-export function applies(step, mode, readOnly, mem) {
+export function applies(step, mode, noChanges, mem) {
   if (step.only && step.only !== mode) return false;
-  if (step.changes && readOnly) return false;
+  if (step.changes && noChanges) return false;
   if (step.needs && !(step.needs in mem)) return false;
   return true;
 }
@@ -131,7 +131,6 @@ const sleep = (ms) => new Promise((resolve) => {
 const api = {
   get mode() { return state.mode; },
   get mem() { return state.mem; },
-  get readOnly() { return document.body.dataset.readOnly === "1"; },
   // The element of a selector; {A} etc. stand for remembered values; null if none or invalid.
   q(selector) {
     try { return document.querySelector(fill(selector, state.mem)); } catch { return null; }
@@ -552,29 +551,32 @@ async function onPanelClick(event) {
 }
 
 // Note the state before a tour and set the tour to its first step.
-// The demo notes the state on the server and gets a token that lets it change
-// things, also in read-only mode; the server restores an earlier snapshot of
-// this browser or an abandoned one first. If another demo is running, this one
-// leaves out the steps that change something (owner false).
+// The demo notes the state on the server, which restores an earlier snapshot of
+// this browser or an abandoned one first; in a demo installation it empties the
+// visitor's space instead. If another demo is running in a normal installation,
+// this one leaves out the steps that change something (owner false).
 async function begin(mode, round = 1) {
   let owner = false;
   if (mode === "demo") {
     owner = Boolean((await post("/tour/snapshot/")).taken);
-    // The page was drawn before the permission: its controls follow with the next page.
-    if (owner) document.body.dataset.readOnly = "0";
   }
   const before = await api.state();
   state = { mode, i: 0, acted: false, shownAt: null, doneAt: null, paused: false, round,
             controls: undefined, holdUntil: 0, skip: false,
-            mem: { known: before.datasets.map((d) => d.id), owner, readOnly: before.read_only } };
+            mem: { known: before.datasets.map((d) => d.id), owner } };
   save();
 }
 
-// True if the tour must leave out the steps that change something: read-only
-// mode without the demo's permission, or another demo is running.
+// True if the tour must leave out the steps that change something: another demo
+// is running in this (normal) installation. In a demo installation every visitor
+// has a space of their own, so this never happens there.
 function noChanges() {
-  if (state?.mode === "demo") return !state.mem.owner;
-  return api.readOnly;
+  return state?.mode === "demo" && !state.mem.owner;
+}
+
+// True if this page was loaded by a reload of the browser.
+function reloaded() {
+  return globalThis.performance?.getEntriesByType?.("navigation")[0]?.type === "reload";
 }
 
 // Start a tour from its first step.
@@ -646,6 +648,9 @@ function init() {
   // A page swapped in place moves the target of the hint.
   document.addEventListener("toxage:swap", () => { if (panel) requestAnimationFrame(position); });
   state = read(KEY);
+  // In a demo installation a reload empties the visitor's space (demo.py), and
+  // with it what the tour made so far: the tour starts again from its first step.
+  if (state && document.body.dataset.demo === "1" && reloaded()) return start(state.mode);
   if (state) return play();
   if (document.body.dataset.tourSnapshot === "1") unfinished();
   let off = false, seen = false;

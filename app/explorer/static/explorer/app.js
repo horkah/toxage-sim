@@ -205,7 +205,7 @@ function swap(doc, only) {
   } else {
     const kept = remember(main);
     document.title = doc.title;
-    for (const key of ["readOnly", "tourSnapshot", "section"]) {
+    for (const key of ["tourSnapshot", "section"]) {
       if (doc.body.dataset[key] !== undefined) document.body.dataset[key] = doc.body.dataset[key];
     }
     const nav = document.getElementById("nav"), newNav = doc.getElementById("nav");

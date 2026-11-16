@@ -129,15 +129,6 @@ class DataTest(CohortTestCase):
         for url in ("/data/generate/", "/data/delete/", "/data/use/"):
             self.assertEqual(self.client.get(url).status_code, 405)
 
-    @override_settings(READ_ONLY=True)
-    def test_read_only_mode(self):
-        self.assertEqual(self.client.post("/data/generate/", {"n": "9"}).status_code, 403)
-        self.assertEqual(self.client.post("/data/delete/", {"all": "yes"}).status_code, 403)
-        self.assertEqual(self.client.post("/parameters/risk/", {"action": "reset_all"}).status_code, 403)
-        self.assertEqual(Dataset.objects.count(), 1)
-        self.assertNotContains(self.client.get("/data/"), "Generate a data set")
-        self.assertEqual(self.client.post("/data/use/", {"dataset": self.dataset.pk}).status_code, 302)
-
     def test_a_page_beyond_the_end_shows_the_last_page(self):
         url = f"/data/{self.dataset.pk}/records/?table=outcome&scenario=combined"
         context = self.client.get(url + "&page=100000").context
@@ -297,10 +288,10 @@ class AboutTest(TestCase):
         page = self.client.get("/about/")
         self.assertContains(page, '<span class="brand-name">toxage<b>-sim</b></span>', count=2)    # top bar, title
         self.assertContains(page, "<title>About · toxage-sim</title>", html=False)
-        self.assertNotContains(page, "-demo")
+        self.assertNotContains(page, "toxage-sim-demo")
 
-    @override_settings(READ_ONLY=True)
-    def test_a_read_only_installation_is_named_demo(self):
+    @override_settings(DEMO=True)
+    def test_a_demo_installation_is_named_demo(self):
         from toxage_app.version import VERSION
         page = self.client.get("/about/")
         self.assertContains(page, '<span class="brand-name">toxage<b>-sim-demo</b></span>', count=2)

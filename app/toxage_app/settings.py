@@ -51,6 +51,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "explorer.middleware.DisclaimerMiddleware",
+    "explorer.demo.VisitorMiddleware",
 ]
 
 ROOT_URLCONF = "toxage_app.urls"
@@ -61,7 +62,8 @@ TEMPLATES = [{
     "APP_DIRS": True,
     "OPTIONS": {"context_processors": ["django.template.context_processors.request",
                                        "explorer.tour.context",
-                                       "explorer.brand.context"]},
+                                       "explorer.brand.context",
+                                       "explorer.demo.context"]},
 }]
 
 # SQLite in one file. Write-ahead logging lets pages be read while a data set
@@ -98,5 +100,9 @@ DISK_LIMIT_MB = float(os.environ.get("TOXAGE_DISK_LIMIT_MB") or 500)
 # Data sets are generated in a thread of the server process. Tests switch
 # this off, so that generating finishes within the call.
 ASYNC_JOBS = True
-# With TOXAGE_READ_ONLY=1 the app shows data and parameters but changes nothing.
-READ_ONLY = os.environ.get("TOXAGE_READ_ONLY", "0") == "1"
+# Demo installation (TOXAGE_DEMO=1, or TOXAGE_READ_ONLY=1): the stored data sets and
+# parameter changes are permanent; every visitor works in a space of their own that
+# is emptied again (explorer/demo.py).
+DEMO = "1" in (os.environ.get("TOXAGE_DEMO", "0"), os.environ.get("TOXAGE_READ_ONLY", "0"))
+# Minutes without a request after which a visitor's space is emptied.
+DEMO_IDLE_MINUTES = 10

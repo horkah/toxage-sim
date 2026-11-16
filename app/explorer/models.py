@@ -31,6 +31,9 @@ class Dataset(models.Model):
     scenarios = models.JSONField(default=list)    # records of the scenario table
     settings = models.JSONField(default=dict)     # values that differed from the defaults
     calibrated = models.BooleanField(default=False)
+    # Empty for the permanent data sets; in a demo installation the visitor whose
+    # space holds it (explorer/demo.py).
+    owner = models.CharField(max_length=16, blank=True, default="", db_index=True)
 
     class Meta:
         """Newest first; the explorer shows the newest by default."""

@@ -45,10 +45,9 @@ class TourTest(CohortTestCase):
         self.assertEqual(self.before["active"], self.dataset.pk)
         self.assertEqual(self.before["changes"], {"risk": 1})
         self.assertFalse(self.before["snapshot"])
-        self.assertFalse(self.before["read_only"])
 
     def test_restore_brings_the_state_before_the_demo_back(self):
-        self.assertEqual(json.loads(self.client.post("/tour/snapshot/").content), {"read_only": False, "taken": True})
+        self.assertEqual(json.loads(self.client.post("/tour/snapshot/").content), {"taken": True})
         self.change_everything()
         changed = self.state()
         self.assertEqual(len(changed["datasets"]), 2)
@@ -77,7 +76,7 @@ class TourTest(CohortTestCase):
         self.change_everything()
         # The same browser starts its next round: the state before comes back first.
         self.assertTrue(json.loads(self.client.post("/tour/snapshot/").content)["taken"])
-        self.assertEqual({**self.state(), "snapshot": False, "demo": False}, {**self.before, "demo": False})
+        self.assertEqual({**self.state(), "snapshot": False}, self.before)
         self.client.post("/tour/restore/")
         self.assertEqual(self.state(), self.before)
 
@@ -120,39 +119,6 @@ class TourTest(CohortTestCase):
         self.client.cookies.clear()
         self.assertEqual(self.client.get("/tour/state/").status_code, 302)
         self.assertEqual(self.client.post("/tour/restore/").status_code, 302)
-
-    @override_settings(READ_ONLY=True)
-    def test_read_only_mode_without_a_demo_changes_nothing(self):
-        self.assertTrue(self.state()["read_only"])
-        self.assertContains(self.client.get("/"), 'data-read-only="1"')
-        self.assertEqual(self.client.post("/data/generate/", {"n": "6", "seed": "3"}).status_code, 403)
-        self.assertEqual(self.client.post("/parameters/risk/", {"p:ild/window_days": "365"}).status_code, 403)
-
-    @override_settings(READ_ONLY=True)
-    def test_the_demo_may_make_its_changes_in_read_only_mode(self):
-        answer = json.loads(self.client.post("/tour/snapshot/").content)
-        self.assertEqual(answer, {"read_only": False, "taken": True})
-        self.assertFalse(self.state()["read_only"])
-        self.assertTrue(self.state()["demo"])
-        self.assertContains(self.client.get("/data/"), 'data-read-only="0"')
-        # What the demo does: generate, change and reset parameters, delete what it made.
-        self.client.post("/data/generate/", {"n": "6", "seed": "3", "scenarios": ["usual_care"], "name": "Tour"})
-        made = Dataset.objects.get(name="Tour")
-        self.client.post("/parameters/interventions/", {"p:risk_adapted_start/share_flagged": "0.5"})
-        self.assertEqual(params.changes("interventions"), {"risk_adapted_start/share_flagged": 0.5})
-        # Its limits: no large data sets, nothing that was there before, no "delete all", no import.
-        self.assertEqual(self.client.post("/data/generate/", {"n": "1500", "seed": "4"}).status_code, 403)
-        self.assertEqual(self.client.post("/data/delete/", {"dataset": self.dataset.pk}).status_code, 403)
-        self.assertEqual(self.client.post("/data/delete/", {"all": "yes"}).status_code, 403)
-        self.assertEqual(self.client.post("/data/import/", {}).status_code, 403)
-        self.assertEqual(self.client.post("/data/delete/", {"dataset": made.pk}).status_code, 302)
-        self.assertFalse(Dataset.objects.filter(pk=made.pk).exists())
-        # Others get no permission from the demo.
-        self.assertEqual(self.other_browser().post("/data/generate/", {"n": "6", "seed": "5"}).status_code, 403)
-        # The end of the demo takes everything back and the permission with it.
-        self.client.post("/tour/restore/")
-        self.assertEqual(self.state(), {**self.before, "read_only": True})
-        self.assertEqual(self.client.post("/data/generate/", {"n": "6", "seed": "6"}).status_code, 403)
 
     def test_pages_carry_the_tour(self):
         response = self.client.get("/")

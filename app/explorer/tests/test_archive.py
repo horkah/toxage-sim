@@ -116,13 +116,6 @@ class ArchiveTest(CohortTestCase):
         with self.assertRaisesMessage(archive.ArchiveError, "empty"):
             archive.load(io.BytesIO(b""))
 
-    @override_settings(READ_ONLY=True)
-    def test_read_only_mode_exports_but_does_not_import(self):
-        self.assertEqual(self.client.get("/data/archive/").status_code, 200)
-        text = text_of(self.client.get("/data/archive/"))
-        self.assertEqual(self.client.post("/data/import/", {"archive": upload(text)}).status_code, 403)
-        self.assertNotContains(self.client.get("/data/"), 'action="/data/import/"')
-
     def test_import_needs_post_and_unknown_data_sets_are_not_found(self):
         self.assertEqual(self.client.get("/data/import/").status_code, 405)
         self.assertEqual(self.client.get("/data/999/archive/").status_code, 404)
