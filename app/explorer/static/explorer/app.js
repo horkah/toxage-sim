@@ -205,7 +205,7 @@ function swap(doc, only) {
   } else {
     const kept = remember(main);
     document.title = doc.title;
-    for (const key of ["tourSnapshot", "section"]) {
+    for (const key of ["tourSnapshot", "section", "simple"]) {
       if (doc.body.dataset[key] !== undefined) document.body.dataset[key] = doc.body.dataset[key];
     }
     const nav = document.getElementById("nav"), newNav = doc.getElementById("nav");
@@ -425,7 +425,7 @@ function showEstimate(form) {
   const note = form?.querySelector("[data-estimate]");
   if (!note || !form.getAttribute("data-full-bytes")) return;
   const patients = Number(form.querySelector('[name="n"]')?.value) || 0;
-  const scenarios = [...form.querySelectorAll('[name="scenarios"]:checked')]
+  const scenarios = [...form.querySelectorAll('[name="scenarios"]:checked, [name="scenarios"][type="hidden"]')]
     .map((box) => ({ id: box.value, extra: Number(box.getAttribute("data-extra-bytes")) }));
   const need = estimateMb(patients, scenarios, Number(form.getAttribute("data-full-bytes")));
   const free = Number(form.getAttribute("data-free-bytes")) / 1e6;
@@ -460,7 +460,7 @@ function settle(root) {
     toast(note.textContent.trim());
     note.remove();
   }
-  for (const set of root.querySelectorAll("[data-setting]")) {
+  for (const set of root.querySelectorAll("[data-setting]:not([data-cookie])")) {
     const current = load(set.dataset.setting);
     for (const input of set.querySelectorAll("input")) input.checked = input.value === current;
   }
@@ -502,10 +502,18 @@ function init() {
   });
   addEventListener("hashchange", revealHash);
 
-  // Settings are kept in this browser.
+  // Settings are kept in this browser. A setting with data-cookie changes what the
+  // server shows (the simple or the full view): it goes into a cookie for a year,
+  // and the page is loaded again.
   document.addEventListener("change", (event) => {
     const set = event.target.closest("[data-setting]");
     if (!set) return;
+    if (set.dataset.cookie) {
+      const value = event.target.value;
+      document.cookie = `${set.dataset.cookie}=${value}; path=/; samesite=lax; max-age=${value ? 31536000 : 0}`;
+      visit(location.href, { push: false, keepScroll: true });
+      return;
+    }
     save(set.dataset.setting, event.target.value);
     apply(set.dataset.setting, event.target.value);
   });

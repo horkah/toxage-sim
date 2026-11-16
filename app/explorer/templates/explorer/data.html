@@ -6,8 +6,9 @@
   <header class="page-head">
     <div>
       <h1>Data sets</h1>
-      <p class="lead">A data set is one cohort of synthetic patients, simulated under one or several
-        scenarios with the <a href="{% url 'parameters_start' %}">model parameters</a> of that moment.</p>
+      {% if simple %}<p class="lead">A data set is one cohort of synthetic patients, simulated under every scenario.</p>
+      {% else %}<p class="lead">A data set is one cohort of synthetic patients, simulated under one or several
+        scenarios with the <a href="{% url 'parameters_start' %}">model parameters</a> of that moment.</p>{% endif %}
     </div>
   </header>
 
@@ -36,6 +37,8 @@
         <div class="progress"><progress value="{{ d.progress }}" max="1"></progress><span>{{ d.message }} …</span></div>
         {% elif d.status == "failed" %}
         <p class="error">Failed: {{ d.message }}</p>
+        {% elif simple %}
+        <p class="small muted">{{ d.record_counts|length }} scenarios of the same patients.</p>
         {% else %}
         <div class="scroll">
         <table class="numbers counts">
@@ -70,8 +73,8 @@
           <form method="post" action="{% url 'data_use' %}" class="inline">{% csrf_token %}
             <input type="hidden" name="dataset" value="{{ d.pk }}">
             <button type="submit"{% if d.pk != active.pk %} class="primary"{% endif %}>Explore</button></form>
-          <a class="button" href="{% url 'records' d.pk %}">Inspect records</a>
-          <a class="button" href="{% url 'archive_dataset' d.pk %}" download title="Save this data set as an archive file">Export</a>
+          {% if not simple %}<a class="button" href="{% url 'records' d.pk %}">Inspect records</a>
+          <a class="button" href="{% url 'archive_dataset' d.pk %}" download title="Save this data set as an archive file">Export</a>{% endif %}
           {% endif %}
           {% if d.removable and d.status != "running" %}
           <form method="post" action="{% url 'data_delete' %}" class="inline push" data-confirm="The data set “{{ d.name }}” will be deleted with all {{ d.record_counts|length }} scenarios and {{ d.n }} patients." data-confirm-title="Delete this data set?">{% csrf_token %}
@@ -100,6 +103,13 @@
         <h2>Generate a data set</h2>
         <form method="post" action="{% url 'data_generate' %}" class="form" id="generate"
               {% if free_bytes is not None %}data-full-bytes="{{ full_bytes }}" data-free-bytes="{{ free_bytes|floatformat:'0' }}"{% endif %}>{% csrf_token %}
+          {% if simple %}
+          <label>Patients <input type="number" name="n" value="{{ form.n }}" min="3" max="{{ max_patients }}" required></label>
+          <input type="hidden" name="seed" value="{{ form.seed }}">
+          {% if needs_calibration %}<input type="hidden" name="recalibrate" value="yes">{% endif %}
+          {% for sid, s, extra in scenario_choices %}<input type="hidden" name="scenarios" value="{{ sid }}" data-extra-bytes="{{ extra }}">{% endfor %}
+          <p class="hint">Patients with advanced pancreatic, prostate or breast cancer, simulated under every scenario. 1500 patients take about 20 seconds.</p>
+          {% else %}
           <label>Name <input type="text" name="name" maxlength="80" placeholder="optional" value="{{ form.name }}"></label>
           <div class="row2">
             <label>Patients <input type="number" name="n" value="{{ form.n }}" min="3" max="{{ max_patients }}" required></label>
@@ -135,12 +145,14 @@
               <small>Matches usual care to the published rates with the current parameters. About a minute.
                 Needed after changes of regimens or simulation parameters.</small></label>
           </fieldset>
+          {% endif %}
           {% if free_bytes is not None %}<p class="hint" data-estimate>{{ size_mb|num:0 }} of {{ limit_mb|num:0 }} MB on disk are used.</p>{% endif %}
           <button type="submit" class="primary"{% if running %} disabled{% endif %}>Generate</button>
           {% if running %}<span class="muted small">A data set is being generated.</span>{% endif %}
         </form>
       </section>
 
+      {% if not simple %}
       <section class="panel" id="archive">
         <h2>Archive</h2>
         <p class="small">An archive file holds data sets and parameter changes. It can be imported again later, here or in another installation of the app.</p>
@@ -160,6 +172,7 @@
           <button type="submit">Import</button>
         </form>
       </section>
+      {% endif %}
     </aside>
   </div>
 </div>

@@ -17,6 +17,7 @@ Then open http://localhost:8000, accept the terms, and generate a first data set
 | `TOXAGE_ALLOWED_HOSTS` | Host names under which the app is reached, separated by commas | `*` |
 | `TOXAGE_CSRF_TRUSTED_ORIGINS` | Addresses with scheme from which forms may be sent; needed behind a proxy with HTTPS | empty |
 | `TOXAGE_DEMO` | `1`: demo installation. The stored data sets and parameter changes are permanent; every visitor works in a space of their own that is emptied on a reload of the page or after 10 minutes without activity, see "Demo installation". The app then shows its name as toxage-sim-demo. `TOXAGE_READ_ONLY=1` has the same effect | `0` |
+| `TOXAGE_SIMPLE_UI` | `1`: the app opens in the simple view, see "Simple view"; each browser can switch to the full view in the settings | `0` |
 | `TOXAGE_SECRET_KEY` | Secret key; without it one is created once and kept in the data folder | created |
 | `TOXAGE_DATA_DIR` | Folder of the database and the secret key | `/data` |
 | `TOXAGE_DEBUG` | `1` for development (`just serve` sets it); off by default | `0` |
@@ -122,6 +123,17 @@ Four views share the scenario, the filters and the selected patient:
 | Interventions | All scenarios side by side for the selected patients: a table of key numbers, including survival without severe toxicity, survival against usual care, costs and quality-adjusted life years against usual care, bar charts, and lung toxicity and cardiovascular events by grade. Survival and time to event for the selected scenario and the comparison: a table of endpoints with paired differences and 95% confidence intervals, Kaplan-Meier curves and cumulative incidence curves with the number at risk, see section 4.4 of the [intervention model](../background/intervention-model.md). For a scenario with monitoring the days gained and the grades of the events recognised early. |
 
 A double click on a chart, or a double tap on a touch screen, outside its bars and points, shows that chart large: it fills the area of the views next to the filters, down to the footer, and is drawn again at that size. Where that area is too low, on a phone in either orientation or in a low window, it fills the screen below the top bar and the page scrolls to it; turning a phone sizes and places it again. Only one chart is large at a time. It stays large while filters, scenario, comparison or patient change, so their effect shows directly in it. A second double click, Esc, Enter on the focused chart, or a click in the top bar brings all charts back to the grid.
+
+### Simple view
+
+With `TOXAGE_SIMPLE_UI=1` the app opens in a simple view that shows the essence of the data in about ten minutes (`explorer/ui.py`). Data, models and calculations are those of the full view; only what is shown and offered is smaller:
+
+- Explorer: the views Risk, Course over time and Interventions. Risk shows the distribution of the predicted risk, the calibration and the cumulative incidence by risk group; a patient's course shows dose, neutrophils, oxygen saturation and the reported symptoms; Interventions shows a short scenario table, the charts with the largest differences between the scenarios (severe toxicity, hospital days, costs, survival without severe toxicity, first severe event, end of therapy for toxicity, overall survival, early recognition) and one measure per endpoint, without confidence intervals.
+- Filters: tumour type, age, ECOG and the risk of the chosen model. Filters set by a click on a chart stay active.
+- Data: a data set is made from the number of patients alone, under every scenario and with the default seed, tumour types, subgroups and regimens. Data sets show no records, archives or tables per scenario.
+- The section Parameters is not in the menu.
+
+"Settings › View › Advanced" switches the browser to the full view (cookie `toxage_ui`, kept for a year) and back. The guided tours follow the view in use: in the simple view they leave out the steps on what it does not show (steps marked `advanced` in `tour-steps.js`) and use shorter texts where they differ; in the advanced view they show everything. The page About explains the simple view only where the installation offers it.
 
 ### Filters
 
@@ -232,6 +244,7 @@ The space is emptied when the visitor reloads the page (the browser marks a relo
 | `explorer/filters.py` | Filters built from schema and risk models |
 | `explorer/charts.py` | Data of the risk charts and key numbers |
 | `explorer/brand.py` | The displayed name of the app (toxage-sim, or toxage-sim-demo in a demo installation), for all templates |
+| `explorer/ui.py` | The simple view: which views, charts, filters and fields it shows |
 | `explorer/demo.py` | Demo installation: the visitor's own space, emptied on reload and when idle |
 | `explorer/timeline.py` | Data of the charts over time and across scenarios, and the table of endpoints |
 | `explorer/survival.py` | Endpoints, Kaplan-Meier and Aalen-Johansen estimates, restricted means and the paired comparison of scenarios |

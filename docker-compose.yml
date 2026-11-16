@@ -23,6 +23,8 @@ services:
       # 1: demo installation, see app/README.md (TOXAGE_READ_ONLY=1 has the same effect).
       TOXAGE_DEMO: "${TOXAGE_DEMO:-0}"
       TOXAGE_READ_ONLY: "${TOXAGE_READ_ONLY:-0}"
+      # 1: the app opens in the simple view, see app/README.md.
+      TOXAGE_SIMPLE_UI: "${TOXAGE_SIMPLE_UI:-0}"
       # Limit of the database on disk in MB; larger data sets are refused.
       TOXAGE_DISK_LIMIT_MB: "${TOXAGE_DISK_LIMIT_MB:-500}"
       # Time zone of the server: the app shows all times in it (build, data sets, archives).

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { applies, clamp, fill, onPage, place, readSeconds, swipedLeft, words } from "../static/explorer/tour.js";
+import { applies, textOf, clamp, fill, onPage, place, readSeconds, swipedLeft, words } from "../static/explorer/tour.js";
 import { STEPS } from "../static/explorer/tour-steps.js";
 
 test("words and reading time", () => {
@@ -73,4 +73,18 @@ test("the tour works without what it changes", () => {
   const readOnly = STEPS.filter((s) => applies(s, "demo", true, {}));
   assert.ok(readOnly.length > 35);
   assert.ok(readOnly.every((s) => !s.needs));
+});
+
+test("the simple view leaves out the steps that need the full view, and uses its own texts", () => {
+  assert.ok(!applies({ advanced: true }, "demo", false, {}, true));
+  assert.ok(applies({ advanced: true }, "demo", false, {}, false));
+  const simple = STEPS.filter((s) => applies(s, "demo", false, { A: 1 }, true));
+  assert.ok(simple.length >= 30 && simple.length < STEPS.length);
+  // The simple tour still creates its data set and deletes it again at the end.
+  const titles = simple.map((s) => s.title);
+  assert.ok(titles.includes("Generate") && titles.includes("Delete the first data set"));
+  assert.ok(simple.every((s) => !s.target || !/parameters|records|archive|schema/.test(s.target + (s.url ?? ""))));
+  const sections = STEPS.find((s) => s.title === "The sections");
+  assert.notDeepEqual(textOf(sections, true), textOf(sections, false));
+  assert.deepEqual(textOf({ text: ["a"] }, true), ["a"]);
 });

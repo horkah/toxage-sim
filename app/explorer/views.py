@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from . import charts, cohort, demo, docs, filters, params, survival, timeline
+from . import charts, cohort, demo, docs, filters, params, survival, timeline, ui
 from .middleware import accepted
 from .models import Dataset
 
@@ -217,7 +217,9 @@ def _explorer(request):
     ids = {r["patient_id"] for r in selection}
 
     focus = next((m for m in models if m.id == request.GET.get("model")), models[0])
-    view = request.GET.get("view") if request.GET.get("view") in dict(VIEWS) else "risk"
+    simple = ui.simple(request)
+    views = [(k, label) for k, label in VIEWS if not simple or k in ui.VIEWS]
+    view = request.GET.get("view") if request.GET.get("view") in dict(views) else "risk"
     wanted = cohort.normalise_id(request.GET.get("patient"))
     patient = cohort.find(rows, wanted) if wanted else None
 
@@ -231,11 +233,22 @@ def _explorer(request):
     else:
         built = charts.build(selection, patient, focus, models)
         sections = built[-1:] if view == "characteristics" else built[:-1]
+    if simple:
+        sections = ui.slim(sections)
+        for s in sections:
+            if s.get("endpoints"):
+                s["endpoints"] = [e for e in s["endpoints"] if e["first"] and e["endpoint"] in ui.ENDPOINTS]
     summaries = [charts.summary(selection, m) for m in models]
     risks = ({r["model"].id: r for r in charts.patient_risks(patient, selection, models)}
              if patient and view in ("risk", "characteristics") else {})
     model_links = [(m, _query(request.GET, model=m.id)) for m in models]
     chips = filters.chips(specs, request.GET, active)
+    # The simple view offers a few filters; filters set elsewhere (a click on a bar)
+    # stay in the form as hidden fields.
+    shown_specs = [f for f in specs if f.key in ui.filter_keys(focus)] if simple else specs
+    shown_keys = {k for f in shown_specs for k in (f.key, f"{f.key}_min", f"{f.key}_max")}
+    kept_filters = ([(k, v) for k, values in request.GET.lists() if k not in STATE and k not in shown_keys
+                     for v in values] if simple else [])
     for chip in chips:
         chip["remove"] = _query(request.GET, **{k: None for k in chip["keys"]})
     facts = [(f, cohort.display(patient[f.name], f.unit)) for f in cohort.fields()] if patient else []
@@ -255,7 +268,8 @@ def _explorer(request):
         "model_cards": [(s, q, risks.get(s["model"].id)) for s, (_, q) in zip(summaries, model_links)],
         "model_doc": docs.anchor("risk-model", f"Candidate {focus.candidate}:"),
         "model_group": MODEL_GROUPS.get(focus.id, ""),
-        "filter_form": filters.form(specs, request.GET, active),
+        "filter_form": filters.form(shown_specs, request.GET, active),
+        "kept_filters": kept_filters,
         "active_count": len(active),
         "chips": chips,
         "patient": patient,
@@ -271,7 +285,7 @@ def _explorer(request):
         "keep_state": [(k, v) for k, values in request.GET.lists()
                        if k not in ("scenario", "compare") for v in values],
         "model_links": model_links,
-        "view_links": [(key, label, _query(request.GET, view=key)) for key, label in VIEWS],
+        "view_links": [(key, label, _query(request.GET, view=key)) for key, label in views],
         "patient_time": _query(request.GET, view="time"),
         "clear_patient": _query(request.GET, patient=None),
         "reset_filters": _query(

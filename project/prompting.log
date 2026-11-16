@@ -371,3 +371,23 @@ At data generation, let the user select the tumour type, patient subgroup, and r
 Git pull
 
 There is a graphics bug in this plot see screenshot from a mobile phone, line outside of the box
+
+================================================================================
+2026-11-16 18:06 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+Implement a simplified version of the app, which might become the default later. first add a variable "simplified ui (or similar)" - of course in the correct syntax for such switches - to .env (I will try it out later than myself).
+
+The purpose is to present the essence of the simulated data quicker with less visual clutter. 
+
+* the most important graphs (those that have the greatest value for our project, and those that show the biggest differences between interventional scenarios) shall be visible
+* massive part of the detailed filter options can disappear
+* etc etc etc
+* many other elements can be hidden as well without reducing the fascination for this app, what you can explore within like 10 minutes or so.
+* If that mode is selected, the full UI can be found in settings with "advanced mode" or simliar. if someone wants to spend more than 10-20 minutes.
+* the data model shall not change or be simplified. This is merely a UI level simplification - reducing the amount of displayed information and even more so the amount of options to select for filtering and also for data generation.
+* explain the simple ui mode in the about, but only if it is selected of course. otherwise, nothing changes compared to now (no info about simple ui mode and no advanced mode of course)
+
+================================================================================
+2026-11-16 18:09 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+PS: continue working, but just make sure that the demo must be stripped to what's possible (and therefore reasonable) with  this simplified UI, and extended again with advanced mode

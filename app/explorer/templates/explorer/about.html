@@ -25,6 +25,20 @@
     <p>New here? “Help” on top starts a guided tour through every part of the app.</p>
   </section>
 
+  {% if simple_ui %}
+  <section class="panel" id="simple-view">
+    <h2>Simple view</h2>
+    <p>This installation opens in a simple view, made to show the essence in about ten minutes. The explorer
+      has three views: the risk of severe side effects, the course of a single patient, and what the
+      interventions change. Each shows the charts that tell the most, with a few filters. A data set is made
+      from the number of patients alone, under every scenario.</p>
+    <p>Data, models and calculations are the same as in the full view; only less is shown and offered.
+      <b>Settings › View › Advanced</b> shows everything: all charts and filters, the full record of a patient,
+      the choice of scenarios, tumour types and regimens when generating, archives, and the model parameters.
+      The guided tours show what the view in use offers.</p>
+  </section>
+  {% endif %}
+
   <section class="panel" id="authors">
     <h2>Authors and credits</h2>
     <dl class="credits">

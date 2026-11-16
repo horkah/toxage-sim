@@ -11,6 +11,8 @@
 //   changes  true: the step changes data or parameters (left out while another demo runs)
 //   needs    name of a remembered value without which the step is left out
 //   only     "tutorial" or "demo"
+//   advanced true: the step needs the full view and is left out in the simple view (ui.py)
+//   simple   the text in the simple view, where it differs
 // {A} and {B} in selectors and addresses stand for the ids of the data sets
 // that the tour created. Functions get the helper object of tour.js.
 
@@ -48,6 +50,7 @@ export const STEPS = [
   },
   {
     title: "The sections",
+    simple: ["Four sections. “Explore” holds the charts. “Data” creates data sets. “Reference” has the data schema and the scientific background. “About” has the version, the authors and what this simple view leaves out; “Settings › View › Advanced” shows everything. Pages change in place, without reloading."],
     target: ".mainnav",
     text: [
       "Five sections. “Explore” holds the charts. “Data” creates, inspects, exports and imports data sets. “Parameters” holds every number of the models. “Reference” has the data schema and the scientific background. “About” has the version and the authors.",
@@ -87,6 +90,7 @@ export const STEPS = [
   },
   {
     title: "Name",
+    advanced: true,
     url: "/data/",
     target: '#generate input[name="name"]',
     changes: true,
@@ -97,6 +101,7 @@ export const STEPS = [
   },
   {
     title: "Number of patients",
+    simple: ["The patients are split over the three tumour types by their shares and are simulated under every scenario. Small cohorts are quick but noisy. 300 patients are enough for a first look."],
     url: "/data/",
     target: '#generate input[name="n"]',
     changes: true,
@@ -111,6 +116,7 @@ export const STEPS = [
   },
   {
     title: "Seed",
+    advanced: true,
     url: "/data/",
     target: '#generate input[name="seed"]',
     changes: true,
@@ -120,6 +126,7 @@ export const STEPS = [
   },
   {
     title: "Scenarios",
+    advanced: true,
     url: "/data/",
     target: "#generate fieldset",
     changes: true,
@@ -130,6 +137,7 @@ export const STEPS = [
   },
   {
     title: "Calibration",
+    advanced: true,
     url: "/data/",
     target: '#generate input[name="recalibrate"]',
     changes: true,
@@ -162,6 +170,7 @@ export const STEPS = [
   },
   {
     title: "What was stored",
+    advanced: true,
     url: "/data/",
     target: `${card("A")} table`,
     needs: "A",
@@ -171,6 +180,7 @@ export const STEPS = [
   },
   {
     title: "Archive",
+    advanced: true,
     url: "/data/",
     target: "#archive",
     text: [
@@ -268,6 +278,7 @@ export const STEPS = [
   },
   {
     title: "Risk by age",
+    advanced: true,
     url: "/",
     target: 'tox-chart[chart="risk-age"]',
     text: [
@@ -294,6 +305,7 @@ export const STEPS = [
   },
   {
     title: "Risk across models",
+    advanced: true,
     url: "/?model=ild",
     target: 'tox-chart[chart^="vs-"]',
     text: ["Each point is a patient for whom both models give a risk: is a patient at high risk for one outcome also at high risk for the other?"],
@@ -318,6 +330,7 @@ export const STEPS = [
   // --- Explore: filters ------------------------------------------------------------
   {
     title: "Filters",
+    simple: ["A few filters narrow the cohort: tumour type, age, performance status (ECOG) and the risk of the chosen model. A click on a bar of a chart filters as well. The advanced view has a filter for every field."],
     url: "/",
     target: "#filters",
     text: [
@@ -359,6 +372,7 @@ export const STEPS = [
   },
   {
     title: "The patient",
+    advanced: true,
     url: "/",
     target: ".panel.patient .facts",
     text: [
@@ -399,6 +413,7 @@ export const STEPS = [
   // --- Explore: characteristics --------------------------------------------------------
   {
     title: "Patient characteristics",
+    advanced: true,
     url: "/",
     target: 'nav[aria-label="View"] a[href*="view=characteristics"]',
     text: ["The second view looks at the cohort by each characteristic of the patients."],
@@ -408,6 +423,7 @@ export const STEPS = [
   },
   {
     title: "Observed and predicted by group",
+    advanced: true,
     url: "/?view=characteristics",
     target: 'tox-chart[chart="field-regimen"]',
     text: [
@@ -475,6 +491,7 @@ export const STEPS = [
   },
   {
     title: "Scenarios side by side",
+    simple: ["One row per scenario, for the same patients: severe toxicity, survival without a severe event, deaths from toxicity, hospital days, costs and quality-adjusted life years. Most unit costs are placeholders. The advanced view shows reach, alerts and the comparison with usual care as well."],
     url: "/?view=interventions&scenario=combined",
     target: ".charts table.numbers",
     text: [
@@ -494,6 +511,7 @@ export const STEPS = [
   },
   {
     title: "Survival and time to event",
+    simple: ["The selected scenario against the comparison, per endpoint: overall survival, survival without a severe adverse event, the first severe event and the end of therapy for toxicity. The same patients are in both scenarios, so the differences are paired.", "Survival differs by a few days only: an intervention changes survival here only through deaths from toxicity. The endpoints on toxicity show the effect clearly."],
     url: "/?view=interventions&scenario=combined",
     target: "#survival table.endpoints",
     text: [
@@ -530,6 +548,7 @@ export const STEPS = [
   // --- Parameters --------------------------------------------------------------------------------
   {
     title: "Model parameters",
+    advanced: true,
     url: "/parameters/parameters/",
     target: ".page-head h1",
     text: [
@@ -538,6 +557,7 @@ export const STEPS = [
   },
   {
     title: "Four parameter files",
+    advanced: true,
     url: "/parameters/parameters/",
     target: 'nav[aria-label="Parameter file"]',
     text: [
@@ -547,6 +567,7 @@ export const STEPS = [
   },
   {
     title: "Values, defaults and their basis",
+    advanced: true,
     url: "/parameters/parameters/",
     target: "form.params details",
     text: [
@@ -555,6 +576,7 @@ export const STEPS = [
   },
   {
     title: "Parameters of the risk models",
+    advanced: true,
     url: "/parameters/parameters/",
     target: 'nav[aria-label="Parameter file"] a[href="/parameters/risk/"]',
     text: ["Risk model parameters act on the explorer at once, because the risks are computed when a page is shown."],
@@ -564,6 +586,7 @@ export const STEPS = [
   },
   {
     title: "Change a value",
+    advanced: true,
     url: "/parameters/risk/",
     target: param(ECOG),
     changes: true,
@@ -576,6 +599,7 @@ export const STEPS = [
   },
   {
     title: "A changed value",
+    advanced: true,
     url: "/parameters/risk/",
     target: changedRow(ECOG),
     changes: true,
@@ -585,6 +609,7 @@ export const STEPS = [
   },
   {
     title: "The effect in the explorer",
+    advanced: true,
     url: "/?model=severe90&ecog_min=2",
     target: 'nav[aria-label="Risk model"] a[data-model="severe90"]',
     changes: true,
@@ -594,6 +619,7 @@ export const STEPS = [
   },
   {
     title: "Reset one value",
+    advanced: true,
     url: "/parameters/risk/",
     target: `button[value="reset:${ECOG}"]`,
     changes: true,
@@ -605,6 +631,7 @@ export const STEPS = [
   },
   {
     title: "Parameters of the engine",
+    advanced: true,
     url: "/parameters/interventions/",
     target: param(FLAGGED),
     changes: true,
@@ -619,6 +646,7 @@ export const STEPS = [
   // --- Data: a second data set, inspect, delete -------------------------------------------------------
   {
     title: "A data set with changed parameters",
+    advanced: true,
     url: "/data/",
     target: "#generate",
     changes: true,
@@ -636,6 +664,7 @@ export const STEPS = [
   },
   {
     title: "Generating",
+    advanced: true,
     url: "/data/",
     target: card("B"),
     changes: true,
@@ -646,6 +675,7 @@ export const STEPS = [
   },
   {
     title: "Data sets remember their parameters",
+    advanced: true,
     url: "/data/",
     target: `${card("B")} header`,
     needs: "B",
@@ -655,6 +685,7 @@ export const STEPS = [
   },
   {
     title: "Inspect the records",
+    advanced: true,
     url: "/data/",
     target: `${card("B")} a[href$="/records/"]`,
     needs: "B",
@@ -665,6 +696,7 @@ export const STEPS = [
   },
   {
     title: "Tables",
+    advanced: true,
     url: "/data/{B}/records/",
     target: 'nav[aria-label="Table"]',
     needs: "B",
@@ -677,6 +709,7 @@ export const STEPS = [
   },
   {
     title: "Records",
+    advanced: true,
     url: "/data/{B}/records/?table=event",
     target: "table.records",
     needs: "B",
@@ -687,6 +720,7 @@ export const STEPS = [
   },
   {
     title: "Delete a scenario",
+    advanced: true,
     url: "/data/",
     target: `${card("B")} form:has(input[name="scenario"][value="perfect_detection"]) button`,
     changes: true,
@@ -704,6 +738,7 @@ export const STEPS = [
   },
   {
     title: "Delete a data set",
+    advanced: true,
     url: "/data/",
     target: `${card("B")} .actions form[action="/data/delete/"] button`,
     changes: true,
@@ -716,6 +751,7 @@ export const STEPS = [
   },
   {
     title: "Reset a group of parameters",
+    advanced: true,
     url: "/parameters/interventions/",
     target: 'form.params button[value="reset_source"]',
     changes: true,
@@ -745,6 +781,7 @@ export const STEPS = [
   // --- Reference --------------------------------------------------------------------------------------
   {
     title: "The data schema",
+    advanced: true,
     url: "/schema/",
     target: 'nav[aria-label="Tables"]',
     text: [

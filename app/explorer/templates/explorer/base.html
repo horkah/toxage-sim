@@ -18,7 +18,7 @@
   <script type="module" src="{% static 'explorer/charts.js' %}?v={{ app_version }}-{{ app_build|urlencode:'' }}"></script>
   {% block tour %}<script type="module" src="{% static 'explorer/tour.js' %}?v={{ app_version }}-{{ app_build|urlencode:'' }}"></script>{% endblock %}
 </head>
-<body data-app-name="{{ app_name }}" data-demo="{{ demo|yesno:'1,0' }}" data-tour-snapshot="{{ tour_snapshot|yesno:'1,0' }}" data-section="{{ section }}">
+<body data-app-name="{{ app_name }}" data-demo="{{ demo|yesno:'1,0' }}" data-simple="{{ simple|yesno:'1,0' }}" data-tour-snapshot="{{ tour_snapshot|yesno:'1,0' }}" data-section="{{ section }}">
   <div class="loadbar" aria-hidden="true"></div>
   <header class="topbar">
     <a class="brand" href="{% url 'explorer' %}" aria-label="{{ app_name }}, start">
@@ -29,7 +29,7 @@
     <nav class="mainnav" id="nav" aria-label="Sections">
       <a href="{% url 'explorer' %}"{% if section == "explore" %} class="active" aria-current="page"{% endif %}>Explore</a>
       <a href="{% url 'data' %}"{% if section == "data" %} class="active" aria-current="page"{% endif %}>Data</a>
-      <a href="{% url 'parameters_start' %}"{% if section == "parameters" %} class="active" aria-current="page"{% endif %}>Parameters</a>
+      {% if not simple %}<a href="{% url 'parameters_start' %}"{% if section == "parameters" %} class="active" aria-current="page"{% endif %}>Parameters</a>{% endif %}
       <a href="{% url 'documents' %}"{% if section == "reference" %} class="active" aria-current="page"{% endif %}>Reference</a>
       <a href="{% url 'about' %}"{% if section == "about" %} class="active" aria-current="page"{% endif %}>About</a>
     </nav>
@@ -45,6 +45,15 @@
       <details class="popover" id="settings">
         <summary aria-label="Settings" title="Settings"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="label">Settings</span></summary>
         <div class="popover-panel">
+          {% if simple_ui %}
+          <fieldset class="setting" data-setting="ui" data-cookie="toxage_ui">
+            <legend>View</legend>
+            <div class="segmented">
+              <label><input type="radio" name="ui" value=""{% if simple %} checked{% endif %}><span>Simple</span></label>
+              <label><input type="radio" name="ui" value="advanced"{% if not simple %} checked{% endif %}><span>Advanced</span></label>
+            </div>
+          </fieldset>
+          {% endif %}
           <fieldset class="setting" data-setting="theme">
             <legend>Theme</legend>
             <div class="segmented">

@@ -59,6 +59,7 @@
       <input type="hidden" name="scenario" value="{{ scenario.scenario_id }}">
       {% if compare %}<input type="hidden" name="compare" value="{{ compare.scenario_id }}">{% endif %}
       {% if patient %}<input type="hidden" name="patient" value="{{ patient.patient_id }}">{% endif %}
+      {% for key, value in kept_filters %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
       {% for group in filter_form %}
       <details id="filter-group-{{ forloop.counter }}"{% if group.active or forloop.first %} open{% endif %}>
         <summary>{{ group.name }}</summary>
@@ -111,10 +112,10 @@
       </a>
       {% endfor %}
     </nav>
-    <p class="model-info">Candidate {{ focus.candidate }} of the toxicity report, outcome within {{ focus.window_days }} days.
+    {% if not simple %}<p class="model-info">Candidate {{ focus.candidate }} of the toxicity report, outcome within {{ focus.window_days }} days.
       Source: {{ focus.source|cite }}. Risks at therapy start without an intervention.
       <a href="{% url 'document' 'risk-model' %}{% if model_doc %}#{{ model_doc }}{% endif %}">How the model works</a>
-      · <a href="{% url 'parameters' 'risk' %}{% if model_group %}#group-{{ model_group }}{% endif %}">Its parameters</a></p>
+      · <a href="{% url 'parameters' 'risk' %}{% if model_group %}#group-{{ model_group }}{% endif %}">Its parameters</a></p>{% endif %}
     {% endif %}
 
     {% if patient_id and not patient %}
@@ -133,12 +134,12 @@
         </div>
         <div class="patient-actions">
           {% if view != "time" %}<a class="button" href="?{{ patient_time }}">Course over time</a>{% endif %}
-          <a class="button" href="{% url 'records' dataset.pk %}?table=event&amp;scenario={{ scenario.scenario_id }}&amp;patient={{ patient.patient_id }}">Records</a>
+          {% if not simple %}<a class="button" href="{% url 'records' dataset.pk %}?table=event&amp;scenario={{ scenario.scenario_id }}&amp;patient={{ patient.patient_id }}">Records</a>{% endif %}
           <a class="iconbutton" href="?{{ clear_patient }}" aria-label="Close the patient" title="Close the patient">×</a>
         </div>
       </header>
       <div class="patient-body">
-        <details class="factsbox" id="patient-facts">
+        {% if not simple %}<details class="factsbox" id="patient-facts">
           <summary>All characteristics and the outcome</summary>
           <div class="facts">
             {% for f, value in patient_fields %}
@@ -147,7 +148,7 @@
             {% if forloop.last %}</dl>{% endif %}
             {% endfor %}
           </div>
-        </details>
+        </details>{% endif %}
         {% if patient_risk %}{% with r=patient_risk %}
         <div class="riskcard focus">
           <div class="riskcard-head">
@@ -195,12 +196,12 @@
       <table class="numbers endpoints">
         <thead><tr><th>Endpoint</th><th>Measure</th>
           {% for name in s.endpoint_names %}<th>{{ name }}</th>{% endfor %}
-          {% if s.endpoint_names|length > 1 %}<th>Difference</th><th>95% confidence interval</th>{% endif %}</tr></thead>
+          {% if s.endpoint_names|length > 1 %}<th>Difference</th>{% if not simple %}<th>95% confidence interval</th>{% endif %}{% endif %}</tr></thead>
         <tbody>
         {% for e in s.endpoints %}
         <tr{% if e.first %} class="group"{% endif %}><th scope="row">{% if e.first %}{{ e.endpoint }}{% if e.population %}<small>{{ e.population }}</small>{% endif %}{% endif %}</th>
           <td>{{ e.measure }}</td>{% for v in e.values %}<td>{{ v }}</td>{% endfor %}
-          {% if s.endpoint_names|length > 1 %}<td>{{ e.diff|default:"–" }}</td><td>{{ e.ci|default:"–" }}</td>{% endif %}</tr>
+          {% if s.endpoint_names|length > 1 %}<td>{{ e.diff|default:"–" }}</td>{% if not simple %}<td>{{ e.ci|default:"–" }}</td>{% endif %}{% endif %}</tr>
         {% endfor %}
         </tbody>
       </table>
@@ -208,6 +209,23 @@
       {% endif %}
       {% if s.table %}
       <div class="scroll">
+      {% if simple %}
+      <table class="numbers scenarios">
+        <thead><tr>
+          <th>Scenario</th><th>Severe toxicity, 90 days</th><th>Alive without severe event at 1 year</th>
+          <th>Deaths from toxicity</th><th>Hospital days per patient</th><th>Cost per patient (€)</th><th>QALY per patient</th>
+        </tr></thead>
+        <tbody>
+        {% for r in s.table %}
+        <tr{% if r.scenario.scenario_id == scenario.scenario_id %} class="selected"{% endif %}>
+          <td><a href="?{{ r.link }}" title="Select this scenario">{{ r.scenario.title }}</a></td><td>{{ r.severe_90d|pct }}</td>
+          <td>{{ r.free_1y|pct }}</td><td>{{ r.toxic_deaths }}</td><td>{{ r.hospital_days|num }}</td>
+          <td>{{ r.cost|num:0 }}</td><td>{{ r.qaly|num:3 }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
       <table class="numbers scenarios">
         <thead><tr>
           <th>Scenario</th><th>Taking part</th><th>Severe toxicity, 90 days</th><th>Severe events per patient</th>
@@ -227,6 +245,7 @@
         {% endfor %}
         </tbody>
       </table>
+      {% endif %}
       </div>
       {% endif %}
       <div class="grid">

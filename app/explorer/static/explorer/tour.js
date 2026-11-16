@@ -61,8 +61,10 @@ export function onPage(current, wanted) {
 }
 
 // Steps that apply: some change data and are left out while another demo runs,
-// some belong to one mode only, some need something an earlier step made.
-export function applies(step, mode, noChanges, mem) {
+// some belong to one mode only, some need something an earlier step made, some
+// need the full view and are left out in the simple view (ui.py).
+export function applies(step, mode, noChanges, mem, simple = false) {
+  if (step.advanced && simple) return false;
   if (step.only && step.only !== mode) return false;
   if (step.changes && noChanges) return false;
   if (step.needs && !(step.needs in mem)) return false;
@@ -252,7 +254,7 @@ function show(step, note = "", free = false) {
   }
   const demo = state.mode === "demo";
   // Count the steps of this mode; those that depend on an earlier step count too.
-  const shown = steps().filter((s) => applies({ ...s, needs: null }, state.mode, noChanges(), state.mem));
+  const shown = steps().filter((s) => applies({ ...s, needs: null }, state.mode, noChanges(), state.mem, simpleView()));
   const number = shown.indexOf(step) + 1;
   const task = step.do ? `<p class="tour-do"><b>${demo ? "The demo does this next:" : "Your turn:"}</b> ${step.do}</p>` : "";
   let buttons;
@@ -279,7 +281,7 @@ function show(step, note = "", free = false) {
     ${demo ? `<p class="tour-keys">Next step: → key or swipe to the left. Click the text to hide these controls.</p>`
            : `<p class="tour-keys">The → key or a swipe to the left also goes on, where “Next” is offered.</p>`}`;
   panel.innerHTML = `<header><span>${demo ? "Demo" : "Tutorial"}${round} · step ${number} of ${shown.length}</span>${toggle}</header>
-    <h2>${step.title}</h2>${step.text.map((p) => `<p>${p}</p>`).join("")}${task}
+    <h2>${step.title}</h2>${textOf(step).map((p) => `<p>${p}</p>`).join("")}${task}
     ${note ? `<p class="tour-note">${note}</p>` : ""}
     <div class="tour-controls"${demo && !state.controls ? " hidden" : ""}>${controls}</div>`;
   bindSpeed(panel);
@@ -327,7 +329,7 @@ async function until(step, patient) {
 
 // All text of a hint, for its reading time.
 function hintText(step) {
-  return [step.title, ...step.text, step.do || ""].join(" ");
+  return [step.title, ...textOf(step), step.do || ""].join(" ");
 }
 
 // Wait while the user reads. The time already spent on the hint counts,
@@ -375,7 +377,7 @@ async function pausing() {
 function move(by) {
   // Go to the next (or previous) step that applies.
   let i = state.i + by;
-  while (steps()[i] && !applies(steps()[i], state.mode, noChanges(), state.mem)) i += by;
+  while (steps()[i] && !applies(steps()[i], state.mode, noChanges(), state.mem, simpleView())) i += by;
   state.i = Math.max(0, i);
   state.acted = false;
   state.shownAt = state.doneAt = null;
@@ -438,7 +440,7 @@ async function play() {
   clearTimeout(timer);
   const step = steps()[state.i];
   if (!step) return finish();
-  if (!applies(step, state.mode, noChanges(), state.mem)) { move(1); return play(); }
+  if (!applies(step, state.mode, noChanges(), state.mem, simpleView())) { move(1); return play(); }
   const demo = state.mode === "demo";
   document.documentElement.dataset.tourAuto = demo ? "1" : "0";
 
@@ -572,6 +574,16 @@ async function begin(mode, round = 1) {
 // has a space of their own, so this never happens there.
 function noChanges() {
   return state?.mode === "demo" && !state.mem.owner;
+}
+
+// True if the page shows the simple view of the app (ui.py).
+function simpleView() {
+  return globalThis.document?.body?.dataset.simple === "1";
+}
+
+// The text of a step: in the simple view its own text there, if it has one.
+export function textOf(step, simple = simpleView()) {
+  return (simple && step.simple) || step.text;
 }
 
 // True if this page was loaded by a reload of the browser.

@@ -63,7 +63,8 @@ TEMPLATES = [{
     "OPTIONS": {"context_processors": ["django.template.context_processors.request",
                                        "explorer.tour.context",
                                        "explorer.brand.context",
-                                       "explorer.demo.context"]},
+                                       "explorer.demo.context",
+                                       "explorer.ui.context"]},
 }]
 
 # SQLite in one file. Write-ahead logging lets pages be read while a data set
@@ -106,3 +107,6 @@ ASYNC_JOBS = True
 DEMO = "1" in (os.environ.get("TOXAGE_DEMO", "0"), os.environ.get("TOXAGE_READ_ONLY", "0"))
 # Minutes without a request after which a visitor's space is emptied.
 DEMO_IDLE_MINUTES = 10
+# Simple view (TOXAGE_SIMPLE_UI=1): the app opens with fewer charts, filters and
+# choices; the full view stays one click away in the settings (explorer/ui.py).
+SIMPLE_UI = os.environ.get("TOXAGE_SIMPLE_UI", "0") == "1"
