@@ -70,6 +70,13 @@ evaluate data="engine/output" *args="":
 fit data="engine/output" out="risk-model/output/fitted.json":
     {{py}} risk-model/fit.py --data {{data}} --out {{out}}
 
+# --- Figures ---------------------------------------------------------------
+
+# Build the figures of the risk models and the project overview and render them as PNG (needs Node.js and Playwright)
+figures:
+    {{py}} background/figures/build.py
+    node background/figures/render.mjs
+
 # --- App -------------------------------------------------------------------
 
 # Create or update the database of the app

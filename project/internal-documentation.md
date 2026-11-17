@@ -14,7 +14,7 @@ Technical and organisational details that go beyond the public [README](../READM
 
 | Folder | Purpose |
 |---|---|
-| `background/` | Literature with the PDFs, the report on toxicity with the risk model candidates, the intervention model |
+| `background/` | Literature with the PDFs, the report on toxicity with the risk model candidates, the intervention model, figures for talks and the app |
 | `schema/` | Central data schema with loader, validator, CSV reader and writer |
 | `engine/` | Synthetic data generator: microsimulation, intervention scenarios, calibration, uncertainty analysis |
 | `risk-model/` | Risk models with a common interface, the detection model, fitting and evaluation |
@@ -100,6 +100,7 @@ The copyrighted PDFs must not be in the repository when it becomes public, see "
 - `risk-model/toxage_risk.py` is the interface for the app: one class per model with risk, reference risk and factors. The calculations are in `models.py`. A new model is added in both places and then appears in the app without changes there.
 - The engine generates outcomes with a richer process than the risk models assume. The evaluation in `risk-model/README.md` therefore shows how well simple baseline models do on these data. For lung toxicity, neutropenia and cardiovascular events, engine and risk model use the same published ratios; the engine adds the frailty, which the models do not know.
 - A risk category that is to be as complete as lung toxicity and cardiovascular events touches every part: fields in the schema, rate and risk factors in the engine configuration, the event with its course in `course.py`, signals in `measurements.py`, a monitoring component and a scenario in `interventions.json`, an outcome field for the time window of the model, the model with scoring, fitting and evaluation, and a chart by grade in `app/explorer/timeline.py`.
+- Each model has a figure in `background/figures/` with its predictors, formula, a worked example, its properties and references; the overview of the project is there as well. `build.py` takes the numbers from `models.json` and `models.py` and the references from the reference list, `render.mjs` saves them as PNG (`just figures`). After a change of a model, of the scenarios or of the schema, the figures are built again and looked at: a longer table or text can run over the 16:9 page.
 - The risk model is plain Python 3 without further packages, like the engine. Refitting uses its own binomial regression in `glm.py`.
 - Scores go to `risk-model/output/`, which is not under version control.
 - Tests run with `python3 -m unittest discover risk-model/tests`. They generate data with the engine, so a change of the engine can make them fail.
@@ -110,7 +111,7 @@ The copyrighted PDFs must not be in the repository when it becomes public, see "
 - `Dockerfile` and `docker-compose.yml` are in the repository root, because the image needs engine, risk model, schema and documents next to the app.
 - The server must run as one process. Data sets are generated in a thread of that process, and the rows of a scenario are kept in its memory.
 - Model parameters: the JSON files of the repository are the defaults. The app stores only changed values, per file, in the table Setting. `params.engine_config()` gives the engine its configuration; the engine itself never reads the database.
-- A new document for the app is one line in `explorer/docs.py`. A new parameter file is one entry in `explorer/params.py`.
+- A new document for the app is one line in `explorer/docs.py`. An image on a line of its own in a document is shown if it is a PNG of `background/figures/`, served at `/figures/<name>.png`. A new parameter file is one entry in `explorer/params.py`.
 - Data sets are generated on the page "Data" or with `python3 manage.py load_cohort`. In development the database is `app/db.sqlite3`, in the container `/data/db.sqlite3`; neither is under version control. Each patient has one course per scenario with outcome, events, alerts and weekly observations.
 - The storage model has one initial migration. As long as no installation has to be kept, a change of the models replaces this migration; afterwards changes get migrations of their own.
 - The rows of a scenario are kept in memory after first use. `cohort.clear_cache()` empties this store; `store.generate` calls it.

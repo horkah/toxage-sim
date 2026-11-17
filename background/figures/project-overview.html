@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Project overview</title>
+<link rel="stylesheet" href="overview.css"></head>
+<body><div id="figure">
+<div class="brand"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="toxage-sim">
+  <defs>
+    <linearGradient id="tx-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a78d6"/>
+      <stop offset="1" stop-color="#0d3f80"/>
+    </linearGradient>
+    <clipPath id="tx-half"><rect x="0" y="32" width="64" height="32"/></clipPath>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#tx-bg)"/>
+  <g transform="rotate(-45 32 32)">
+    <rect x="20" y="9" width="24" height="46" rx="12" fill="#eb6834" clip-path="url(#tx-half)"/>
+    <rect x="20" y="9" width="24" height="46" rx="12" fill="none" stroke="#fff" stroke-width="3.6"/>
+    <line x1="20" y1="32" x2="44" y2="32" stroke="#fff" stroke-width="3.6"/>
+  </g>
+  <circle cx="20.9" cy="28.3" r="1.9" fill="#fff"/>
+  <circle cx="24.8" cy="24.4" r="2.3" fill="#fff"/>
+  <circle cx="28.7" cy="20.5" r="2.7" fill="#fff"/>
+</svg><span class="name">toxage<b>-sim</b></span><span class="tumours"><span class="chip orange">Pancreatic cancer</span><span class="chip orange">Prostate cancer</span><span class="chip orange">Breast cancer</span></span></div>
+<div class="flow">
+<div class="stage"><div class="card " id="literature"><h3>Literature</h3><div class="kind">Published evidence</div><ul><li>Phase 3 trials of the regimens: rates of adverse events</li><li>Meta-analyses and cohort studies: risk factors with odds and hazard ratios</li><li>Validated risk scores</li><li>Guidelines on risk assessment and monitoring</li><li>Trials of symptom monitoring and early treatment</li></ul></div></div>
+<div class="stage"><div class="card " id="report"><h3>Toxicity report</h3><div class="kind">What the literature says</div><ul><li>Event rates per regimen and tumour type</li><li>Risk factors and their effect sizes</li><li>What guidelines ask for</li><li>Candidates for risk models</li></ul></div><div class="card " id="intervention"><h3>Intervention model</h3><div class="kind">Concept</div><ul><li>Risk prediction and adapted start</li><li>Monitoring during therapy</li><li>Earlier recognition, earlier treatment</li><li>Effects anchored in trials</li></ul></div></div>
+<div class="stage" style="gap:28px"><div class="card accent" id="generator"><h3>Generator for synthetic cohorts</h3><div class="kind">Microsimulation, patient by patient, week by week</div><div class="steps"><span>frailty</span> <i>&rarr;</i> <span>baseline</span> <i>&rarr;</i> <span>regimen, dose</span> <i>&rarr;</i> <span>weekly hazards</span> <i>&rarr;</i> <span>events, alerts</span> <i>&rarr;</i> <span>outcome</span></div><p>Calibrated to the published rates; published uncertainty of the parameters carried through. The same patients under every scenario:</p><div class="chips"><span class="chip">Usual care</span><span class="chip">Risk-adapted start</span><span class="chip">Model-guided start</span><span class="chip">Symptom monitoring</span><span class="chip">Lung monitoring</span><span class="chip">Cardiovascular monitoring</span><span class="chip">Combined</span><span class="chip">Perfect detection</span></div></div><div class="card models" id="models"><h3>Risk models</h3><div class="kind">Risk at therapy start, from published effect sizes</div><div class="model"><span class="n">1</span><span class="t">Severe toxicity</span><span class="meta">logistic &middot; 90 days</span></div><div class="model"><span class="n">2</span><span class="t">Lung toxicity</span><span class="meta">prop. hazards &middot; 730 days</span></div><div class="model"><span class="n">3</span><span class="t">Severe neutropenia</span><span class="meta">logistic &middot; 90 days</span></div><div class="model"><span class="n">4</span><span class="t">Severe diarrhoea</span><span class="meta">logistic &middot; 90 days</span></div><div class="model"><span class="n">5</span><span class="t">Cardiovascular events (ADT)</span><span class="meta">prop. hazards &middot; 364 days</span></div><div class="model"><span class="n d">D</span><span class="t">Detection of lung toxicity</span><span class="meta">weekly home measurements</span></div></div></div>
+<div class="stage" style="gap:22px"><div class="card " id="cohorts"><h3>Synthetic cohorts</h3><div class="kind">One schema for all data</div><div class="chips"><span class="chip plain">scenario</span><span class="chip plain">baseline</span><span class="chip plain">observation</span><span class="chip plain">event</span><span class="chip plain">alert</span><span class="chip plain">outcome</span><span class="chip plain">risk_score</span></div></div><div class="card " id="evaluation"><h3>Evaluation</h3><div class="kind">On synthetic data</div><ul><li>Discrimination and calibration of the models</li><li>Refit of the models on the cohorts</li><li>Effect of each scenario against usual care</li></ul></div><div class="card accent" id="app"><h3>Explorer app</h3><div class="kind">Web app</div><ul><li>Risk of severe side effects</li><li>Course of single patients</li><li>What the interventions change</li></ul></div></div>
+</div>
+<div class="note"><span><b>Same sources, separate parameters.</b> Generator and risk models each take their values from
+the literature; the models do not read the parameters of the generator.</span><span><b>Synthetic data only.</b></span></div>
+<svg id="links"></svg>
+</div>
+<script>const LINKS = [["literature", "report", "", ""], ["literature", "intervention", "", ""], ["report", "generator", "", ""], ["report", "models", "", ""], ["intervention", "generator", "", ""], ["generator", "cohorts", "", ""], ["models", "evaluation", "", ""], ["cohorts", "evaluation", "down", ""], ["evaluation", "app", "down", ""], ["models", "generator", "up models", "model-guided start &middot; lung monitoring"]];
+const box = (id) => { const f = document.getElementById('figure').getBoundingClientRect();
+  const r = document.getElementById(id).getBoundingClientRect();
+  return { l: r.left - f.left, r: r.right - f.left, t: r.top - f.top, b: r.bottom - f.top, w: r.width, h: r.height }; };
+const svg = document.getElementById('links');
+let out = '<defs><marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">'
+  + '<path d="M0,0 L8,4 L0,8 z" fill="#c9ced6"/></marker>'
+  + '<marker id="head-o" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">'
+  + '<path d="M0,0 L8,4 L0,8 z" fill="#eb6834"/></marker></defs>';
+for (const [from, to, cls, label] of LINKS) {
+  const a = box(from), b = box(to), head = cls.includes('models') ? 'head-o' : 'head';
+  if (cls.includes('down')) {
+    const x = a.l + a.w / 2;
+    out += `<path class="link ${cls}" marker-end="url(#${head})" d="M${x},${a.b + 1} L${x},${b.t - 2}"/>`;
+  } else if (cls.includes('up')) {
+    const x = a.l + 46;
+    out += `<path class="link ${cls}" marker-end="url(#${head})" d="M${x},${a.t - 1} L${x},${b.b + 2}"/>`;
+    out += `<text class="tag" x="${x + 9}" y="${(a.t + b.b) / 2 + 4}">${label}</text>`;
+  } else {
+    const x1 = a.r + 1, y1 = a.t + a.h / 2, x2 = b.l - 2, y2 = b.t + b.h / 2, m = (x1 + x2) / 2;
+    out += `<path class="link ${cls}" marker-end="url(#${head})" d="M${x1},${y1} C${m},${y1} ${m},${y2} ${x2},${y2}"/>`;
+  }
+}
+svg.innerHTML = out;
+</script>
+</body></html>

@@ -57,6 +57,13 @@
 - `uv run python app/manage.py link_citations` links the citations of all
   Markdown files; the app links those of the configuration notes itself.
 
+## Figures
+
+- `background/figures/` holds a figure per risk model and an overview of
+  the project, built from the configuration (`just figures`). After a
+  change of the risk models, the scenarios or the schema, build them again,
+  look at the PNGs and commit them with the change.
+
 ## Status, limits and open points
 
 - Each kind of such information has one place; other documents link to it

@@ -19,6 +19,7 @@ urlpatterns = [
     path("schema/", pages.schema, name="schema"),
     path("documents/", pages.documents, name="documents"),
     path("documents/<str:key>/", pages.documents, name="document"),
+    path("figures/<slug:name>.png", pages.figure, name="figure"),
     path("tour/state/", tour.state, name="tour_state"),
     path("tour/snapshot/", tour.snapshot, name="tour_snapshot"),
     path("tour/restore/", tour.restore, name="tour_restore"),

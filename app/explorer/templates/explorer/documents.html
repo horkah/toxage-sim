@@ -22,5 +22,11 @@
   </a>
   {% endfor %}{% endfor %}
 </div>
+<figure class="overview-figure panel">
+  <img src="{% url 'figure' 'project-overview' %}" width="1920" height="1080" loading="lazy"
+    alt="From the literature to the generator of synthetic cohorts and the risk models, and on to data, evaluation and this app">
+  <figcaption>How the project is built: the literature, summarised in the toxicity report and the intervention model,
+    gives the values of the generator of synthetic cohorts and of the risk models.</figcaption>
+</figure>
 </div>
 {% endblock %}

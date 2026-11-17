@@ -376,9 +376,19 @@ class ReferenceTest(TestCase):
         self.assertEqual(self.client.get("/documents/internal/").status_code, 404)
         self.assertEqual(self.client.get("/documents/x/").status_code, 404)
 
+    def test_figures(self):
+        for url in ("/documents/", "/about/"):
+            self.assertContains(self.client.get(url), 'src="/figures/project-overview.png"')
+        response = self.client.get("/figures/project-overview.png")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "image/png")
+        self.assertEqual(b"".join(response.streaming_content)[:8], b"\x89PNG\r\n\x1a\n")
+        for url in ("/figures/missing.png", "/figures/..%2Fpapers%2Fx.png", "/figures/figures.css"):
+            self.assertEqual(self.client.get(url).status_code, 404, url)
+
     def test_pages_need_the_disclaimer(self):
         self.client.cookies.clear()
-        for url in ("/data/", "/parameters/", "/schema/", "/documents/"):
+        for url in ("/data/", "/parameters/", "/schema/", "/documents/", "/figures/project-overview.png"):
             self.assertEqual(self.client.get(url).status_code, 302)
 
     def test_menu_reaches_every_section(self):

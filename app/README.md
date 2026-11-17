@@ -78,8 +78,8 @@ The bar at the top leads to five sections. Each piece of information has one pla
 | Explore | Cohort and single patient: risk, patient characteristics, course over time, interventions |
 | Data | Stored data sets: generate, choose for the explorer, inspect records, download as CSV, export and import archives, delete a scenario, a data set or everything |
 | Parameters | All model parameters of the engine and the risk models, with their defaults and their basis; change, reset |
-| Reference | The data schema with every table and field, and the scientific background: toxicity report, intervention model, references, data engine, risk models |
-| About | What the project is, its authors and how it was made, version and build |
+| Reference | The data schema with every table and field, and the scientific background: toxicity report, intervention model, references, data engine, risk models with a figure of each model; an overview of the project |
+| About | What the project is, with an overview figure, its authors and how it was made, version and build |
 
 "Help" next to the sections starts the tutorial or the demo, "Settings" holds theme, text size and the offer of the tours. The footer has the disclaimer and the version.
 
@@ -239,7 +239,7 @@ The space is emptied when the visitor reloads the page (the browser marks a relo
 | `explorer/params.py` | Model parameters: defaults from the repository, changes of the user |
 | `explorer/pages.py` | Pages for data sets, archive, records, parameters, schema and documents |
 | `explorer/archive.py` | Export and import of archives |
-| `explorer/docs.py` | The documents shown in the app, without their developer sections, and a small Markdown renderer |
+| `explorer/docs.py` | The documents shown in the app, without their developer sections, and a small Markdown renderer that also shows the figures of `background/figures/` |
 | `explorer/cohort.py` | Loads the patients, adds the risks of all models, describes the schema fields |
 | `explorer/filters.py` | Filters built from schema and risk models |
 | `explorer/charts.py` | Data of the risk charts and key numbers |

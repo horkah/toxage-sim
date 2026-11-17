@@ -391,3 +391,14 @@ The purpose is to present the essence of the simulated data quicker with less vi
 2026-11-16 18:09 (+01:00) | model: claude-opus-5-5 | attachments: none
 --------------------------------------------------------------------------------
 PS: continue working, but just make sure that the demo must be stripped to what's possible (and therefore reasonable) with  this simplified UI, and extended again with advanced mode
+
+================================================================================
+2026-11-17 18:45 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+Ich möchte ein paar Abbildungen für einen Vortrag: Eine für jedes Risiko-Modell. Bitte zu Background hinzufügen, und auch in der App anzeigen. Es sollen in der Abbildung die wesentlichen Zutaten und Eigenschaften sowie Rechenvorschrift (Formel) für jedes der fünf Modelle klar werden sowie die entsprechenden Referenzen. 
+
+Du kannst es bitte als html mit css setzen und dann in mittlerer Auflösung als png abspeichern und in die app an geeigneter Stelle einbinden. Keine Überschrift und Caption. Das würden die App oder eine Folie in einem Vortrag selbst typesetten. und ohne Logo 
+
+Als Stil bitte Fraunhofer-Farben, lieber Ecken als Rundungen, und bitte keine Claude-typischen Schatten oder Balken. Clean, professional, scientific, 
+
+Zudem bitte eine Übersichtsgrafik, wie wir hier im Projekt aus der Literaturrecherche die Risikomodelle und den Generator für syntheische Kohorten ermittelt haben - quasi als graphical abstract des Projekts. Dort gerne abweichend zu den anderen Abbildungen im Claude-Stil dieser App und mit unserem Projekt-Logo. Die Übersichtsgrafik kannst du bei About sowie bei den Hintergrundinformationen an geeigneter Stelle einbinden.

@@ -16,6 +16,8 @@ We start with three groups of patients with advanced disease who receive systemi
 
 The project works with synthetic data. A data engine generates patients, therapies and toxicity courses based on published knowledge. A risk model is built and tested on these data. An app makes data and risk scores visible, for a single patient, for a population, and for a patient compared with a reference population.
 
+![From the literature to the generator of synthetic cohorts and the risk models, and on to data, evaluation and app](background/figures/project-overview.png)
+
 ## Repository
 
 | Folder | Content |
@@ -62,7 +64,7 @@ The central data schema and the data engine exist:
 
 The risk models:
 
-- [risk-model/](risk-model/) gives all risk models one interface and has baseline models for candidates 1 to 5: a logistic model for any severe toxicity within 90 days, a proportional hazards model for lung toxicity under trastuzumab deruxtecan, a logistic model for severe or febrile neutropenia with the published factors of [Lyman et al. (2011)](background/references.md#lyman-2011), a logistic model for severe diarrhoea under the pancreatic regimens and sacituzumab govitecan, and a proportional hazards model for major cardiovascular events in the first year under androgen deprivation, built on the trials HERO and PRONOUNCE. Coefficients come from the literature or are marked as assumptions. Each patient gets a risk, the published rate of the regimen for comparison, a risk category, and the factors behind the risk.
+- [risk-model/](risk-model/) gives all risk models one interface and has baseline models for candidates 1 to 5: a logistic model for any severe toxicity within 90 days, a proportional hazards model for lung toxicity under trastuzumab deruxtecan, a logistic model for severe or febrile neutropenia with the published factors of [Lyman et al. (2011)](background/references.md#lyman-2011), a logistic model for severe diarrhoea under the pancreatic regimens and sacituzumab govitecan, and a proportional hazards model for major cardiovascular events in the first year under androgen deprivation, built on the trials HERO and PRONOUNCE. Coefficients come from the literature or are marked as assumptions. Each patient gets a risk, the published rate of the regimen for comparison, a risk category, and the factors behind the risk. [background/figures/](background/figures/) shows each model on one page, with predictors, formula, a worked example and references, for talks and for the app.
 - On the synthetic data, the models for severe toxicity and for severe diarrhoea rank patients only slightly better than the published rate of the regimen alone, and the models for lung toxicity, neutropenia and cardiovascular events clearly better. All data are synthetic, so this says nothing about real patients. A detection model for lung toxicity reads the weekly home measurements and drives the lung monitoring of the engine. [risk-model/EXTENSIONS.md](risk-model/EXTENSIONS.md) lists the open extensions.
 
 [background/intervention-model.md](background/intervention-model.md) describes the intervention model: the chain from the offer of an intervention to its effect on health and costs, and what the engine implements of it. Most effect sizes and unit costs are assumptions or placeholders, and the quality-of-life weights come from one study of metastatic breast cancer, so the scenario results show how the model behaves, not what an intervention achieves in patients.
@@ -71,7 +73,7 @@ The app:
 
 - [app/](app/) is a web app that shows the cohort and a single patient in relation to it: risk distribution, calibration, time to event by risk group, and observed and predicted rates by patient characteristic. Filters cover every field of the baseline and outcome records and every risk model.
 - The app shows the course of a single patient under two scenarios, survival and time to event of the cohort with Kaplan-Meier and cumulative incidence curves, and compares all scenarios side by side.
-- Data sets are generated, inspected, exported to archive files, imported again and deleted in the app. All model parameters can be changed there and reset to the defaults of the repository. The data schema and the scientific background can be read in the app.
+- Data sets are generated, inspected, exported to archive files, imported again and deleted in the app. All model parameters can be changed there and reset to the defaults of the repository. The data schema, the scientific background and the figures can be read in the app.
 - Pages change in place without reloading, and the parts of the app are linked to each other: patients, scenarios, fields, data sets and parameters. The page "About" names the authors and shows version and build.
 - A tutorial and a demo lead through all functions of the app. In the tutorial the user does each step herself; the demo runs on its own at an adjustable speed and leaves the app as it was.
 - `docker compose up -d --build` starts the app in a container, with the data in a volume. See [app/README.md](app/README.md).

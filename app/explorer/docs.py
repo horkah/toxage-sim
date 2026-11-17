@@ -13,8 +13,12 @@ from html import escape
 from pathlib import Path
 
 from django.conf import settings
+from django.urls import reverse
 
 REPO = Path(settings.REPO_DIR)
+# Figures of the project (background/figures), rendered from HTML to PNG.
+FIGURES = REPO / "background" / "figures"
+IMAGE = re.compile(r"!\[([^\]]*)\]\(([^)\s]+)\)$")
 
 
 @dataclass(frozen=True)
@@ -74,6 +78,15 @@ def _link(target, base):
         if resolved in ((REPO / d.path).resolve(), (REPO / d.path).resolve().parent) and (
                 resolved.is_file() or (REPO / d.path).name == "README.md"):
             return f"../{d.key}/" + (f"#{anchor}" if anchor else "")
+    return None
+
+
+def figure_url(target, base):
+    """Address of an image of a Markdown file in the app: the PNG figures of
+    background/figures. Other images give None."""
+    resolved = (REPO / base).parent.joinpath(target).resolve()
+    if resolved.parent == FIGURES.resolve() and resolved.suffix == ".png" and resolved.is_file():
+        return reverse("figure", args=[resolved.stem])
     return None
 
 
@@ -261,6 +274,14 @@ def render(text, base=""):
             html += "</li></ul></li>" if depth else "</li>"
             out.append(html + f"</{tag}>")
             continue
+        elif IMAGE.match(stripped):
+            # An image on a line of its own: a figure of the project.
+            flush()
+            match = IMAGE.match(stripped)
+            address = figure_url(match.group(2), base)
+            if address:
+                out.append(f'<figure class="doc-figure"><img src="{escape(address)}" alt="{escape(match.group(1))}" '
+                           f'loading="lazy"></figure>')
         elif not stripped or re.match(r"=+$|-{3,}$", stripped):
             flush()
         else:

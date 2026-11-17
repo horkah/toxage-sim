@@ -116,6 +116,8 @@ The risk models do not import the engine and do not read its parameters. The eng
 
 ## Candidate 1: any severe toxicity in 90 days
 
+![Candidate 1: predictors, formula, worked example, properties and references](../background/figures/risk-model-1-severe-toxicity.png)
+
 A logistic model. The published rate of the regimen is the risk of a reference patient: 65 years old, ECOG 0 or 1, no impaired geriatric domain, haemoglobin 12.3 g/dl, albumin 38 g/l, full starting dose. Patient factors multiply the odds:
 
 | Factor | Odds ratio | Basis |
@@ -136,6 +138,8 @@ Risk categories: low below 50%, intermediate from 50%, high from 70%. The thresh
 The CRASH score of [Extermann et al. (2012)](../background/references.md#extermann-2012) is the closest published tool. It reached a c-statistic of 0.65 for any severe toxicity in its derivation sample and 0.64 in its validation sample, and it found that patient differences count two to three times more than regimen differences.
 
 ## Candidate 2: lung toxicity
+
+![Candidate 2: predictors, formula, worked example, properties and references](../background/figures/risk-model-2-lung-toxicity.png)
 
 A proportional hazards model: risk = 1 − (1 − r0)^HR. `r0` is the risk of a patient without any risk factor on the regimen, `HR` the product of the hazard ratios that apply:
 
@@ -182,6 +186,8 @@ Lung toxicity of grade 1 has no symptoms and shows only in imaging ([Swain et al
 
 ## Candidate 3: severe or febrile neutropenia
 
+![Candidate 3: predictors, formula, worked example, properties and references](../background/figures/risk-model-3-neutropenia.png)
+
 A logistic model with the patient factors of [Lyman et al. (2011)](../background/references.md#lyman-2011). That study followed 3760 patients who started chemotherapy in 115 US practices and predicted severe or febrile neutropenia in the first cycle with an area under the curve of 0.83 in the derivation sample and 0.81 in the validation sample.
 
 | Factor | Odds ratio | Basis |
@@ -206,6 +212,8 @@ Risk categories: low below 10%, intermediate from 10%, high from 20%. The thresh
 
 ## Candidate 4: severe diarrhoea
 
+![Candidate 4: predictors, formula, worked example, properties and references](../background/figures/risk-model-4-diarrhoea.png)
+
 A logistic model for the two pancreatic regimens, with 20% and 5% severe diarrhoea in NAPOLI 3 ([Wainberg et al., 2023](../background/references.md#wainberg-2023)), and for sacituzumab govitecan, with 10% in ASCENT ([Bardia et al., 2021](../background/references.md#bardia-2021)). The references name risk factors but give no effect sizes, so all odds ratios are assumptions:
 
 | Factor | Odds ratio |
@@ -220,6 +228,8 @@ The higher risk with two copies of UGT1A1*28 is reported for sacituzumab govitec
 Risk categories: low below 10%, intermediate from 10%, high from 20%. The thresholds are assumptions. This model has the weakest basis of the five.
 
 ## Candidate 5: cardiovascular events under androgen deprivation
+
+![Candidate 5: predictors, formula, worked example, properties and references](../background/figures/risk-model-5-cardiovascular.png)
 
 The ESC guideline states that no dedicated risk calculator exists for patients under androgen deprivation ([Lyon et al., 2022](../background/references.md#lyon-2022)). This model is a first one, built on the trials HERO ([Shore et al., 2020](../background/references.md#shore-2020)) and PRONOUNCE ([Lopes et al., 2021](../background/references.md#lopes-2021)).
 

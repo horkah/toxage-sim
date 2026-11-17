@@ -1,7 +1,7 @@
 """Pages next to the explorer: data sets, archive, parameters, reference."""
 
 from django.conf import settings
-from django.http import Http404, HttpResponseForbidden, StreamingHttpResponse
+from django.http import FileResponse, Http404, HttpResponseForbidden, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -313,6 +313,16 @@ def schema(request):
                        "description": spec["description"], "fields": fields,
                        "records": name in store.TABLES})
     return _reference(request, "explorer/schema.html", schema_tables=tables, page="schema")
+
+
+def figure(request, name):
+    """A figure of the project (background/figures) as PNG."""
+    path = docs.FIGURES / f"{name}.png"
+    if not path.is_file():
+        raise Http404
+    response = FileResponse(path.open("rb"), content_type="image/png")
+    response["Cache-Control"] = "max-age=3600"
+    return response
 
 
 def documents(request, key=None):

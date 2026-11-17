@@ -36,6 +36,26 @@ class RenderTest(SimpleTestCase):
         self.assertEqual(docs.inline("[file](papers/x.pdf)", "background/references.md"), "file")
         self.assertEqual(docs.inline("[web](https://example.org)"), '<a href="https://example.org">web</a>')
 
+    def test_figures_of_the_project_are_shown(self):
+        html, _ = docs.render("Text\n\n![Model one](../background/figures/risk-model-1-severe-toxicity.png)\n\nMore",
+                              "risk-model/README.md")
+        self.assertIn('<figure class="doc-figure"><img src="/figures/risk-model-1-severe-toxicity.png" '
+                      'alt="Model one" loading="lazy"></figure>', html)
+        self.assertIn("<p>More</p>", html)
+        # Images that are not figures of the project are left out.
+        for target in ("../background/figures/missing.png", "../app/x.png", "https://example.org/x.png"):
+            html, _ = docs.render(f"![x]({target})", "risk-model/README.md")
+            self.assertEqual(html, "", target)
+
+    def test_every_risk_model_has_its_figure(self):
+        html, _ = docs.page(docs.DOCUMENTS["risk-model"])
+        figures = re.findall(r'<img src="/figures/([a-z0-9-]+)\.png"', html)
+        self.assertEqual(figures, [f"risk-model-{n}-{name}" for n, name in enumerate(
+            ("severe-toxicity", "lung-toxicity", "neutropenia", "diarrhoea", "cardiovascular"), 1)])
+        for name in figures:
+            self.assertTrue((docs.FIGURES / f"{name}.png").is_file())
+            self.assertTrue((docs.FIGURES / f"{name}.html").is_file())
+
     def test_all_documents_render(self):
         for document in docs.DOCUMENTS.values():
             html, _ = docs.page(document)
