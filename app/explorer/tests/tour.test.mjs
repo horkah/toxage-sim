@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { applies, textOf, clamp, fill, onPage, place, readSeconds, swipedLeft, words } from "../static/explorer/tour.js";
-import { STEPS } from "../static/explorer/tour-steps.js";
+import { STEPS, STORY } from "../static/explorer/tour-steps.js";
 
 test("words and reading time", () => {
   assert.equal(words("one two  three\nfour"), 4);
@@ -87,4 +87,16 @@ test("the simple view leaves out the steps that need the full view, and uses its
   const sections = STEPS.find((s) => s.title === "The sections");
   assert.notDeepEqual(textOf(sections, true), textOf(sections, false));
   assert.deepEqual(textOf({ text: ["a"] }, true), ["a"]);
+});
+
+test("the demo tells a short story, shorter still in the simple view", () => {
+  const advanced = STORY.filter((s) => applies(s, "demo", false, { A: 1 }, false));
+  const simple = STORY.filter((s) => applies(s, "demo", false, { A: 1 }, true));
+  assert.ok(advanced.length <= 25 && advanced.length < STEPS.length / 2);
+  assert.ok(simple.length < advanced.length);
+  // Every step that acts says when it is done; the texts read aloud well: no symbols or brackets.
+  for (const s of STORY) {
+    if (s.act || s.wait) assert.ok(s.until, s.title);
+    assert.ok(s.text.every((p) => !/[()→›%]/.test(p)), s.title);
+  }
 });

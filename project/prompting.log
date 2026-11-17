@@ -402,3 +402,14 @@ Du kannst es bitte als html mit css setzen und dann in mittlerer Auflösung als 
 Als Stil bitte Fraunhofer-Farben, lieber Ecken als Rundungen, und bitte keine Claude-typischen Schatten oder Balken. Clean, professional, scientific, 
 
 Zudem bitte eine Übersichtsgrafik, wie wir hier im Projekt aus der Literaturrecherche die Risikomodelle und den Generator für syntheische Kohorten ermittelt haben - quasi als graphical abstract des Projekts. Dort gerne abweichend zu den anderen Abbildungen im Claude-Stil dieser App und mit unserem Projekt-Logo. Die Übersichtsgrafik kannst du bei About sowie bei den Hintergrundinformationen an geeigneter Stelle einbinden.
+
+================================================================================
+2026-11-17 18:55 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+change the demo of the app to a selected more dramatic "explosive" and in total shorter story compared to the current "full and boring" demo. the tutorial stays as it is.
+
+the demo shall tell a story from the researcher perspective who wants to explore potential mechanisms in risk modeling of toxicity of cancer therapy regimens. too many patients are suffering from such toxicity, and this demo showcases that field of knowledge. later of course to be filled with and adapted to real data.
+
+please also make sure that the demo in the simple-ui version is shorter compared to the advanced-mode demo.
+
+the text elements should result in a story interesing to read and - will be implemented later - to listen to.

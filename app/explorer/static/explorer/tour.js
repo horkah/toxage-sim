@@ -16,7 +16,7 @@
 // Before a demo the server keeps a snapshot of parameters and data sets and
 // brings it back at the end, so that the demo leaves no trace.
 
-import { STEPS } from "./tour-steps.js";
+import { STEPS, STORY } from "./tour-steps.js";
 
 const KEY = "toxage-tour";
 // Reading time in seconds per 20 words (6.7 is 3 words per second), and the
@@ -160,9 +160,10 @@ const api = {
   },
 };
 
-// All steps; a function so that tests and future variants can choose them.
+// The steps of the running tour: the tutorial goes through every part of the app,
+// the demo tells its story.
 function steps() {
-  return STEPS;
+  return state?.mode === "demo" ? STORY : STEPS;
 }
 
 // Open the groups that hide an element and scroll it to the middle of the window.
@@ -605,15 +606,16 @@ function welcome() {
   dialog.className = "tour-dialog";
   dialog.innerHTML = `<h2>Welcome to the explorer</h2>
     <p>The app shows synthetic patients with advanced cancer, their risk of severe side effects of therapy,
-      and what early detection could change. Two guided tours explain every part of it.</p>
+      and what early detection could change. Two guided tours show it.</p>
     <div class="tour-choice">
       <button type="button" class="primary" data-choice="tutorial">Tutorial</button>
       <p>Step by step. A hint points to each feature, and you click and type yourself.
         What you create or change stays until you remove it.</p>
       <button type="button" class="primary" data-choice="demo">Demo</button>
-      <p>The same tour, running by itself in a loop until you stop it. It creates data and
-        changes parameters, and puts everything back after each round. The → key or a swipe to
-        the left goes to the next step; a click on the hint shows pause, stop and speed.</p>
+      <p>A short story, told by itself in a loop until you stop it: why side effects of cancer
+        therapy matter, and how risk models and early detection could help. It creates data and
+        puts everything back after each round. The → key or a swipe to the left goes to the next
+        step; a click on the hint shows pause, stop and speed.</p>
     </div>
     ${speedControls()}
     <label class="check"><input type="checkbox" data-off> Do not offer this at start again
