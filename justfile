@@ -42,6 +42,10 @@ test-app:
 test-js:
     cd app && node --test explorer/tests/*.test.mjs
 
+# Play every story of the demo in both views and list what it did not find (needs the app running with TOXAGE_SIMPLE_UI=1)
+check-stories url="http://localhost:8000" *stories="":
+    node app/explorer/tests/check-stories.mjs {{url}} {{stories}}
+
 # --- Engine ----------------------------------------------------------------
 
 # Generate synthetic patients as CSV files, e.g.: just generate 3000 1 engine/output

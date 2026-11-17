@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { applies, textOf, clamp, fill, onPage, place, readSeconds, swipedLeft, words } from "../static/explorer/tour.js";
-import { STEPS, STORY } from "../static/explorer/tour-steps.js";
+import { STEPS } from "../static/explorer/tour-steps.js";
+import { STORIES } from "../static/explorer/stories/index.js";
+import { AT } from "../static/explorer/stories/prerequisites.js";
 
 test("words and reading time", () => {
   assert.equal(words("one two  three\nfour"), 4);
@@ -89,14 +91,26 @@ test("the simple view leaves out the steps that need the full view, and uses its
   assert.deepEqual(textOf({ text: ["a"] }, true), ["a"]);
 });
 
-test("the demo tells a short story, shorter still in the simple view", () => {
-  const advanced = STORY.filter((s) => applies(s, "demo", false, { A: 1 }, false));
-  const simple = STORY.filter((s) => applies(s, "demo", false, { A: 1 }, true));
-  assert.ok(advanced.length <= 25 && advanced.length < STEPS.length / 2);
-  assert.ok(simple.length < advanced.length);
-  // Every step that acts says when it is done; the texts read aloud well: no symbols or brackets.
-  for (const s of STORY) {
-    if (s.act || s.wait) assert.ok(s.until, s.title);
-    assert.ok(s.text.every((p) => !/[()→›%]/.test(p)), s.title);
+test("the demo tells stories, each one shorter in the simple view", () => {
+  assert.ok(STORIES.length >= 6);
+  const used = new Set();
+  for (const story of STORIES) {
+    const advanced = story.steps.filter((s) => applies(s, "demo", false, { A: 1 }, false));
+    const simple = story.steps.filter((s) => applies(s, "demo", false, { A: 1 }, true));
+    assert.ok(advanced.length <= 25 && simple.length < advanced.length, story.title);
+    // The first step shows the title and the choice of the story, in both views and before any change.
+    assert.ok(!story.steps[0].advanced && !story.steps[0].changes && !story.steps[0].act, story.title);
+    for (const s of story.steps) {
+      assert.ok(s.title && s.text.length, `${story.title}: ${s.title}`);
+      assert.ok(!s.at || s.target, `${story.title}: ${s.title}: unknown place ${s.at}`);
+      assert.ok(!s.url || s.url.startsWith("/"), s.title);
+      if (s.wait) assert.ok(s.until && !s.act, s.title);
+      if (s.act) assert.equal(typeof s.act, "function", s.title);
+      used.add(s.at);
+    }
+    // Read aloud: the story title and the texts, without symbols or brackets.
+    for (const text of [story.title, ...story.steps.flatMap((s) => s.text)]) assert.ok(!/[()→›%]/.test(text), text);
   }
+  // Every place of the app that a story needs is used, so prerequisites.js holds no more than that.
+  assert.deepEqual(Object.keys(AT).filter((name) => !used.has(name)), []);
 });

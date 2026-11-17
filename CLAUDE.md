@@ -81,7 +81,8 @@
     `risk-model/EXTENSIONS.md` (open extensions) and the `basis` notes in
     `risk-model/config/models.json`
   - app: `app/README.md` ("Limits"); the texts that tell users about the
-    state of the project: `disclaimer.html`, `about.html`, `tour-steps.js`
+    state of the project: `disclaimer.html`, `about.html`, `tour-steps.js`,
+    the stories in `stories/`
     and the notes in `views.py`
   - overview: `README.md` ("Status"), `project/code-review-issues.md`,
     "Open points" in `project/internal-documentation.md`

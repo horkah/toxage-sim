@@ -1,10 +1,12 @@
 // Tutorial and demo of the app, without a framework.
 //
-// Both walk through the steps of tour-steps.js. A step shows a hint next to
-// the control it is about. In the tutorial the user does what the hint says,
-// and the tour goes on when it sees the result. In the demo the tour reads
-// the hint for the user, does the step itself and goes on after a pause.
-// The demo runs in an endless loop until it is stopped; before every new
+// The tutorial walks through the steps of tour-steps.js, the demo tells one of
+// the stories of stories/. A step shows a hint next to the control it is about.
+// In the tutorial the user does what the hint says, and the tour goes on when it
+// sees the result. In the demo the tour reads the hint for the user, does the
+// step itself and goes on after a pause. The demo runs in an endless loop until
+// it is stopped: it starts with a random story and tells the next one in every
+// new round; the first step of a story offers all of them. Before every new
 // round the state before the demo is brought back. The right arrow key or a
 // swipe to the left goes to the next step at once. The controls of the demo
 // (pause, stop, speed) show on the first step and when the hint is clicked
@@ -16,7 +18,8 @@
 // Before a demo the server keeps a snapshot of parameters and data sets and
 // brings it back at the end, so that the demo leaves no trace.
 
-import { STEPS, STORY } from "./tour-steps.js";
+import { STEPS } from "./tour-steps.js";
+import { STORIES } from "./stories/index.js";
 
 const KEY = "toxage-tour";
 // Reading time in seconds per 20 words (6.7 is 3 words per second), and the
@@ -89,7 +92,7 @@ export function place(target, w, h, W, H, gap = 12) {
 // Browser part ------------------------------------------------------------------
 
 const browser = typeof document !== "undefined" && typeof sessionStorage !== "undefined";
-let state = null;       // { mode, i, acted, shownAt, doneAt, paused, mem }
+let state = null;       // { mode, story, i, acted, shownAt, doneAt, paused, mem }
 let panel = null, ring = null, timer = null, run = 0;
 
 // A JSON value from session storage, fallback if missing or blocked.
@@ -163,7 +166,21 @@ const api = {
 // The steps of the running tour: the tutorial goes through every part of the app,
 // the demo tells its story.
 function steps() {
-  return state?.mode === "demo" ? STORY : STEPS;
+  return state?.mode === "demo" ? STORIES[state.story].steps : STEPS;
+}
+
+// The choice of a story, on the first step of the demo.
+function chooser() {
+  const options = STORIES.map((s, i) => `<option value="${i}"${i === state.story ? " selected" : ""}>${i + 1} · ${s.title}</option>`);
+  return `<label class="tour-chooser">Story <select data-story>${options.join("")}</select></label>`;
+}
+
+// Tell another story from its beginning.
+function choose(story) {
+  state.story = story;
+  state.i = -1;
+  move(1);
+  play();
 }
 
 // Open the groups that hide an element and scroll it to the middle of the window.
@@ -281,15 +298,26 @@ function show(step, note = "", free = false) {
   const controls = `<div class="tour-buttons">${buttons}</div>${demo ? speedControls() : ""}
     ${demo ? `<p class="tour-keys">Next step: → key or swipe to the left. Click the text to hide these controls.</p>`
            : `<p class="tour-keys">The → key or a swipe to the left also goes on, where “Next” is offered.</p>`}`;
-  panel.innerHTML = `<header><span>${demo ? "Demo" : "Tutorial"}${round} · step ${number} of ${shown.length}</span>${toggle}</header>
-    <h2>${step.title}</h2>${textOf(step).map((p) => `<p>${p}</p>`).join("")}${task}
+  // The demo shows the title of its story on the first step; the titles of its steps are muted,
+  // as a story is read aloud from its title and the texts of the steps.
+  const title = demo
+    ? `${number <= 1 ? `<h2>${STORIES[state.story].title}</h2>${chooser()}` : ""}<h3 class="tour-section">${step.title}</h3>`
+    : `<h2>${step.title}</h2>`;
+  const label = demo ? `Demo${round} · story ${state.story + 1} of ${STORIES.length}` : "Tutorial";
+  panel.innerHTML = `<header><span>${label} · step ${number} of ${shown.length}</span>${toggle}</header>
+    ${title}${textOf(step).map((p) => `<p>${p}</p>`).join("")}${task}
     ${note ? `<p class="tour-note">${note}</p>` : ""}
     <div class="tour-controls"${demo && !state.controls ? " hidden" : ""}>${controls}</div>`;
   bindSpeed(panel);
+  const select = panel.querySelector("[data-story]");
+  select?.addEventListener("focus", hold);
+  select?.addEventListener("change", () => choose(Number(select.value)));
   // Bring the target into view when the hint appears, not when it is drawn
   // again while waiting: the step itself may just have closed what held it.
   const el = step.target ? api.q(step.target) : null;
   if (el && !note) reveal(el);
+  // A story whose place is missing needs an update (stories/prerequisites.js, just check-stories).
+  if (demo && step.target && !el && !note) console.warn(`demo: story ${state.story + 1}, step "${step.title}": ${step.at} not found`);
   position();
   requestAnimationFrame(position);
 }
@@ -328,9 +356,12 @@ async function until(step, patient) {
   }
 }
 
-// All text of a hint, for its reading time.
+// The text of a hint that is read, for its reading time: in the demo the title of
+// the story on its first step and the texts, in the tutorial the whole hint.
 function hintText(step) {
-  return [step.title, ...textOf(step), step.do || ""].join(" ");
+  if (state.mode !== "demo") return [step.title, ...textOf(step), step.do || ""].join(" ");
+  const first = steps().find((s) => applies(s, state.mode, noChanges(), state.mem, simpleView())) === step;
+  return [first ? STORIES[state.story].title : "", ...textOf(step)].join(" ");
 }
 
 // Wait while the user reads. The time already spent on the hint counts,
@@ -495,10 +526,10 @@ async function finish(stopped = false) {
   const needsRestore = demo && Boolean(state.mem.owner);
   if (demo && !stopped) {
     // The demo runs in a loop: bring the state before the demo back and start again.
-    const round = (state.round || 1) + 1;
+    const round = (state.round || 1) + 1, story = (state.story + 1) % STORIES.length;
     hide();
     if (needsRestore) await post("/tour/restore/");
-    await begin("demo", round);
+    await begin("demo", round, story);
     location.href = "/";
     return;
   }
@@ -553,18 +584,19 @@ async function onPanelClick(event) {
   }
 }
 
-// Note the state before a tour and set the tour to its first step.
+// Note the state before a tour and set the tour to its first step; the demo
+// tells the given story, or a random one.
 // The demo notes the state on the server, which restores an earlier snapshot of
 // this browser or an abandoned one first; in a demo installation it empties the
 // visitor's space instead. If another demo is running in a normal installation,
 // this one leaves out the steps that change something (owner false).
-async function begin(mode, round = 1) {
+async function begin(mode, round = 1, story = Math.floor(Math.random() * STORIES.length)) {
   let owner = false;
   if (mode === "demo") {
     owner = Boolean((await post("/tour/snapshot/")).taken);
   }
   const before = await api.state();
-  state = { mode, i: 0, acted: false, shownAt: null, doneAt: null, paused: false, round,
+  state = { mode, story, i: 0, acted: false, shownAt: null, doneAt: null, paused: false, round,
             controls: undefined, holdUntil: 0, skip: false,
             mem: { known: before.datasets.map((d) => d.id), owner } };
   save();
@@ -612,9 +644,10 @@ function welcome() {
       <p>Step by step. A hint points to each feature, and you click and type yourself.
         What you create or change stays until you remove it.</p>
       <button type="button" class="primary" data-choice="demo">Demo</button>
-      <p>A short story, told by itself in a loop until you stop it: why side effects of cancer
-        therapy matter, and how risk models and early detection could help. It creates data and
-        puts everything back after each round. The → key or a swipe to the left goes to the next
+      <p>Six short stories, told by the AI that built the app, one patient group each: why side
+        effects of cancer therapy matter, and how risk models and early detection could help. They
+        run by themselves in a loop until you stop them, create data and put everything back after
+        each story. The → key or a swipe to the left goes to the next
         step; a click on the hint shows pause, stop and speed.</p>
     </div>
     ${speedControls()}
@@ -662,6 +695,8 @@ function init() {
   // A page swapped in place moves the target of the hint.
   document.addEventListener("toxage:swap", () => { if (panel) requestAnimationFrame(position); });
   state = read(KEY);
+  // A demo begun before the stories were changed goes on with the first story.
+  if (state?.mode === "demo" && !STORIES[state.story]) state.story = 0;
   // In a demo installation a reload empties the visitor's space (demo.py), and
   // with it what the tour made so far: the tour starts again from its first step.
   if (state && document.body.dataset.demo === "1" && reloaded()) return start(state.mode);

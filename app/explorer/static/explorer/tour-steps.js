@@ -1,4 +1,4 @@
-// The steps of the tutorial and the demo.
+// The steps of the tutorial, and helpers that the stories of the demo share (stories/).
 //
 // A step has a title and a text (list of paragraphs) and may have:
 //   url      page on which the step is shown; the tour goes there first
@@ -16,13 +16,13 @@
 // {A} and {B} in selectors and addresses stand for the ids of the data sets
 // that the tour created. Functions get the helper object of tour.js.
 
-const card = (name) => `article.dataset[data-id="{${name}}"]`;
-const param = (path) => `input[name="p:${path}"]`;
-const ECOG = "severe_toxicity_90d/odds_ratios/ecog_2_or_higher/value";
+export const card = (name) => `article.dataset[data-id="{${name}}"]`;
+export const param = (path) => `input[name="p:${path}"]`;
+export const ECOG = "severe_toxicity_90d/odds_ratios/ecog_2_or_higher/value";
 const FLAGGED = "risk_adapted_start/share_flagged";
 
 // A data set that was not there when the tour began or when the step before made one.
-const created = (name) => async (t) => {
+export const created = (name) => async (t) => {
   const state = await t.state();
   const found = state.datasets.find((d) => !t.mem.known.includes(d.id));
   if (!found) return false;
@@ -30,12 +30,12 @@ const created = (name) => async (t) => {
   t.mem.known.push(found.id);
   return true;
 };
-const ready = (name) => (t) => t.q(`${card(name)}[data-status="ready"]`) !== null;
+export const ready = (name) => (t) => t.q(`${card(name)}[data-status="ready"]`) !== null;
 const gone = (name) => async (t) => !(await t.state()).datasets.some((d) => d.id === t.mem[name]);
 // The table row of one parameter, and the same row while its value differs from the default.
 const row = (path) => `tr:has(${param(path)})`;
 const changedRow = (path) => `tr.changed:has(${param(path)})`;
-const isChanged = (path) => (t) => t.q(changedRow(path)) !== null;
+export const isChanged = (path) => (t) => t.q(changedRow(path)) !== null;
 const isDefault = (path) => (t) => t.q(row(path)) !== null && t.q(changedRow(path)) === null;
 
 export const STEPS = [
@@ -823,215 +823,6 @@ export const STEPS = [
     target: "#help summary",
     text: [
       "That was every part of the app. Tutorial and demo can be started again under “Help”, and the offer at start can be switched off and on under “Settings”.",
-    ],
-  },
-];
-
-// The demo: a short story from the view of the researchers, told by itself. It shares
-// the fields of the steps above; steps marked "advanced" add depth in the full view.
-// The texts are written to be read and also to be listened to.
-// Patients with lung toxicity under lung monitoring, compared with usual care. The story
-// shows one whose lung toxicity the monitoring recognised earlier: it looks at random
-// patients who took part and had an alert until the table of their adverse events says
-// "days earlier"; without such a patient it shows any patient with lung toxicity.
-const ILD_WORLD = "view=time&model=ild&scenario=lung_monitoring&compare=usual_care&ild=true";
-const MONITORED = "&participating=true&alerts_min=1";
-const earlierPatient = async (t) => {
-  for (let i = 0; i < 12; i++) {
-    try {
-      const answer = await fetch(`/random/?${ILD_WORLD}${MONITORED}`, { headers: { "X-Toxage-Fetch": "1" } });
-      if (answer.url.includes("patient=") && / days earlier/.test(await answer.text())) return t.go(answer.url);
-    } catch { /* try the next one */ }
-  }
-  return t.go(`/random/?${ILD_WORLD}`);
-};
-
-export const STORY = [
-  {
-    title: "Too many pay the price",
-    url: "/",
-    text: [
-      "Cancer therapy buys time. Too often it also takes something. In the large trials behind this project, between half and almost nine in ten patients suffered at least one severe side effect.",
-      "We are researchers, and we want to know: who will be hit, when, and could we see it coming? Real patient data are scarce and protected. So we begin with patients who never existed.",
-    ],
-  },
-  {
-    title: "A cohort is born",
-    url: "/data/",
-    target: '#generate input[name="n"]',
-    changes: true,
-    text: [
-      "Fifteen hundred patients with advanced pancreatic, prostate or breast cancer. Each one gets an age, a body, a tumour and a therapy, drawn from what published trials report.",
-    ],
-    act: (t) => t.fill('#generate input[name="n"]', "1500"),
-    until: (t) => t.q('#generate input[name="n"]')?.value === "1500",
-  },
-  {
-    title: "Parallel worlds",
-    url: "/data/",
-    target: '#generate button[type="submit"]',
-    changes: true,
-    text: [
-      "Every patient will live several times. Once under usual care, and once under each intervention we want to test. The same fate in every world, until an intervention changes it.",
-      "That is our advantage over any real trial: we can compare one and the same person with and without help.",
-    ],
-    act: (t) => t.click('#generate button[type="submit"]'),
-    until: created("A"),
-  },
-  {
-    title: "Week by week",
-    url: "/data/",
-    target: card("A"),
-    changes: true,
-    needs: "A",
-    wait: true,
-    text: [
-      "Now the engine lets them live. Week after week, side effects can start and grow, doses are cut, therapies end, and some patients die. Ten years of follow-up, in a few seconds.",
-    ],
-    until: ready("A"),
-  },
-  {
-    title: "Into the data",
-    url: "/data/",
-    target: `${card("A")} form[action="/data/use/"] button`,
-    needs: "A",
-    text: ["The cohort is ready. Let us look inside."],
-    act: (t) => t.click(`${card("A")} form[action="/data/use/"] button`),
-    until: (t) => location.pathname === "/",
-  },
-  {
-    title: "Who will be hit?",
-    url: "/",
-    target: 'tox-chart[chart="risk-hist"]',
-    text: [
-      "A risk model looks at each patient on the first day of therapy and estimates the chance of a severe side effect within ninety days.",
-      "Each bar holds patients with a similar estimate. Orange marks those who were actually hit. From left to right, the orange grows. The model sees something real.",
-    ],
-  },
-  {
-    title: "Can we trust the numbers?",
-    advanced: true,
-    url: "/",
-    target: 'tox-chart[chart="calibration"]',
-    text: [
-      "A good estimate must also be honest. When the model says sixty percent, sixty of a hundred such patients should be hit. The closer the dots follow the diagonal, the more we can trust it.",
-    ],
-  },
-  {
-    title: "It strikes early",
-    url: "/",
-    target: 'tox-chart[chart="incidence"]',
-    text: [
-      "We split the cohort into thirds by risk and follow them in time. In the highest third the curve shoots up within the first weeks.",
-      "The danger is concentrated at the start of therapy. That is exactly where prevention could act.",
-    ],
-  },
-  {
-    title: "One model is not enough",
-    advanced: true,
-    url: "/",
-    target: 'nav[aria-label="Risk model"]',
-    text: [
-      "Every kind of toxicity has its own pattern, its own timing and its own risk factors. Blood counts are most at risk in the first cycle, the heart over months. So we build one model for each, not one for all.",
-    ],
-  },
-  {
-    title: "A quiet danger in the lungs",
-    url: "/?model=ild",
-    target: 'nav[aria-label="Risk model"] a[data-model="ild"]',
-    text: [
-      "Some toxicities are rare but treacherous. Under the targeted drug trastuzumab deruxtecan, the lungs can become inflamed. It starts quietly.",
-      "In the trials, experts dated the true onset earlier than the treating doctors in about half of the cases, by a median of forty-three days. Six weeks in which the disease was already there, unseen.",
-    ],
-  },
-  {
-    title: "Two futures for one patient",
-    url: `/?${ILD_WORLD}${MONITORED}`,
-    target: "#random",
-    text: [
-      "We pick one patient whose lungs were hit, and look at both worlds at once: one with home monitoring of oxygen and symptoms, one with usual care.",
-    ],
-    act: earlierPatient,
-    until: (t) => t.has("patient="),
-  },
-  {
-    title: "The signal before the storm",
-    target: 'tox-chart[chart="patient-spo2"]',
-    text: [
-      "Oxygen saturation, week by week. The solid line is the world with monitoring, the dashed line usual care.",
-      "As the inflammation begins, the oxygen sinks, long before the patient feels ill enough to come in. With monitoring, the alarm can come weeks earlier, treatment starts at a milder stage, and the course is gentler.",
-    ],
-  },
-  {
-    title: "What the record says",
-    advanced: true,
-    target: ".charts .columns",
-    text: [
-      "The adverse events of both worlds side by side: when each started, when it was recognised, how severe it became, and what was done. Recognised earlier often means a lower grade, and a therapy that can go on.",
-    ],
-  },
-  {
-    title: "Help for everyone",
-    url: "/?view=interventions&scenario=combined",
-    target: ".charts table.numbers",
-    text: [
-      "Now the whole cohort, all worlds side by side. Combined joins our ideas: a gentler start for patients at high risk, weekly symptom reports, and home monitoring of the lungs and the heart.",
-    ],
-  },
-  {
-    title: "Fewer patients hit",
-    url: "/?view=interventions&scenario=combined",
-    target: 'tox-chart[chart="tte-sfs"]',
-    text: [
-      "These curves show who is still alive and free of a severe side effect. The solid curve of the combined interventions stays above usual care. Fewer patients go through a severe event, and many who do, go through it later and milder.",
-    ],
-  },
-  {
-    title: "The sobering truth",
-    url: "/?view=interventions&scenario=combined",
-    target: 'tox-chart[chart="tte-os"]',
-    text: [
-      "And survival? It barely moves, a few days at most. In this model, early detection saves lives only where a side effect would have killed.",
-      "The real gain lies elsewhere: in suffering avoided, in hospital days not spent, in therapies that do not have to stop.",
-    ],
-  },
-  {
-    title: "The ceiling",
-    url: "/?view=interventions&scenario=perfect_detection",
-    target: 'tox-chart[chart="iv-severe"]',
-    text: [
-      "Perfect detection is a dream world. Everyone takes part, and every side effect is caught at its first sign.",
-      "The gap between this ceiling and the real interventions is what participation, sensitivity and timing cost. That gap is where research has to push.",
-    ],
-  },
-  {
-    title: "Question the assumptions",
-    advanced: true,
-    url: "/parameters/risk/",
-    target: param(ECOG),
-    changes: true,
-    text: [
-      "Many numbers in these models are still assumptions. What if a poor general condition quadruples the odds of a severe side effect, instead of doubling them?",
-    ],
-    act: (t) => t.fill(param(ECOG), "4"),
-    until: isChanged(ECOG),
-  },
-  {
-    title: "The picture shifts",
-    advanced: true,
-    url: "/?model=severe90&ecog_min=2",
-    target: 'nav[aria-label="Risk model"] a[data-model="severe90"]',
-    changes: true,
-    text: [
-      "Among frail patients the predicted risk jumps at once. Every assumption leaves its mark, and real data will tell us which ones hold.",
-    ],
-  },
-  {
-    title: "From simulation to real patients",
-    url: "/",
-    text: [
-      "Everything you have seen is synthetic, built from published trials and guidelines. The next step is real data, and the methods are ready for it.",
-      "The questions stay the same: who will be hit, when, and what helps. Because too many patients suffer from side effects that could be seen coming.",
     ],
   },
 ];

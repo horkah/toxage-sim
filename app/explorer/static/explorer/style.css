@@ -588,11 +588,15 @@ dialog { color: var(--text); }
   display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .tour-toggle { min-height: 0; padding: 0 9px; line-height: 1.4; font-size: 1rem; border-radius: 999px; color: var(--muted); }
 .tour-toggle[aria-expanded="true"] { background: var(--tour-soft); color: var(--text); border-color: var(--tour-line); }
-.tour:has(.tour-toggle) > p, .tour:has(.tour-toggle) > h2 { cursor: pointer; }
+.tour:has(.tour-toggle) > p, .tour:has(.tour-toggle) > h2, .tour:has(.tour-toggle) > h3 { cursor: pointer; }
 .tour-controls { display: flex; flex-direction: column; gap: 6px; }
 .tour-controls[hidden] { display: none; }
 .tour-keys { color: var(--muted); font-size: .78rem; margin: 2px 0 0; }
 .tour h2 { margin: 2px 0 6px; font-size: 1.05rem; }
+/* The demo: the title of a story is read aloud, the titles of its steps are only shown. */
+.tour h3.tour-section { margin: 2px 0 4px; font-size: .8rem; font-weight: 600; color: var(--muted); }
+.tour-chooser { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: .82rem; color: var(--muted); }
+.tour-chooser select { flex: 1; min-width: 0; font-size: .85rem; }
 .tour p { margin: 0 0 8px; }
 .tour-do { border-left: 3px solid var(--tour-line); padding-left: 8px; }
 .tour-note { color: var(--muted); font-style: italic; }

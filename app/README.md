@@ -133,7 +133,7 @@ With `TOXAGE_SIMPLE_UI=1` the app opens in a simple view that shows the essence 
 - Data: a data set is made from the number of patients alone, under every scenario and with the default seed, tumour types, subgroups and regimens. Data sets show no records, archives or tables per scenario.
 - The section Parameters is not in the menu.
 
-"Settings › View › Advanced" switches the browser to the full view (cookie `toxage_ui`, kept for a year) and back. The guided tours follow the view in use: in the simple view they leave out the steps on what it does not show (steps marked `advanced` in `tour-steps.js`) and use shorter texts where they differ; in the advanced view they show everything. The page About explains the simple view only where the installation offers it.
+"Settings › View › Advanced" switches the browser to the full view (cookie `toxage_ui`, kept for a year) and back. The guided tours follow the view in use: in the simple view they leave out the steps on what it does not show and use shorter texts where they differ; in the advanced view they show everything. The tutorial marks such steps `advanced` in `tour-steps.js`; a story leaves out the steps whose place in the app `stories/prerequisites.js` marks as `full`, so each story has its short version without a text of its own. The page About explains the simple view only where the installation offers it.
 
 ### Filters
 
@@ -207,7 +207,18 @@ SQLite fits because there is one server process, the data are written once per d
 Two guided tours show the app. Each step shows a hint with a short text next to the part of the page it is about.
 
 - The **tutorial** leads through the whole app: help and settings, generating a data set, the archive, the risk models and their charts, filters, a single patient, patient characteristics, the course over time, the scenarios and interventions, the parameters, records, deleting and resetting, the reference and the page "About" (steps `STEPS` in `tour-steps.js`).
-- The **demo** tells a short story from the view of the researchers (steps `STORY`): too many patients suffer severe side effects; a synthetic cohort is created and lives in parallel worlds; the risk model shows who is hit and that it happens early; lung toxicity as a quiet danger; one patient in two worlds, with and without home monitoring; what the interventions change for everyone, why survival barely moves, and the ceiling of perfect detection; the step to real data. The full view adds calibration, one model per toxicity, the patient's adverse events and the effect of an assumption of the model. The texts are written to be read and listened to.
+- The **demo** tells one of six stories (`explorer/static/explorer/stories/`). The AI that built the app tells them in the first person, to an experienced data scientist with basic knowledge of toxicology: what an AI can do to generate such data and build such an app, each time with one patient group that shows why the project matters.
+
+| Story | Patient group | What it shows |
+|---|---|---|
+| 1 Too many pay the price | Women with HER2-low breast cancer on trastuzumab deruxtecan | Synthetic cohort in parallel worlds, risk and its early peak, lung toxicity that starts quietly, one patient with and without home monitoring, all scenarios, survival, the ceiling of perfect detection |
+| 2 Age is only a number | Patients aged 70 and older | Frailty as a hidden confounder of the engine, risk by age and by impaired geriatric domains, discrimination against calibration, the factors of one patient, an assumption changed, the risk-adapted start |
+| 3 Two drugs, one heart | Men with prostate cancer under androgen deprivation | Two trials that disagree, agonist and antagonist, confounding by indication, pooled evidence, risk across models, the warning phase in blood pressure and chest pain, cardiovascular monitoring |
+| 4 Nine in ten | Metastatic pancreatic cancer | Calibration to the trials, two regimens with different toxicity, the UGT1A1 genotype, weekly symptom reports, hospital days, quality-adjusted life years, costs, survival |
+| 5 The first cycle | Women with pretreated triple-negative breast cancer on sacituzumab govitecan | A published model used as it is, ranking by construction, the threshold for growth factors, the start guided by the models, neutrophils of one patient, records, fitting the model back |
+| 6 How I built this | Men with castration-resistant prostate cancer on lutetium-177 PSMA or olaparib | From the literature to the models, seed and scenarios, stored records, a model that is wrong for a known reason, schema, parameters with their basis, archive |
+
+  The demo starts with a random story and tells the next one in every new round; the first step of a story shows its title and offers all stories. The titles of the steps are shown muted: read aloud, a story is its title and the texts of its steps.
 
 - In the tutorial the user does every step herself. The hint says what to do and moves on when it is done. "Do it for me" carries out a step, "Back" and "Next" move freely, "End" stops. The tutorial changes nothing on its own and leaves the data sets and parameters as the user made them; its last steps point to the ways to delete and reset.
 - The demo does every step itself and runs in an endless loop until it is stopped; before each new round the state before the demo is brought back. Two speed values control it: the reading time in seconds per 20 words of a hint (0 to 30, default 6.7, about three words per second), and the seconds a new state of the screen is shown before the next step. The right arrow key or a swipe to the left goes to the next step at once. The controls (pause, stop, speed) show on the first step and otherwise only after a click or touch on the hint; while they are shown the demo waits five seconds longer, and a second click hides them. Each new step starts with the controls hidden. A deletion in the demo needs no confirmation.
@@ -257,7 +268,9 @@ The space is emptied when the visitor reloads the page (the browser marks a relo
 | `explorer/static/explorer/app.js` | Pages in place, warnings before deleting, messages, settings, forms that apply on change |
 | `explorer/static/explorer/img/logo.svg` | Logo and icon of the app |
 | `explorer/static/explorer/tour.js` | Tutorial and demo: hints, speed, offer at start |
-| `explorer/static/explorer/tour-steps.js` | The steps of the tours: text, page, target, action |
+| `explorer/static/explorer/tour-steps.js` | The steps of the tutorial: text, page, target, action; helpers for the stories |
+| `explorer/static/explorer/stories/` | The stories of the demo, one file each; `prerequisites.js` names the places of the app they need, `index.js` lists the stories |
+| `explorer/tests/check-stories.mjs` | Plays every story in both views and lists the places it did not find (`just check-stories`) |
 | `explorer/tour.py` | State of the app for the tours; notes and restores the state around a demo |
 | `explorer/static/explorer/style.css` | Layout and colours for bright and dark mode |
 | `explorer/management/commands/load_cohort.py` | Generates and stores a data set from the command line |

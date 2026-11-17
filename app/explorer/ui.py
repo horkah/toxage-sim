@@ -6,7 +6,7 @@ views of the explorer with their most telling charts, a few filters, and a
 data set made from the number of patients alone. Data, models and
 calculations are the same as in the full view; only what is shown and offered
 is smaller. A browser can switch to the full view, "Advanced", in the
-settings (cookie COOKIE); the tours use the full view while they run.
+settings (cookie COOKIE). The tours follow the view in use and leave out what it does not show.
 """
 from django.conf import settings
 

@@ -43,7 +43,7 @@ Each kind of information has one place. Other documents link to it and do not re
 | Open findings of the code review | `project/code-review-issues.md` |
 | Open organisational points | this file, "Open points" |
 | Summary of the whole project | `README.md`, "Status" |
-| What the app tells its users about the state of the project | `app/explorer/templates/explorer/disclaimer.html` and `about.html`, the texts of `app/explorer/static/explorer/tour-steps.js`, the notes in `app/explorer/views.py` |
+| What the app tells its users about the state of the project | `app/explorer/templates/explorer/disclaimer.html` and `about.html`, the texts of `app/explorer/static/explorer/tour-steps.js` and of the stories in `app/explorer/static/explorer/stories/`, the notes in `app/explorer/views.py` |
 
 ## Literature
 
@@ -116,7 +116,8 @@ The copyrighted PDFs must not be in the repository when it becomes public, see "
 - The storage model has one initial migration. As long as no installation has to be kept, a change of the models replaces this migration; afterwards changes get migrations of their own.
 - The rows of a scenario are kept in memory after first use. `cohort.clear_cache()` empties this store; `store.generate` calls it.
 - Filters and the charts per patient characteristic are built from the schema, the status bar and risk filters from the registered risk models.
-- The steps of tutorial and demo are in `explorer/static/explorer/tour-steps.js`. A new function of the app gets a step there. A step that changes data or parameters is marked with `changes`, and the demo must undo it in a later step; the server restores the state at the end in any case.
+- The steps of the tutorial are in `explorer/static/explorer/tour-steps.js`. A new function of the app gets a step there. A step that changes data or parameters is marked with `changes`; the tutorial points to deleting and resetting at its end, and the server restores the state after every story of the demo.
+- The stories of the demo are in `explorer/static/explorer/stories/`, one file each, listed in `index.js`. Their steps name places of the app (`prerequisites.js`) instead of CSS selectors. When a page, chart or field changes, the place is updated there once; `just check-stories` (app running with `TOXAGE_SIMPLE_UI=1`) plays every story in both views and lists the steps whose place was not found. A place marked `full` leaves its steps out in the simple view. A new story is a new file and one line in `index.js`.
 - Tests run in `app/` with `python3 manage.py test explorer` and `node --test "explorer/tests/*.test.mjs"`.
 
 ## Cloud environment

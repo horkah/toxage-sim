@@ -75,7 +75,7 @@ The app:
 - The app shows the course of a single patient under two scenarios, survival and time to event of the cohort with Kaplan-Meier and cumulative incidence curves, and compares all scenarios side by side.
 - Data sets are generated, inspected, exported to archive files, imported again and deleted in the app. All model parameters can be changed there and reset to the defaults of the repository. The data schema, the scientific background and the figures can be read in the app.
 - Pages change in place without reloading, and the parts of the app are linked to each other: patients, scenarios, fields, data sets and parameters. The page "About" names the authors and shows version and build.
-- A tutorial and a demo lead through all functions of the app. In the tutorial the user does each step herself; the demo runs on its own at an adjustable speed and leaves the app as it was.
+- A tutorial leads through all functions of the app; the user does each step herself. A demo tells six stories, each about one patient group, in the voice of the AI that built the app; it runs on its own at an adjustable speed and leaves the app as it was.
 - `docker compose up -d --build` starts the app in a container, with the data in a volume. See [app/README.md](app/README.md).
 
 ## Note

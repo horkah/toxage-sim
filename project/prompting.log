@@ -413,3 +413,36 @@ the demo shall tell a story from the researcher perspective who wants to explore
 please also make sure that the demo in the simple-ui version is shorter compared to the advanced-mode demo.
 
 the text elements should result in a story interesing to read and - will be implemented later - to listen to.
+
+================================================================================
+2026-11-17 23:36 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+ok, great work, git pull for safety - there were parallel processes.
+
+I now want six different demos, meaning six different catching stories, six for the advanced-mode app - and then modifications of the six for the simple-ui app, see below. 
+
+Re-Organize the demo app part internally if needed, such that the demos can easily be updated in case the functionality of the app changes, or new stories to be added over time.
+
+for this I propose to make for every of the six stories a prerequisites file, with relation to the steps, such that it is trivial and fast later to see which step needs to be removed or updated because a prerequisite has changed. try to be minimal both in code (no redundancies, no bloat coding, but comments at a level as before are fine) and in these prerequisite or dependency files. choose your own way better than my description. i am sure youll be fine.
+
+so each of the six stories shall focus on a different patient group and relevance of our research. you did really fine in the last demo you did. you can keep those two (same demo long and short version).  so my proposal is that you do the six long stories / demos first, and then create a short version thereof for the simple-ui version. with the above mentioned dependency files, it will be super-easy for you to shorten the demo. 
+
+so please only generate the six demos (the long versions), and the shortening to everything that's possible in the simple-ui to then fewer steps is done on the fly. that even reduces redundancy further. if the story is a bit 'bumpy' by missinig pieces, don't care - that's just fine.
+
+what I really want you to change is the tone and perspective of these demos, also of the first one - please adapt to the following instructions:
+the demo story is told from the 'AI'. It speaks of itself in the first person, and talks to (target persona 1) an "experienced data scientist with basic toxicology knowledge". The stories are all about guiding the listener through the world of what AI (who has built this system with human guidance) can do to build such an app, or to generate the data, and then to always talk about one patient subgroup that is specifically motivating for our project, and also shows why.
+
+each story can select those ui elements that are most useful for the given compelling case. Just make sure that by all six stories taken together at least most of the graphs and app elements are seen. 
+
+you can also extend the demo to the documentation section with the new graphics files explaining some of the models, and where you (the AI) have documented the literature research results that you (the AI) has performed.
+
+every story should be different - otherwise it would be boring for the human listeners. Give each story an overall story title, which would be read if someone reads the story out loud.
+
+then every step also has a title to highlight the section of the story that is just going on. But when reading the story out loud, only the texts underneath would be read. So don't worry about these section titles being somewhat redundant (normally they are) to the text content. The section titles are muted, such that by only reading the story title at the beginning and then the section content texts without section titles, results in an interesting to listen audio story, and the graphical stations of course are synchronized - just as you always did already.
+
+on the start section of the story where also the story title is shown, there is a new option to select one of the (at them moment, can be extended later) six stories with their number and story title displayed. Per default, the system starts at a random story number and then rotates forward, so for example from 3 to 4 to 5 to 6 to 1 to 2 to 3 to 4 etc.
+
+================================================================================
+2026-11-18 00:11 (+01:00) | model: claude-opus-5-5 | attachments: none
+--------------------------------------------------------------------------------
+bitte schon einmal commit+push, danach kannst du noch immer testen und korrigieren
