@@ -84,3 +84,30 @@ class SimpleViewTest(CohortTestCase):
         self.assertContains(response, 'data-simple="0"')
         self.assertContains(self.client.get("/data/"), 'id="archive"')
         self.assertContains(self.client.get("/about/"), 'id="simple-view"')     # still explained there
+
+    def test_ui_advanced_param_sets_cookie_and_shows_the_full_view(self):
+        redirect = self.client.get("/?ui=advanced")
+        self.assertRedirects(redirect, "/", fetch_redirect_response=False)
+        self.assertEqual(redirect.cookies[ui.COOKIE].value, "advanced")
+        self.assertEqual(int(redirect.cookies[ui.COOKIE]["max-age"]), 31536000)
+        # Following the redirect, the cookie renders the full view and the URL is clean.
+        page = self.client.get("/?ui=advanced", follow=True)
+        self.assertEqual(page.redirect_chain, [("/", 302)])
+        self.assertContains(page, 'data-simple="0"')
+        self.assertNotContains(page, "ui=advanced")
+
+    def test_ui_simple_param_clears_the_cookie_and_shows_the_simple_view(self):
+        self.client.cookies[ui.COOKIE] = "advanced"
+        page = self.client.get("/?ui=simple", follow=True)
+        self.assertEqual(page.redirect_chain, [("/", 302)])
+        self.assertContains(page, 'data-simple="1"')
+
+    def test_ui_param_keeps_the_rest_of_the_query(self):
+        self.assertRedirects(self.client.get("/?ui=advanced&scenario=combined"),
+                             "/?scenario=combined", fetch_redirect_response=False)
+
+    def test_demo_param_does_not_leak_into_filters_or_links(self):
+        response = self.client.get("/?demo=1")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="demo"')
+        self.assertNotContains(response, "demo=1")

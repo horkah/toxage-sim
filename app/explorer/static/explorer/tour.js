@@ -625,6 +625,13 @@ function reloaded() {
   return globalThis.performance?.getEntriesByType?.("navigation")[0]?.type === "reload";
 }
 
+// ?demo=1 in the address starts the demo once per tab, like the Help › Demo
+// button; null otherwise (no parameter, another value, or already started).
+export function demoFromUrl(search = typeof location !== "undefined" ? location.search : "",
+                            started = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("toxage-demo-started") : null) {
+  return new URLSearchParams(search).get("demo") === "1" && !started ? "demo" : null;
+}
+
 // Start a tour from its first step.
 export async function start(mode) {
   if (state) { run++; hide(); }
@@ -703,6 +710,13 @@ function init() {
   if (state && document.body.dataset.demo === "1" && reloaded()) return start(state.mode);
   if (state) return play();
   if (document.body.dataset.tourSnapshot === "1") unfinished();
+  // ?demo=1 starts the demo once per tab, like the Help › Demo button. The
+  // server keeps the parameter out of links and forms; the browser keeps it
+  // long enough to start the demo.
+  if (demoFromUrl()) {
+    try { sessionStorage.setItem("toxage-demo-started", "1"); } catch { /* storage blocked */ }
+    return start("demo");
+  }
   let off = false, seen = false;
   try {
     off = localStorage.getItem("toxage-welcome") === "off";

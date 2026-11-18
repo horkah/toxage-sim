@@ -11,7 +11,7 @@ COOKIE = settings.DISCLAIMER_COOKIE
 
 class DisclaimerTest(TestCase):
     def test_everything_redirects_to_the_disclaimer(self):
-        for url in ("/", "/random/", "/?patient=1"):
+        for url in ("/", "/random/", "/?patient=1", "/?ui=advanced", "/?demo=1"):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 302)
             self.assertTrue(response["Location"].startswith("/disclaimer/?next="))
@@ -231,6 +231,15 @@ class ExplorerTest(CohortTestCase):
     def test_random_patient_with_empty_selection(self):
         response = self.client.get("/random/?age_years_min=200&patient=P000001")
         self.assertEqual(response["Location"], "/?age_years_min=200")
+
+    def test_demo_param_is_dropped_and_leaves_no_trace(self):
+        # ?demo=1 starts the demo in the browser; the server drops it, so it does
+        # not turn up as a hidden field or in a link, and the rest of the query stays.
+        response = self.client.get("/?demo=1&scenario=combined")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="demo"')
+        self.assertNotContains(response, "demo=1")
+        self.assertEqual(response.context["scenario"]["scenario_id"], "combined")
 
 
 class TagTest(TestCase):

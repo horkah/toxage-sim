@@ -51,6 +51,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "explorer.middleware.DisclaimerMiddleware",
+    "explorer.middleware.LaunchMiddleware",
     "explorer.demo.VisitorMiddleware",
 ]
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { applies, textOf, clamp, fill, onPage, place, readSeconds, swipedLeft, words } from "../static/explorer/tour.js";
+import { applies, textOf, clamp, demoFromUrl, fill, onPage, place, readSeconds, swipedLeft, words } from "../static/explorer/tour.js";
 import { STEPS } from "../static/explorer/tour-steps.js";
 import { STORIES } from "../static/explorer/stories/index.js";
 import { AT } from "../static/explorer/stories/prerequisites.js";
@@ -113,4 +113,12 @@ test("the demo tells stories, each one shorter in the simple view", () => {
   }
   // Every place of the app that a story needs is used, so prerequisites.js holds no more than that.
   assert.deepEqual(Object.keys(AT).filter((name) => !used.has(name)), []);
+});
+
+test("?demo=1 starts the demo once per tab", () => {
+  assert.equal(demoFromUrl("?demo=1", null), "demo");
+  assert.equal(demoFromUrl("?demo=1", "1"), null);          // already started this tab
+  assert.equal(demoFromUrl("", null), null);                // no parameter
+  assert.equal(demoFromUrl("?demo=0", null), null);          // another value
+  assert.equal(demoFromUrl("?scenario=combined&demo=1", null), "demo");
 });
