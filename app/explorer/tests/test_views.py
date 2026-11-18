@@ -11,10 +11,21 @@ COOKIE = settings.DISCLAIMER_COOKIE
 
 class DisclaimerTest(TestCase):
     def test_everything_redirects_to_the_disclaimer(self):
-        for url in ("/", "/random/", "/?patient=1", "/?ui=advanced", "/?demo=1"):
+        for url in ("/", "/random/", "/?patient=1", "/?ui=advanced"):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 302)
             self.assertTrue(response["Location"].startswith("/disclaimer/?next="))
+
+    def test_demo_param_skips_and_accepts_the_disclaimer(self):
+        # ?demo=1 starts the demo in the browser; a kiosk may have no input to
+        # click through the disclaimer, so the demo URL accepts the terms for
+        # the session and goes straight to the page.
+        response = self.client.get("/?demo=1")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("Location", response)
+        cookie = response.cookies[COOKIE]
+        self.assertEqual(cookie.value, settings.DISCLAIMER_VERSION)
+        self.assertEqual(cookie["max-age"], "")   # session cookie
 
     def test_disclaimer_is_shown_without_menu(self):
         response = self.client.get("/disclaimer/")

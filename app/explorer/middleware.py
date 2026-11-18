@@ -1,10 +1,11 @@
-"""Gates and launch parameters of the app.
+""""Gates and launch parameters of the app.
 
 Nothing of the app is shown before the user accepted the disclaimer and licence
-terms; the acceptance is a cookie with the version of the terms. After the gate,
-LaunchMiddleware turns the launch parameters of a URL (?ui= and ?demo=) into
-the cookie and the browser trigger that hold the choice, so the parameters do
-not linger in links and forms.
+terms; the acceptance is a cookie with the version of the terms. The exception is
+?demo=1, which accepts the terms for the session so a kiosk can run the demo
+unattended. After the gate, LaunchMiddleware turns the launch parameters of a
+URL (?ui= and ?demo=) into the cookie and the browser trigger that hold the
+choice, so the parameters do not linger in links and forms.
 """
 from urllib.parse import urlencode
 
@@ -29,11 +30,21 @@ class DisclaimerMiddleware:
 
     def __call__(self, request):
         """Let accepted requests and the open paths through, redirect the others with
-        ?next= to the disclaimer."""
+        ?next= to the disclaimer. ?demo=1 accepts the terms for the session, so a
+        kiosk can start the demo without a click on the disclaimer."""
         disclaimer = reverse("disclaimer")
         open_paths = (disclaimer, "/" + settings.STATIC_URL.lstrip("/"))
         if accepted(request) or request.path.startswith(open_paths):
             return self.get_response(request)
+        # ?demo=1 starts the demo in the browser (tour.js). Visitors who call it
+        # are taken to know the terms, and may be at a kiosk without a keyboard
+        # or mouse to click through the disclaimer, so it is accepted for them
+        # for the session. The cookie lets the demo's later requests through too.
+        if request.GET.get("demo") == "1":
+            response = self.get_response(request)
+            response.set_cookie(settings.DISCLAIMER_COOKIE, settings.DISCLAIMER_VERSION,
+                                samesite="Lax", httponly=True, secure=request.is_secure())
+            return response
         return redirect(f"{disclaimer}?{urlencode({'next': request.get_full_path()})}")
 
 
