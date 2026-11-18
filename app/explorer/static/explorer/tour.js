@@ -298,10 +298,11 @@ function show(step, note = "", free = false) {
   const controls = `<div class="tour-buttons">${buttons}</div>${demo ? speedControls() : ""}
     ${demo ? `<p class="tour-keys">Next step: → key or swipe to the left. Click the text to hide these controls.</p>`
            : `<p class="tour-keys">The → key or a swipe to the left also goes on, where “Next” is offered.</p>`}`;
-  // The demo shows the title of its story on the first step; the titles of its steps are muted,
-  // as a story is read aloud from its title and the texts of the steps.
+  // The demo shows the title of its story on the first step; the titles of its steps will be muted in future audio output,
+  // when a story is read aloud from its title and the texts of the steps.
+  // but the display of the step titles shall be the same in both demo and tutorial.
   const title = demo
-    ? `${number <= 1 ? `<h2>${STORIES[state.story].title}</h2>${chooser()}` : ""}<h3 class="tour-section">${step.title}</h3>`
+    ? `${number <= 1 ? `<h2>${STORIES[state.story].title}</h2>${chooser()}` : ""}<h2>${step.title}</h2>`
     : `<h2>${step.title}</h2>`;
   const label = demo ? `Demo${round} · story ${state.story + 1} of ${STORIES.length}` : "Tutorial";
   panel.innerHTML = `<header><span>${label} · step ${number} of ${shown.length}</span>${toggle}</header>

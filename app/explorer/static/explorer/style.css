@@ -593,8 +593,6 @@ dialog { color: var(--text); }
 .tour-controls[hidden] { display: none; }
 .tour-keys { color: var(--muted); font-size: .78rem; margin: 2px 0 0; }
 .tour h2 { margin: 2px 0 6px; font-size: 1.05rem; }
-/* The demo: the title of a story is read aloud, the titles of its steps are only shown. */
-.tour h3.tour-section { margin: 2px 0 4px; font-size: .8rem; font-weight: 600; color: var(--muted); }
 .tour-chooser { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: .82rem; color: var(--muted); }
 .tour-chooser select { flex: 1; min-width: 0; font-size: .85rem; }
 .tour p { margin: 0 0 8px; }
