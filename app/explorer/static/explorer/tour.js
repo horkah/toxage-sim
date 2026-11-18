@@ -24,8 +24,8 @@ import { STORIES } from "./stories/index.js";
 const KEY = "toxage-tour";
 // Reading time in seconds per 20 words (6.7 is 3 words per second), and the
 // pause after each step in seconds.
-const SPEED = { read: { key: "toxage-tourread", min: 0, max: 30, step: 0.1, fallback: 6.7 },
-                pause: { key: "toxage-tourpause", min: 0.5, max: 10, step: 0.5, fallback: 2 } };
+const SPEED = { read: { key: "toxage-tourread", min: 0, max: 30, step: 0.1, fallback: 2.5 },
+                pause: { key: "toxage-tourpause", min: 0.5, max: 10, step: 0.5, fallback: 1.5 } };
 const HOLD = 5000;         // the demo waits this much longer while its controls are shown
 const SWIPE = 60;          // pixels a finger must move to the left for "next"
 const POLL = 400;
